@@ -7,6 +7,7 @@
 set -e
 
 MAX_ITERATIONS=${1:-25}
+CLAUDE_MODEL=${CC_CLAUDE_MODEL:-sonnet}
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROMPT_FILE="$SCRIPT_DIR/prompt.md"
 SETUP_PROMPT_FILE="$SCRIPT_DIR/prompt-setup.md"
@@ -15,6 +16,7 @@ echo "════════════════════════�
 echo "  🗡️  BERSERK - Autonomous Coding Agent"
 echo "══════════════════════════════════════════════════════"
 echo "  Max iterations: $MAX_ITERATIONS"
+echo "  Model:          $CLAUDE_MODEL"
 echo "  Prompt file:    $PROMPT_FILE"
 echo "══════════════════════════════════════════════════════"
 echo ""
@@ -34,7 +36,7 @@ echo "════════════════════════�
 echo ""
 
 if [ -f "$SETUP_PROMPT_FILE" ]; then
-  OUTPUT=$(cat "$SETUP_PROMPT_FILE" | claude --dangerously-skip-permissions 2>&1 | tee /dev/stderr) || true
+  OUTPUT=$(cat "$SETUP_PROMPT_FILE" | claude --model "$CLAUDE_MODEL" --dangerously-skip-permissions 2>&1 | tee /dev/stderr) || true
 
   # Check if setup failed critically
   if echo "$OUTPUT" | grep -q "<promise>SETUP_FAILED</promise>"; then
@@ -65,7 +67,7 @@ for i in $(seq 1 $MAX_ITERATIONS); do
   # Pipe prompt to Claude Code
   # --dangerously-skip-permissions allows autonomous operation
   # Capture output while also displaying it (tee to stderr)
-  OUTPUT=$(cat "$PROMPT_FILE" | claude --dangerously-skip-permissions 2>&1 | tee /dev/stderr) || true
+  OUTPUT=$(cat "$PROMPT_FILE" | claude --model "$CLAUDE_MODEL" --dangerously-skip-permissions 2>&1 | tee /dev/stderr) || true
 
   # Check for completion signal
   if echo "$OUTPUT" | grep -q "<promise>COMPLETE</promise>"; then

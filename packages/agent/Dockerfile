@@ -48,7 +48,7 @@ ENV NODE_OPTIONS="--max-old-space-size=4096"
 # https://www.npmjs.com/package/@anthropic-ai/claude-code
 RUN npm install -g @anthropic-ai/claude-code
 
-# ANTHROPIC_API_KEY is passed at runtime via environment variable
+# CC_ANTHROPIC_API_KEY is passed at runtime via environment variable (mapped to ANTHROPIC_API_KEY in entrypoint)
 # Usage: claude --dangerously-skip-permissions
 
 # Install Playwright with Chromium for browser testing

@@ -38,7 +38,7 @@
       "acceptanceCriteria": [
         "Claude Code CLI installed via npm globally",
         "Verify claude --version runs successfully",
-        "ANTHROPIC_API_KEY can be passed as env var"
+        "CC_ANTHROPIC_API_KEY can be passed as env var"
       ],
       "priority": 3,
       "passes": true,
@@ -162,7 +162,7 @@
       "title": "Create .env.example and documentation",
       "acceptanceCriteria": [
         "packages/agent/.env.example with all required vars",
-        "ANTHROPIC_API_KEY documented",
+        "CC_ANTHROPIC_API_KEY documented",
         "GITHUB_TOKEN documented",
         "GITHUB_REPO_URL documented",
         "BRANCH_NAME documented",
@@ -186,7 +186,7 @@
         "Logs are visible and informative"
       ],
       "priority": 12,
-      "passes": false,
+      "passes": true,
       "notes": "Integration test before moving to CLI/EC2; STOP HERE FOR HUMAN APPROVAL."
     },
     {

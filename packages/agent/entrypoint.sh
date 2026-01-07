@@ -15,12 +15,12 @@ echo "════════════════════════�
 : "${BRANCH_NAME:?BRANCH_NAME is required}"
 : "${GITHUB_TOKEN:?GITHUB_TOKEN is required}"
 
-# Authentication: Either CLAUDE_CODE_OAUTH_TOKEN (Pro/Max subscription) or ANTHROPIC_API_KEY (API credits)
-if [ -z "$CLAUDE_CODE_OAUTH_TOKEN" ] && [ -z "$ANTHROPIC_API_KEY" ]; then
-  echo "ERROR: Either CLAUDE_CODE_OAUTH_TOKEN or ANTHROPIC_API_KEY is required"
+# Authentication: Either CC_CLAUDE_CODE_OAUTH_TOKEN (Pro/Max subscription) or CC_ANTHROPIC_API_KEY (API credits)
+if [ -z "$CC_CLAUDE_CODE_OAUTH_TOKEN" ] && [ -z "$CC_ANTHROPIC_API_KEY" ]; then
+  echo "ERROR: Either CC_CLAUDE_CODE_OAUTH_TOKEN or CC_ANTHROPIC_API_KEY is required"
   echo ""
-  echo "  CLAUDE_CODE_OAUTH_TOKEN - Uses your Pro/Max subscription (recommended)"
-  echo "  ANTHROPIC_API_KEY       - Uses API credits (pay per token)"
+  echo "  CC_CLAUDE_CODE_OAUTH_TOKEN - Uses your Pro/Max subscription (recommended)"
+  echo "  CC_ANTHROPIC_API_KEY       - Uses API credits (pay per token)"
   echo ""
   echo "Run 'claude setup-token' on your local machine to get an OAuth token."
   exit 1
@@ -31,7 +31,7 @@ SCRIPT_DIR="/home/berserk/scripts"
 WORKSPACE="/home/berserk/workspace"
 
 # Set up Claude Code authentication
-if [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+if [ -n "$CC_CLAUDE_CODE_OAUTH_TOKEN" ]; then
   echo "  Auth:       OAuth (Pro/Max subscription)"
 
   # Create required directories
@@ -50,8 +50,8 @@ CLAUDEJSON
   cat > ~/.claude/.credentials.json << CREDSJSON
 {
   "claudeAiOauth": {
-    "accessToken": "$CLAUDE_CODE_OAUTH_TOKEN",
-    "refreshToken": "$CLAUDE_CODE_OAUTH_TOKEN",
+    "accessToken": "$CC_CLAUDE_CODE_OAUTH_TOKEN",
+    "refreshToken": "$CC_CLAUDE_CODE_OAUTH_TOKEN",
     "expiresAt": 9999999999999,
     "scopes": ["user:inference", "user:profile"]
   }
@@ -65,6 +65,7 @@ CREDSJSON
   unset ANTHROPIC_API_KEY
 else
   echo "  Auth:       API Key (credits)"
+  export ANTHROPIC_API_KEY="$CC_ANTHROPIC_API_KEY"
 fi
 
 echo "  Repo:       $GITHUB_REPO_URL"
