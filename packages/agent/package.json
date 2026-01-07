@@ -1,0 +1,6 @@
+{
+  "name": "@berserk/agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Berserk autonomous coding agent - Docker image and scripts"
+}

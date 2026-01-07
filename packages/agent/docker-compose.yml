@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  berserk:
+    build: .
+    image: berserk-agent:local
+    container_name: berserk-agent
+
+    # Environment variables from .env file
+    env_file:
+      - .env
+
+    # Override for local testing (optional - mount local repo)
+    # volumes:
+    #   - /path/to/local/repo:/home/berserk/workspace/repo
+
+    # Keep stdin open for debugging
+    stdin_open: true
+    tty: true
+
+    # Resource limits (optional - adjust based on your machine)
+    # deploy:
+    #   resources:
+    #     limits:
+    #       memory: 8G
+    #     reservations:
+    #       memory: 4G

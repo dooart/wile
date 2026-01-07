@@ -1,0 +1,416 @@
+{
+  "branchName": "main",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Initialize monorepo structure",
+      "acceptanceCriteria": [
+        "Create packages/cli/ and packages/agent/ directories",
+        "Root package.json with workspaces configured for bun",
+        "packages/agent/package.json with basic metadata",
+        "packages/cli/package.json with bin field pointing to dist/cli.js",
+        ".gitignore with node_modules, dist, .env files"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Using bun workspaces"
+    },
+    {
+      "id": "US-002",
+      "title": "Create Dockerfile base",
+      "acceptanceCriteria": [
+        "packages/agent/Dockerfile exists",
+        "Based on Ubuntu 22.04 LTS",
+        "Installs: git, curl, bun, Node.js 20 LTS",
+        "Installs: Python 3.11 with pip",
+        "Sets up non-root user 'berserk'",
+        "Configures swap (8GB), zswap with lz4, earlyoom",
+        "Sets vm.swappiness=10",
+        "Sets NODE_OPTIONS=--max-old-space-size=4096"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Memory config per Claude Code specs"
+    },
+    {
+      "id": "US-003",
+      "title": "Install Claude Code in Docker",
+      "acceptanceCriteria": [
+        "Claude Code CLI installed via npm globally",
+        "Verify claude --version runs successfully",
+        "ANTHROPIC_API_KEY can be passed as env var"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Package is @anthropic-ai/claude-code"
+    },
+    {
+      "id": "US-004",
+      "title": "Install Playwright in Docker",
+      "acceptanceCriteria": [
+        "Playwright installed with Chromium browser",
+        "npx playwright test --version runs successfully",
+        "Headless browser can screenshot a webpage",
+        "Create packages/agent/scripts/browser-test.ts helper"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": "For visual verification of UI changes"
+    },
+    {
+      "id": "US-005",
+      "title": "Create berserk.sh main loop script",
+      "acceptanceCriteria": [
+        "packages/agent/scripts/berserk.sh exists",
+        "Accepts MAX_ITERATIONS as argument (default 25)",
+        "Reads prompt from packages/agent/scripts/prompt.md",
+        "Pipes prompt to claude --dangerously-skip-permissions",
+        "Captures output and checks for <promise>COMPLETE</promise>",
+        "Loops until complete or max iterations",
+        "Exits with appropriate codes (0=success, 1=max iterations)"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": "Core loop logic from Ralph"
+    },
+    {
+      "id": "US-006",
+      "title": "Create prompt.md agent instructions",
+      "acceptanceCriteria": [
+        "packages/agent/scripts/prompt.md exists",
+        "Instructions to read berserk.json from repo root",
+        "Instructions to read .berserk-temp/progress.txt",
+        "Instructions to pick highest priority story where passes=false",
+        "Instructions to implement ONE story per iteration",
+        "Instructions to run tests and typecheck",
+        "Instructions to commit with format: feat: [ID] - [Title]",
+        "Instructions to push after each commit",
+        "Instructions to update berserk.json passes=true",
+        "Instructions to append learnings to progress.txt",
+        "Stop condition: reply <promise>COMPLETE</promise> when all pass"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": "Agent brain - critical for success"
+    },
+    {
+      "id": "US-007",
+      "title": "Create entrypoint.sh",
+      "acceptanceCriteria": [
+        "packages/agent/entrypoint.sh exists",
+        "Clones repo from GITHUB_REPO_URL env var",
+        "Checks out BRANCH_NAME env var",
+        "Creates .berserk-temp/ directory",
+        "Nukes .berserk-temp/ if it exists",
+        "Adds .berserk-temp/ to .gitignore if not present",
+        "Creates initial .berserk-temp/progress.txt",
+        "Commits gitignore changes",
+        "Pushes initial commit",
+        "Runs berserk.sh with MAX_ITERATIONS",
+        "On completion: ensures final state is pushed",
+        "On partial completion: commits WIP with explanation",
+        "On no changes: creates .berserk-temp/failed-{timestamp}.txt"
+      ],
+      "priority": 7,
+      "passes": true,
+      "notes": "Container startup orchestration"
+    },
+    {
+      "id": "US-008",
+      "title": "Configure git in Docker",
+      "acceptanceCriteria": [
+        "Git configured with berserk bot identity",
+        "user.name = 'Berserk Bot'",
+        "user.email = 'berserk@bot.local'",
+        "GitHub token auth works via GITHUB_TOKEN env var",
+        "Can clone, commit, push to private repos"
+      ],
+      "priority": 8,
+      "passes": true,
+      "notes": "Configured in entrypoint.sh with credential helper"
+    },
+    {
+      "id": "US-009",
+      "title": "Create docker-compose for local testing",
+      "acceptanceCriteria": [
+        "packages/agent/docker-compose.yml exists",
+        "Mounts local .env file for secrets",
+        "Environment variables documented in .env.example",
+        "Can build and run with: docker compose up --build",
+        "Includes volume mount for testing with local repos"
+      ],
+      "priority": 9,
+      "passes": true,
+      "notes": "For local development and testing"
+    },
+    {
+      "id": "US-010",
+      "title": "Add browser testing to prompt.md",
+      "acceptanceCriteria": [
+        "prompt.md includes instructions for browser verification",
+        "When acceptance criteria mention UI/visual checks",
+        "Agent should use Playwright to screenshot",
+        "Screenshots saved to .berserk-temp/screenshots/",
+        "Include browser-test.ts usage examples in prompt"
+      ],
+      "priority": 10,
+      "passes": true,
+      "notes": "Visual verification capability"
+    },
+    {
+      "id": "US-011",
+      "title": "Create .env.example and documentation",
+      "acceptanceCriteria": [
+        "packages/agent/.env.example with all required vars",
+        "ANTHROPIC_API_KEY documented",
+        "GITHUB_TOKEN documented",
+        "GITHUB_REPO_URL documented",
+        "BRANCH_NAME documented",
+        "MAX_ITERATIONS documented (default 25)",
+        "ENV_FORWARD_* pattern documented for project env vars",
+        "packages/agent/README.md with usage instructions"
+      ],
+      "priority": 11,
+      "passes": true,
+      "notes": "Documentation for local testing"
+    },
+    {
+      "id": "US-012",
+      "title": "Test full Docker flow locally",
+      "acceptanceCriteria": [
+        "Can run docker compose up --build successfully",
+        "Container clones a test repo",
+        "Container creates branch and .berserk-temp/",
+        "Container runs at least one iteration",
+        "Container commits and pushes changes",
+        "Logs are visible and informative"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": "Integration test before moving to CLI/EC2; STOP HERE FOR HUMAN APPROVAL."
+    },
+    {
+      "id": "US-101",
+      "title": "Initialize CLI package with Bun",
+      "acceptanceCriteria": [
+        "packages/cli/package.json configured properly",
+        "bin field points to dist/cli.js",
+        "name is 'berserk'",
+        "TypeScript configured with tsconfig.json",
+        "Entry point src/cli.ts with shebang #!/usr/bin/env node"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Foundation for bunx berserk"
+    },
+    {
+      "id": "US-102",
+      "title": "Install CLI dependencies",
+      "acceptanceCriteria": [
+        "@clack/prompts installed for beautiful TUI",
+        "commander installed for argument parsing",
+        "@aws-sdk/client-ec2 installed for EC2 management",
+        "dotenv installed for env file handling",
+        "chalk installed for colors (if needed beyond clack)"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Core dependencies for CLI"
+    },
+    {
+      "id": "US-103",
+      "title": "Create CLI entry point with commander",
+      "acceptanceCriteria": [
+        "src/cli.ts parses commands: setup, run",
+        "berserk setup triggers setup flow",
+        "berserk run --branch=X triggers run flow",
+        "berserk run --repo=X --branch=Y works for non-local",
+        "Help text is clear and useful",
+        "Version flag works"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Main CLI routing"
+    },
+    {
+      "id": "US-104",
+      "title": "Implement 'berserk setup' command",
+      "acceptanceCriteria": [
+        "Uses @clack/prompts for beautiful interactive prompts",
+        "Prompts for Anthropic API key (password input)",
+        "Prompts for GitHub token (password input)",
+        "Prompts for AWS Access Key ID",
+        "Prompts for AWS Secret Access Key",
+        "Prompts for AWS region (default us-east-1)",
+        "Saves to ~/.berserk/.env",
+        "Creates ~/.berserk/ directory if not exists",
+        "Shows success message with next steps"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": "One-time setup flow"
+    },
+    {
+      "id": "US-105",
+      "title": "Implement .env.project handling in setup",
+      "acceptanceCriteria": [
+        "After main setup, asks if user wants to configure project env vars",
+        "If yes, opens ~/.berserk/.env.project in $EDITOR",
+        "Or allows adding key=value pairs interactively",
+        "Explains these vars get forwarded to container",
+        "Can be skipped"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": "For project-specific secrets like DB URLs"
+    },
+    {
+      "id": "US-106",
+      "title": "Create config reading utilities",
+      "acceptanceCriteria": [
+        "src/lib/config.ts exists",
+        "Function to read ~/.berserk/.env",
+        "Function to read ~/.berserk/.env.project",
+        "Validates required keys are present",
+        "Returns typed config object",
+        "Helpful error messages if config missing"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": "Shared config utilities"
+    },
+    {
+      "id": "US-107",
+      "title": "Create EC2 launcher module",
+      "acceptanceCriteria": [
+        "src/lib/aws.ts exists",
+        "Function to launch EC2 instance with params",
+        "Uses r6a.xlarge instance type (32GB RAM)",
+        "Uses Ubuntu 22.04 AMI",
+        "Configures security group for outbound only",
+        "Passes UserData script for bootstrap",
+        "Tags instance with berserk metadata",
+        "Returns instance ID"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": "Core AWS integration"
+    },
+    {
+      "id": "US-108",
+      "title": "Create UserData bootstrap script",
+      "acceptanceCriteria": [
+        "src/lib/userdata.ts generates bash script",
+        "Installs Docker",
+        "Pulls berserk Docker image from registry",
+        "Passes all env vars to container",
+        "Runs container with appropriate flags",
+        "Schedules self-termination on completion",
+        "Logs to CloudWatch (optional)"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": "EC2 instance bootstrap"
+    },
+    {
+      "id": "US-109",
+      "title": "Implement 'berserk run' command",
+      "acceptanceCriteria": [
+        "Reads config from ~/.berserk/",
+        "Validates berserk.json exists in target repo/branch",
+        "--branch flag is required",
+        "--repo flag optional (can detect from current dir)",
+        "--max-iterations flag optional (default 25)",
+        "Shows spinner while launching EC2",
+        "Displays instance ID and status",
+        "Shows how to monitor progress (git log, etc)"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": "Main run command"
+    },
+    {
+      "id": "US-110",
+      "title": "Create IAM policy documentation",
+      "acceptanceCriteria": [
+        "infra/iam-policy.json with minimal required permissions",
+        "EC2: RunInstances, TerminateInstances, DescribeInstances",
+        "EC2: CreateSecurityGroup, AuthorizeSecurityGroupEgress",
+        "EC2: CreateTags",
+        "Documentation on how to create IAM user",
+        "Documentation on how to create fine-grained GitHub token"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": "Security documentation"
+    },
+    {
+      "id": "US-111",
+      "title": "Publish Docker image to registry",
+      "acceptanceCriteria": [
+        "Dockerfile builds successfully",
+        "Image published to Docker Hub or ECR",
+        "Image tagged with version",
+        "UserData script references correct image",
+        "Documentation on image updates"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": "Make image available for EC2"
+    },
+    {
+      "id": "US-112",
+      "title": "Add 'berserk status' command",
+      "acceptanceCriteria": [
+        "Lists running berserk EC2 instances",
+        "Shows instance ID, repo, branch, uptime",
+        "Shows status (running, terminated)",
+        "Can filter by repo"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": "Monitor running jobs"
+    },
+    {
+      "id": "US-113",
+      "title": "Add 'berserk stop' command",
+      "acceptanceCriteria": [
+        "Terminates a running berserk instance by ID",
+        "Confirms before terminating",
+        "Shows success message"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": "Manual stop capability"
+    },
+    {
+      "id": "US-114",
+      "title": "Build and publish CLI to npm",
+      "acceptanceCriteria": [
+        "bun build produces dist/cli.js",
+        "Package published to npm as 'berserk'",
+        "bunx berserk setup works",
+        "bunx berserk run --branch=X works",
+        "README with full usage instructions"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": "Public release"
+    },
+    {
+      "id": "US-115",
+      "title": "End-to-end test",
+      "acceptanceCriteria": [
+        "Create test repo with simple berserk.json",
+        "Run bunx berserk run --repo=test --branch=test",
+        "Verify EC2 spawns",
+        "Verify commits appear on branch",
+        "Verify instance self-terminates",
+        "Document any issues found"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": "Full integration test"
+    }
+  ]
+}
