@@ -67,10 +67,20 @@ NODE
   exit 0
 fi
 
-# Required environment variables
-: "${GITHUB_REPO_URL:?GITHUB_REPO_URL is required}"
-: "${BRANCH_NAME:?BRANCH_NAME is required}"
-: "${GITHUB_TOKEN:?GITHUB_TOKEN is required}"
+REPO_SOURCE="${WILE_REPO_SOURCE:-github}"
+LOCAL_REPO_PATH="${WILE_LOCAL_REPO_PATH:-/home/wile/workspace/repo}"
+
+if [ "$REPO_SOURCE" = "local" ]; then
+  if [ ! -d "$LOCAL_REPO_PATH" ]; then
+    echo "ERROR: WILE_LOCAL_REPO_PATH does not exist: $LOCAL_REPO_PATH"
+    exit 1
+  fi
+else
+  # Required environment variables
+  : "${GITHUB_REPO_URL:?GITHUB_REPO_URL is required}"
+  : "${BRANCH_NAME:?BRANCH_NAME is required}"
+  : "${GITHUB_TOKEN:?GITHUB_TOKEN is required}"
+fi
 
 # Authentication: Either CC_CLAUDE_CODE_OAUTH_TOKEN (Pro/Max subscription) or CC_ANTHROPIC_API_KEY (API credits)
 if [ -z "$CC_CLAUDE_CODE_OAUTH_TOKEN" ] && [ -z "$CC_ANTHROPIC_API_KEY" ]; then
@@ -125,8 +135,12 @@ else
   export ANTHROPIC_API_KEY="$CC_ANTHROPIC_API_KEY"
 fi
 
-echo "  Repo:       $GITHUB_REPO_URL"
-echo "  Branch:     $BRANCH_NAME"
+if [ "$REPO_SOURCE" = "local" ]; then
+  echo "  Repo:       local ($LOCAL_REPO_PATH)"
+else
+  echo "  Repo:       $GITHUB_REPO_URL"
+  echo "  Branch:     $BRANCH_NAME"
+fi
 echo "  Iterations: $MAX_ITERATIONS"
 echo "══════════════════════════════════════════════════════"
 echo ""
@@ -137,34 +151,39 @@ git config --global user.name "Wile Bot"
 git config --global user.email "wile@bot.local"
 git config --global credential.helper store
 
-# Set up GitHub token authentication
-# Extract host from URL (handles both https://github.com/... and git@github.com:...)
-if [[ "$GITHUB_REPO_URL" =~ ^https://([^/]+)/ ]]; then
-  GIT_HOST="${BASH_REMATCH[1]}"
-  # Store credentials for HTTPS
-  echo "https://x-access-token:${GITHUB_TOKEN}@${GIT_HOST}" > ~/.git-credentials
-elif [[ "$GITHUB_REPO_URL" =~ ^git@([^:]+): ]]; then
-  GIT_HOST="${BASH_REMATCH[1]}"
-  # Convert to HTTPS for token auth
-  GITHUB_REPO_URL=$(echo "$GITHUB_REPO_URL" | sed 's|git@\([^:]*\):|https://\1/|')
-  echo "https://x-access-token:${GITHUB_TOKEN}@${GIT_HOST}" > ~/.git-credentials
-fi
-
-# Clone the repository
-echo "Cloning repository..."
-cd "$WORKSPACE"
-git clone "$GITHUB_REPO_URL" repo
-cd repo
-
-# Checkout the branch
-echo "Checking out branch: $BRANCH_NAME"
-git fetch origin
-if git show-ref --verify --quiet "refs/remotes/origin/$BRANCH_NAME"; then
-  git checkout "$BRANCH_NAME"
+if [ "$REPO_SOURCE" = "local" ]; then
+  echo "Using local repo mount..."
+  cd "$LOCAL_REPO_PATH"
 else
-  echo "Branch $BRANCH_NAME does not exist remotely. Creating it..."
-  git checkout -b "$BRANCH_NAME"
-  git push -u origin "$BRANCH_NAME"
+  # Set up GitHub token authentication
+  # Extract host from URL (handles both https://github.com/... and git@github.com:...)
+  if [[ "$GITHUB_REPO_URL" =~ ^https://([^/]+)/ ]]; then
+    GIT_HOST="${BASH_REMATCH[1]}"
+    # Store credentials for HTTPS
+    echo "https://x-access-token:${GITHUB_TOKEN}@${GIT_HOST}" > ~/.git-credentials
+  elif [[ "$GITHUB_REPO_URL" =~ ^git@([^:]+): ]]; then
+    GIT_HOST="${BASH_REMATCH[1]}"
+    # Convert to HTTPS for token auth
+    GITHUB_REPO_URL=$(echo "$GITHUB_REPO_URL" | sed 's|git@\([^:]*\):|https://\1/|')
+    echo "https://x-access-token:${GITHUB_TOKEN}@${GIT_HOST}" > ~/.git-credentials
+  fi
+
+  # Clone the repository
+  echo "Cloning repository..."
+  cd "$WORKSPACE"
+  git clone "$GITHUB_REPO_URL" repo
+  cd repo
+
+  # Checkout the branch
+  echo "Checking out branch: $BRANCH_NAME"
+  git fetch origin
+  if git show-ref --verify --quiet "refs/remotes/origin/$BRANCH_NAME"; then
+    git checkout "$BRANCH_NAME"
+  else
+    echo "Branch $BRANCH_NAME does not exist remotely. Creating it..."
+    git checkout -b "$BRANCH_NAME"
+    git push -u origin "$BRANCH_NAME"
+  fi
 fi
 
 # Verify .wile/prd.json exists

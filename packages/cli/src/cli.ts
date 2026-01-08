@@ -26,11 +26,10 @@ program
 program
   .command("run")
   .description("Run Wile on a repository")
-  .option("--branch <branch>", "Branch to work on")
   .option("--repo <repo>", "Repository URL or local path")
   .option("--max-iterations <count>", "Maximum iterations", "25")
   .option("--test", "Run in test mode")
-  .action((options: { branch?: string; repo?: string; maxIterations: string; test?: boolean }) => {
+  .action((options: { repo?: string; maxIterations: string; test?: boolean }) => {
     runWile(options);
   });
 

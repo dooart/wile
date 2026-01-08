@@ -16,6 +16,7 @@ export type WileConfig = {
   githubToken: string;
   githubRepoUrl: string;
   branchName: string;
+  repoSource: "github" | "local";
   ccClaudeModel?: string;
   ccClaudeCodeOauthToken?: string;
   ccAnthropicApiKey?: string;
@@ -63,23 +64,27 @@ export const readWileConfig = (options: { cwd?: string; validate?: boolean } = {
   const env = parseEnvFile(paths.envPath);
   const envProject = parseEnvFile(paths.envProjectPath);
 
+  const repoSource = (env.WILE_REPO_SOURCE as "github" | "local") || "github";
+
   if (validate) {
     ensureRequired(
       env.CODING_AGENT === "CC",
       "CODING_AGENT must be set to CC in .wile/secrets/.env. Run 'bunx wile config'."
     );
-    ensureRequired(
-      Boolean(env.GITHUB_TOKEN),
-      "GITHUB_TOKEN is required in .wile/secrets/.env. Run 'bunx wile config'."
-    );
-    ensureRequired(
-      Boolean(env.GITHUB_REPO_URL),
-      "GITHUB_REPO_URL is required in .wile/secrets/.env. Run 'bunx wile config'."
-    );
-    ensureRequired(
-      Boolean(env.BRANCH_NAME),
-      "BRANCH_NAME is required in .wile/secrets/.env. Run 'bunx wile config'."
-    );
+    if (repoSource === "github") {
+      ensureRequired(
+        Boolean(env.GITHUB_TOKEN),
+        "GITHUB_TOKEN is required in .wile/secrets/.env. Run 'bunx wile config'."
+      );
+      ensureRequired(
+        Boolean(env.GITHUB_REPO_URL),
+        "GITHUB_REPO_URL is required in .wile/secrets/.env. Run 'bunx wile config'."
+      );
+      ensureRequired(
+        Boolean(env.BRANCH_NAME),
+        "BRANCH_NAME is required in .wile/secrets/.env. Run 'bunx wile config'."
+      );
+    }
     ensureRequired(
       Boolean(env.CC_CLAUDE_CODE_OAUTH_TOKEN || env.CC_ANTHROPIC_API_KEY),
       "Either CC_CLAUDE_CODE_OAUTH_TOKEN or CC_ANTHROPIC_API_KEY is required in .wile/secrets/.env."
@@ -93,6 +98,7 @@ export const readWileConfig = (options: { cwd?: string; validate?: boolean } = {
       githubToken: env.GITHUB_TOKEN ?? "",
       githubRepoUrl: env.GITHUB_REPO_URL ?? "",
       branchName: env.BRANCH_NAME ?? "",
+      repoSource,
       ccClaudeModel: env.CC_CLAUDE_MODEL,
       ccClaudeCodeOauthToken: env.CC_CLAUDE_CODE_OAUTH_TOKEN,
       ccAnthropicApiKey: env.CC_ANTHROPIC_API_KEY,

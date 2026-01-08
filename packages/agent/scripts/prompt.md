@@ -41,29 +41,13 @@ npm test || npm run test || true
 
 If tests or typecheck fail, fix the issues before proceeding.
 
-### 6. Commit Your Changes
-```bash
-git add -A
-git commit -m "feat: [STORY-ID] - [Story Title]"
-git push
-```
-
-Use the exact story ID and title from `.wile/prd.json`.
-
-### 7. Update prd.json
+### 6. Update prd.json
 Set `passes: true` for the completed story:
 ```bash
 # Edit .wile/prd.json to mark the story as complete
 ```
 
-Commit and push this change:
-```bash
-git add .wile/prd.json
-git commit -m "chore: mark [STORY-ID] complete"
-git push
-```
-
-### 8. Log Your Progress
+### 7. Log Your Progress
 **APPEND** to `.wile/progress.txt`:
 
 ```markdown
@@ -86,12 +70,14 @@ git push
 
 If you discovered important patterns, also add them to the **Codebase Patterns** section at the TOP of progress.txt.
 
-Commit and push:
+### 8. Commit and Push
 ```bash
-git add .wile/progress.txt
-git commit -m "docs: log progress for [STORY-ID]"
+git add -A
+git commit -m "feat: [STORY-ID] - [Story Title]"
 git push
 ```
+
+Use the exact story ID and title from `.wile/prd.json`.
 
 ## Stop Condition
 
@@ -108,7 +94,7 @@ After completing steps 1-8, check if ALL stories in `.wile/prd.json` have `passe
 
 1. **ONE story per iteration** - Do not implement multiple stories
 2. **Always push** - Push after every commit so progress is visible
-3. **Small commits** - Commit the implementation, then prd.json update, then progress log separately
+3. **One commit per feature** - Include the implementation, prd.json update, and progress log in a single commit
 4. **Fix related files** - If typecheck requires changes in other files, make them (this is not scope creep)
 5. **Be idempotent** - Use `IF NOT EXISTS` for migrations, check before creating files
 6. **No interactive prompts** - Use `echo -e "\n\n\n" |` if a command might prompt

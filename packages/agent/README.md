@@ -112,9 +112,10 @@ For UI work, tell the agent how to verify:
 |----------|----------|-------------|
 | `CC_CLAUDE_CODE_OAUTH_TOKEN` | Yes* | OAuth token from `claude setup-token` (uses Pro/Max subscription) |
 | `CC_ANTHROPIC_API_KEY` | Yes* | API key (uses API credits - alternative to OAuth) |
-| `GITHUB_TOKEN` | Yes | GitHub PAT with repo access |
-| `GITHUB_REPO_URL` | Yes | HTTPS URL to repository |
-| `BRANCH_NAME` | Yes | Branch to work on |
+| `WILE_REPO_SOURCE` | No | `github` (default) or `local` |
+| `GITHUB_TOKEN` | Yes (github) | GitHub PAT with repo access |
+| `GITHUB_REPO_URL` | Yes (github) | HTTPS URL to repository |
+| `BRANCH_NAME` | Yes (github) | Branch to work on |
 | `MAX_ITERATIONS` | No | Max loops (default: 25) |
 | `CC_CLAUDE_MODEL` | No | Claude model alias/name (default: sonnet) |
 

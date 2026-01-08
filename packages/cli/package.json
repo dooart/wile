@@ -14,7 +14,8 @@
   "scripts": {
     "build": "bun build ./src/cli.ts --outdir ./dist --target node",
     "dev": "bun run ./src/cli.ts",
-    "prepublishOnly": "./build.sh"
+    "prepublishOnly": "./build.sh",
+    "test": "bun test"
   },
   "dependencies": {
     "commander": "^14.0.2",

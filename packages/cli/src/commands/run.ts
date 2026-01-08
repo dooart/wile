@@ -90,8 +90,63 @@ const runDockerWithLogging = (args: string[], logPath: string) => {
   }
 };
 
+export const buildDockerArgs = (options: {
+  repo?: string;
+  maxIterations: string;
+  test?: boolean;
+}, config: {
+  githubRepoUrl: string;
+  repoSource: "github" | "local";
+}, paths: {
+  envPath: string;
+  envProjectPath: string;
+}, cwd: string) => {
+  const dockerArgs = ["run", "--rm"];
+
+  if (options.test) {
+    dockerArgs.push(
+      "-e",
+      "WILE_TEST=true",
+      "-e",
+      "WILE_TEST_REPO_PATH=/home/wile/workspace/repo",
+      "-v",
+      `${cwd}:/home/wile/workspace/repo`
+    );
+  }
+
+  if (options.maxIterations) {
+    dockerArgs.push("-e", `MAX_ITERATIONS=${options.maxIterations}`);
+  }
+
+  const repoSource =
+    options.test || options.repo ? "github" : config.repoSource ?? "github";
+
+  if (repoSource === "local") {
+    dockerArgs.push(
+      "-e",
+      "WILE_REPO_SOURCE=local",
+      "-e",
+      "WILE_LOCAL_REPO_PATH=/home/wile/workspace/repo",
+      "-v",
+      `${cwd}:/home/wile/workspace/repo`
+    );
+  } else {
+    const repoValue = options.repo ?? config.githubRepoUrl;
+    if (repoValue) {
+      dockerArgs.push("-e", `GITHUB_REPO_URL=${repoValue}`);
+    }
+  }
+
+  const envFiles = [paths.envPath, paths.envProjectPath].filter((path) => existsSync(path));
+  for (const envFile of envFiles) {
+    dockerArgs.push("--env-file", envFile);
+  }
+
+  dockerArgs.push("wile-agent:local");
+  return dockerArgs;
+};
+
 export const runWile = (options: {
-  branch: string;
   repo?: string;
   maxIterations: string;
   test?: boolean;
@@ -130,38 +185,7 @@ export const runWile = (options: {
   const agentDir = resolveAgentDir();
   buildAgentImage(agentDir);
 
-  const dockerArgs = ["run", "--rm"];
-
-  if (options.test) {
-    dockerArgs.push(
-      "-e",
-      "WILE_TEST=true",
-      "-e",
-      "WILE_TEST_REPO_PATH=/home/wile/workspace/repo",
-      "-v",
-      `${cwd}:/home/wile/workspace/repo`
-    );
-  }
-
-  if (options.maxIterations) {
-    dockerArgs.push("-e", `MAX_ITERATIONS=${options.maxIterations}`);
-  }
-
-  const repoValue = options.repo ?? config.githubRepoUrl;
-  if (repoValue) {
-    dockerArgs.push("-e", `GITHUB_REPO_URL=${repoValue}`);
-  }
-
-  if (options.branch) {
-    dockerArgs.push("-e", `BRANCH_NAME=${options.branch}`);
-  }
-
-  const envFiles = [paths.envPath, paths.envProjectPath].filter((path) => existsSync(path));
-  for (const envFile of envFiles) {
-    dockerArgs.push("--env-file", envFile);
-  }
-
-  dockerArgs.push("wile-agent:local");
+  const dockerArgs = buildDockerArgs(options, config, paths, cwd);
 
   const logsDir = join(paths.wileDir, "logs");
   mkdirSync(logsDir, { recursive: true });

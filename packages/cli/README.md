@@ -23,6 +23,9 @@ This creates:
 - `.wile/.gitignore` to ignore `secrets/`, `screenshots/`, and `logs/`
 - `.wile/prd.json` (empty) and `.wile/prd.json.example`
 
+Set `WILE_REPO_SOURCE=local` in `.wile/secrets/.env` to run against the current directory without GitHub.
+When `WILE_REPO_SOURCE=local`, GitHub credentials are optional.
+
 ## Run Wile
 
 ```bash

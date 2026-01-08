@@ -1,5 +1,4 @@
 {
-  "branchName": "main",
   "userStories": [
     {
       "id": "US-001",
@@ -221,8 +220,8 @@
       "acceptanceCriteria": [
         "src/cli.ts parses commands: config, run",
         "wile config triggers config flow",
-        "wile run --branch=X triggers run flow",
-        "wile run --repo=X --branch=Y works for non-local",
+        "wile run triggers run flow",
+        "wile run --repo=X works for non-local",
         "Help text is clear and useful",
         "Version flag works"
       ],
@@ -243,7 +242,7 @@
         "Shows a tip describing how to obtain the selected auth",
         "When Claude Code is chosen, prompts for default model: sonnet or opus",
         "Writes .wile/secrets/.env in the current project",
-        "Required keys in .wile/secrets/.env: CODING_AGENT, GITHUB_TOKEN, GITHUB_REPO_URL, BRANCH_NAME, and one of CC_CLAUDE_CODE_OAUTH_TOKEN or CC_ANTHROPIC_API_KEY",
+        "Required keys in .wile/secrets/.env: CODING_AGENT, WILE_REPO_SOURCE, BRANCH_NAME (github only), GITHUB_TOKEN (github only), GITHUB_REPO_URL (github only), and one of CC_CLAUDE_CODE_OAUTH_TOKEN or CC_ANTHROPIC_API_KEY",
         "Writes CC_CLAUDE_MODEL in .wile/secrets/.env when Claude Code is selected",
         "Creates .wile/secrets/.env.project with a comment explaining it is forwarded into the container",
         "Creates .wile/.gitignore that ignores secrets/ and screenshots/",
@@ -276,7 +275,7 @@
         "Reads .wile/secrets/.env",
         "Reads .wile/secrets/.env.project",
         "Validates required keys are present",
-        "Required keys: CODING_AGENT=CC, GITHUB_TOKEN, GITHUB_REPO_URL, BRANCH_NAME, and one of CC_CLAUDE_CODE_OAUTH_TOKEN or CC_ANTHROPIC_API_KEY",
+        "Required keys: CODING_AGENT=CC, WILE_REPO_SOURCE, BRANCH_NAME (github only), GITHUB_TOKEN (github only), GITHUB_REPO_URL (github only), and one of CC_CLAUDE_CODE_OAUTH_TOKEN or CC_ANTHROPIC_API_KEY",
         "Returns typed config object",
         "Helpful error messages if config missing"
       ],
@@ -306,7 +305,6 @@
         "Validates .wile/prd.json exists",
         "If all stories are passes=true, exits early with friendly message",
         "If .wile is not configured, exits with message to run bunx wile config",
-        "--branch flag is required",
         "--repo flag optional (can detect from current dir)",
         "--max-iterations flag optional (default 25)",
         "--test flag runs inside Docker with mocked agent, skipping GitHub/Claude",
@@ -347,6 +345,62 @@
         "bunx wile works from a separate project repo"
       ],
       "priority": 10,
+      "passes": true,
+      "notes": "Phase 1 - CLI"
+    },
+    {
+      "id": "US-108B1",
+      "title": "Adjust agent commit guidance to one commit per feature",
+      "acceptanceCriteria": [
+        "Prompt guidance updated to prefer a single commit per feature story",
+        "Progress and PRD updates can be included in the same commit as the feature",
+        "Acceptance criteria relaxed; will be verified manually"
+      ],
+      "priority": 10,
+      "passes": true,
+      "notes": "Phase 1 - CLI"
+    },
+    {
+      "id": "US-108C",
+      "title": "Add local repo source mode (WILE_REPO_SOURCE)",
+      "acceptanceCriteria": [
+        "Introduce WILE_REPO_SOURCE env var with values: github or local",
+        "wile config asks for repo source and writes WILE_REPO_SOURCE to .wile/secrets/.env",
+        "When WILE_REPO_SOURCE=local, config skips prompts for GITHUB_TOKEN and GITHUB_REPO_URL",
+        "Config validation only requires GitHub credentials when WILE_REPO_SOURCE=github",
+        "wile run honors WILE_REPO_SOURCE unless overridden by explicit flags",
+        "Local mode mounts the current directory into the container and skips git clone",
+        "Local mode does not require GITHUB_TOKEN or GITHUB_REPO_URL",
+        "Entrypoint supports local mode by using the mounted repo path and skipping GitHub auth",
+        "CLI README documents local repo source behavior and requirements"
+      ],
+      "priority": 11,
+      "passes": true,
+      "notes": "Phase 1 - CLI"
+    },
+    {
+      "id": "US-108D",
+      "title": "Add automated tests for CLI and agent flows",
+      "acceptanceCriteria": [
+        "Add test runner configuration for packages/cli (bun:test)",
+        "Add integration test entrypoint scripts: scripts/test-local.sh and scripts/test-full.sh",
+        "scripts/test-local.sh runs config flow tests and Docker test-mode run without GitHub/Claude",
+        "scripts/test-full.sh runs everything in scripts/test-local.sh plus the real GitHub+Claude flow",
+        "Test scripts use .wile/secrets/.env.test in this repo as the source of env vars",
+        "Test scripts copy .env.test into temp repos under /tmp and always clean up via trap",
+        "Config flow tests cover each conditional fork with prompts.inject (one test per branch path, no combinatorial matrix)",
+        "Config flow tests verify .wile/secrets/.env and .wile/secrets/.env.project outputs",
+        "Config flow tests are split across multiple files by feature area",
+        "Integration test verifies Docker test mode creates .wile/logs run log",
+        "Integration test verifies entrypoint --test path updates .wile/prd.json and .wile/progress.txt",
+        "Integration test verifies env forwarding into container args via inspection or logging",
+        "Full integration test uses the wile repo with branch name integration-test",
+        "If integration-test exists, delete it before running the test",
+        "Full integration test creates a new file with a haiku and then updates it in a second step",
+        "Full integration test verifies the haiku file exists with both steps applied",
+        "Full integration test deletes the integration-test branch on completion"
+      ],
+      "priority": 12,
       "passes": true,
       "notes": "Phase 1 - CLI. STOP HERE. DO NOT CONTINUE WITHOUT HUMAN APPROVAL."
     },
@@ -444,7 +498,7 @@
         "bun build produces dist/cli.js",
         "Package published to npm as 'wile'",
         "bunx wile config works",
-        "bunx wile run --branch=X works",
+        "bunx wile run works",
         "README with full usage instructions"
       ],
       "priority": 26,
@@ -456,7 +510,7 @@
       "title": "End-to-end test",
       "acceptanceCriteria": [
         "Create test repo with simple .wile/prd.json",
-        "Run bunx wile run --repo=test --branch=test",
+        "Run bunx wile run --repo=test",
         "Verify EC2 spawns",
         "Verify commits appear on branch",
         "Verify instance self-terminates",

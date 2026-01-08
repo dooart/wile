@@ -248,23 +248,44 @@ export const runConfig = async () => {
     initial: existingEnv.CC_CLAUDE_MODEL === "opus" ? 1 : 0
   });
 
-  console.log("");
-  console.log(tips.github);
-  console.log("");
-
-  const githubTokenResponse = await prompt({
-    type: "password",
-    name: "githubToken",
-    message: "GitHub token (press enter to keep existing)",
-    initial: existingEnv.GITHUB_TOKEN ?? ""
+  const repoSourceResponse = await prompt({
+    type: "select",
+    name: "repoSource",
+    message: "Repo source",
+    choices: [
+      { title: "GitHub (remote)", value: "github" },
+      { title: "Local directory (no GitHub)", value: "local" }
+    ],
+    initial: existingEnv.WILE_REPO_SOURCE === "local" ? 1 : 0
   });
 
-  const repoResponse = await prompt({
-    type: "text",
-    name: "repoUrl",
-    message: "GitHub repo URL",
-    initial: existingEnv.GITHUB_REPO_URL ?? ""
-  });
+  const repoSource = repoSourceResponse.repoSource as "github" | "local";
+
+  if (repoSource === "github") {
+    console.log("");
+    console.log(tips.github);
+    console.log("");
+  }
+
+  const githubTokenResponse =
+    repoSource === "github"
+      ? await prompt({
+          type: "password",
+          name: "githubToken",
+          message: "GitHub token (press enter to keep existing)",
+          initial: existingEnv.GITHUB_TOKEN ?? ""
+        })
+      : { githubToken: undefined };
+
+  const repoResponse =
+    repoSource === "github"
+      ? await prompt({
+          type: "text",
+          name: "repoUrl",
+          message: "GitHub repo URL",
+          initial: existingEnv.GITHUB_REPO_URL ?? ""
+        })
+      : { repoUrl: undefined };
 
   const branchResponse = await prompt({
     type: "text",
@@ -278,11 +299,14 @@ export const runConfig = async () => {
       ? existingEnv.CC_CLAUDE_CODE_OAUTH_TOKEN
       : existingEnv.CC_ANTHROPIC_API_KEY;
   const authValue = coalesceValue(authValueResponse.authValue, authFallback);
-  const githubToken = coalesceValue(
-    githubTokenResponse.githubToken,
-    existingEnv.GITHUB_TOKEN
-  );
-  const repoUrl = coalesceValue(repoResponse.repoUrl, existingEnv.GITHUB_REPO_URL);
+  const githubToken =
+    repoSource === "github"
+      ? coalesceValue(githubTokenResponse.githubToken, existingEnv.GITHUB_TOKEN)
+      : existingEnv.GITHUB_TOKEN;
+  const repoUrl =
+    repoSource === "github"
+      ? coalesceValue(repoResponse.repoUrl, existingEnv.GITHUB_REPO_URL)
+      : existingEnv.GITHUB_REPO_URL;
   const branchName = coalesceValue(
     branchResponse.branchName,
     existingEnv.BRANCH_NAME ?? "main"
@@ -290,6 +314,7 @@ export const runConfig = async () => {
 
   const envLines = [
     "CODING_AGENT=CC",
+    `WILE_REPO_SOURCE=${repoSource}`,
     `GITHUB_TOKEN=${githubToken ?? ""}`,
     `GITHUB_REPO_URL=${repoUrl ?? ""}`,
     `BRANCH_NAME=${branchName ?? "main"}`,
