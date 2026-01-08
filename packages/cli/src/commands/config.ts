@@ -347,7 +347,7 @@ export const runConfig = async () => {
   const hadAdditionalInstructions = existsSync(additionalInstructionsPath);
   await writeIfMissing(
     additionalInstructionsPath,
-    "# Additional Instructions\n\nAdd project-specific guidance for the agent here.\n"
+    ""
   );
 
   console.log("\nWile config complete.");
