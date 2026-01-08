@@ -45,6 +45,7 @@ else
 fi
 
 git -C "$ROOT_DIR" tag "v$VERSION"
+git -C "$ROOT_DIR" push
 git -C "$ROOT_DIR" push --tags
 
 echo "published v$VERSION"
