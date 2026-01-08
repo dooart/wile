@@ -26,7 +26,7 @@ This creates:
 ## Run Wile
 
 ```bash
-bunx wile run --branch main
+bunx wile run
 ```
 
 Optional flags:
@@ -38,3 +38,17 @@ Optional flags:
 ## Logs
 
 Each run writes a session log to `.wile/logs/run-YYYYMMDD_HHMMSS.log`.
+
+## Publish
+
+Release (bump version + build):
+
+```bash
+./scripts/release-cli.sh patch
+```
+
+Publish:
+
+```bash
+./scripts/publish-cli.sh
+```
