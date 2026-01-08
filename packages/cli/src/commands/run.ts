@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, mkdirSync, createWriteStream, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { resolve, join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -21,6 +21,7 @@ const validateGitignore = (path: string) => {
   const missing: string[] = [];
   if (!contents.includes("secrets/")) missing.push("secrets/");
   if (!contents.includes("screenshots/")) missing.push("screenshots/");
+  if (!contents.includes("logs/")) missing.push("logs/");
   if (missing.length > 0) {
     throw new Error(
       `Missing ${missing.join(", ")} in .berserk/.gitignore. Run 'bunx berserk config'.`
@@ -44,13 +45,6 @@ const buildAgentImage = (agentDir: string) => {
   }
 };
 
-const runDocker = (args: string[]) => {
-  const result = spawnSync("docker", args, { stdio: "inherit" });
-  if (result.status !== 0) {
-    throw new Error("Docker run failed.");
-  }
-};
-
 const resolveAgentDir = () => {
   const override = process.env.BERSERK_AGENT_DIR;
   if (override && existsSync(override)) {
@@ -63,6 +57,37 @@ const resolveAgentDir = () => {
     throw new Error("Unable to locate packages/agent. Run from the monorepo.");
   }
   return agentDir;
+};
+
+const getTimestamp = () => {
+  const now = new Date();
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(
+    now.getHours()
+  )}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+};
+
+const runDockerWithLogging = (args: string[], logPath: string) => {
+  const logStream = createWriteStream(logPath, { flags: "a" });
+  const result = spawnSync("docker", args, {
+    stdio: ["inherit", "pipe", "pipe"]
+  });
+
+  if (result.stdout) {
+    process.stdout.write(result.stdout);
+    logStream.write(result.stdout);
+  }
+
+  if (result.stderr) {
+    process.stderr.write(result.stderr);
+    logStream.write(result.stderr);
+  }
+
+  logStream.end();
+
+  if (result.status !== 0) {
+    throw new Error("Docker run failed.");
+  }
 };
 
 export const runBerserk = (options: {
@@ -138,11 +163,19 @@ export const runBerserk = (options: {
 
   dockerArgs.push("berserk-agent:local");
 
+  const logsDir = join(paths.berserkDir, "logs");
+  mkdirSync(logsDir, { recursive: true });
+  const logPath = join(logsDir, `run-${getTimestamp()}.log`);
+
   if (options.test) {
-    console.log("TEST MODE: running mocked agent inside Docker.");
+    const message = "TEST MODE: running mocked agent inside Docker.\n";
+    process.stdout.write(message);
+    writeFileSync(logPath, message, { flag: "a" });
   }
 
-  runDocker(dockerArgs);
+  runDockerWithLogging(dockerArgs, logPath);
 
-  console.log("Berserk run complete. Monitor progress with git log in your repo.");
+  const finishMessage = "Berserk run complete. Monitor progress with git log in your repo.\n";
+  process.stdout.write(finishMessage);
+  writeFileSync(logPath, finishMessage, { flag: "a" });
 };

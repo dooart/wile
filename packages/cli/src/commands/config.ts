@@ -113,7 +113,7 @@ const readEnvFile = async (path: string) => {
 };
 
 const ensureGitignore = async (path: string) => {
-  const entries = ["secrets/", "screenshots/"];
+  const entries = ["secrets/", "screenshots/", "logs/"];
   if (!existsSync(path)) {
     await writeFile(path, entries.join("\n") + "\n");
     return;

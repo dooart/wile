@@ -316,10 +316,23 @@
         "In --test mode, sets BERSERK_TEST=true to trigger mocked agent behavior in the container",
         "In --test mode, entrypoint uses the mounted repo path instead of cloning from GitHub",
         "Forwards .berserk/secrets/.env and .berserk/secrets/.env.project into the container",
-        "Shows how to monitor progress (git log, etc)",
-        "STOP HERE. DO NOT CONTINUE WITHOUT HUMAN APPROVAL"
+        "Shows how to monitor progress (git log, etc)"
       ],
       "priority": 8,
+      "passes": true,
+      "notes": "Phase 1 - CLI."
+    },
+    {
+      "id": "US-108A",
+      "title": "Add run session logging to .berserk/logs",
+      "acceptanceCriteria": [
+        "berserk config ensures .berserk/.gitignore includes logs/",
+        "berserk run creates .berserk/logs/run-YYYYMMDD_HHMMSS.log before executing",
+        "CLI run output is streamed to console and appended to the log file",
+        "--test runs also write log files under .berserk/logs",
+        "Test verifies log file exists and includes mocked test mode output"
+      ],
+      "priority": 9,
       "passes": true,
       "notes": "Phase 1 - CLI. STOP HERE. DO NOT CONTINUE WITHOUT HUMAN APPROVAL."
     },
