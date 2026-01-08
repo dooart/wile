@@ -177,7 +177,6 @@ if [ ! -f ".wile/prd.json" ]; then
   echo ""
   echo "Example structure:"
   echo '  {'
-  echo '    "branchName": "main",'
   echo '    "userStories": ['
   echo '      {'
   echo '        "id": "US-001",'

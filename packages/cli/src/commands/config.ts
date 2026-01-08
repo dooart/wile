@@ -5,7 +5,6 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 const prdExample = {
-  branchName: "main",
   userStories: [
     {
       id: "US-001",
@@ -101,7 +100,9 @@ const tips = {
   oauth:
     "Tip: run 'claude setup-token' on your machine to generate an OAuth token (uses Pro/Max subscription).",
   apiKey:
-    "Tip: create an Anthropic API key in the console (uses API credits)."
+    "Tip: create an Anthropic API key in the console (uses API credits).",
+  github:
+    "Tip: use a GitHub Personal Access Token (fine-grained recommended). Create at https://github.com/settings/tokens?type=beta with Contents (read/write) and Metadata (read)."
 };
 
 const readEnvFile = async (path: string) => {
@@ -247,6 +248,10 @@ export const runConfig = async () => {
     initial: existingEnv.CC_CLAUDE_MODEL === "opus" ? 1 : 0
   });
 
+  console.log("");
+  console.log(tips.github);
+  console.log("");
+
   const githubTokenResponse = await prompt({
     type: "password",
     name: "githubToken",
@@ -307,11 +312,7 @@ export const runConfig = async () => {
   );
 
   if (!existsSync(prdPath)) {
-    const prdContents = JSON.stringify(
-      { branchName: branchName ?? "main", userStories: [] },
-      null,
-      2
-    );
+    const prdContents = JSON.stringify({ userStories: [] }, null, 2);
     await writeFile(prdPath, prdContents + "\n");
   }
 

@@ -21,7 +21,7 @@ Check the **Codebase Patterns** section at the top for learnings from previous i
 git branch --show-current
 git status
 ```
-Ensure you're on the correct branch specified in `.wile/prd.json`.
+Ensure you're on the correct branch specified by the `BRANCH_NAME` environment variable.
 
 ### 4. Implement the Story
 Pick the highest priority story where `passes: false` and implement it completely.

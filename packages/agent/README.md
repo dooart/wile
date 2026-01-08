@@ -49,7 +49,6 @@ your-repo/
 
 ```json
 {
-  "branchName": "feature/my-feature",
   "userStories": [
     {
       "id": "US-001",
