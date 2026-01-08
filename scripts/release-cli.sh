@@ -24,7 +24,29 @@ fi
 
 cd "$CLI_DIR"
 
-npm version "$1" --no-git-tag-version
+node - "$1" <<'NODE'
+const fs = require("fs");
+const path = require("path");
+
+const bump = process.argv[1];
+const file = path.join(process.cwd(), "package.json");
+const data = JSON.parse(fs.readFileSync(file, "utf8"));
+const [major, minor, patch] = (data.version || "0.0.0").split(".").map(Number);
+
+let next;
+if (bump === "major") {
+  next = [major + 1, 0, 0];
+} else if (bump === "minor") {
+  next = [major, minor + 1, 0];
+} else if (bump === "patch") {
+  next = [major, minor, patch + 1];
+} else {
+  throw new Error("invalid bump");
+}
+
+data.version = next.join(".");
+fs.writeFileSync(file, JSON.stringify(data, null, 2) + "\n");
+NODE
 VERSION=$(node -p "require('./package.json').version")
 
 git -C "$ROOT_DIR" add "$CLI_DIR/package.json" "$CLI_DIR/package-lock.json" 2>/dev/null || true
