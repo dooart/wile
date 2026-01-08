@@ -10,7 +10,7 @@ test("run command forwards env files into docker args", async () => {
     const secretsDir = join(wileDir, "secrets");
     await mkdir(secretsDir, { recursive: true });
     await writeFile(join(secretsDir, ".env"), "CODING_AGENT=CC\n");
-    await writeFile(join(secretsDir, ".env.project"), "ENV_FORWARD_TEST=ok\n");
+    await writeFile(join(secretsDir, ".env.project"), "TEST_FORWARD=ok\n");
 
     const args = buildDockerArgs(
       { maxIterations: "25" },

@@ -142,6 +142,12 @@ export const buildDockerArgs = (options: {
     dockerArgs.push("--env-file", envFile);
   }
 
+  const additionalInstructionsPath = join(paths.wileDir, "additional-instructions.md");
+  if (existsSync(additionalInstructionsPath)) {
+    dockerArgs.push("-e", `WILE_ADDITIONAL_INSTRUCTIONS=${additionalInstructionsPath}`);
+    dockerArgs.push("-v", `${additionalInstructionsPath}:${additionalInstructionsPath}`);
+  }
+
   dockerArgs.push("wile-agent:local");
   return dockerArgs;
 };

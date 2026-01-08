@@ -189,6 +189,7 @@ export const runConfig = async () => {
   const gitignorePath = join(wileDir, ".gitignore");
   const prdPath = join(wileDir, "prd.json");
   const prdExamplePath = join(wileDir, "prd.json.example");
+  const additionalInstructionsPath = join(wileDir, "additional-instructions.md");
 
   await mkdir(secretsDir, { recursive: true });
 
@@ -343,8 +344,19 @@ export const runConfig = async () => {
 
   await writeIfMissing(prdExamplePath, JSON.stringify(prdExample, null, 2) + "\n");
 
+  const hadAdditionalInstructions = existsSync(additionalInstructionsPath);
+  await writeIfMissing(
+    additionalInstructionsPath,
+    "# Additional Instructions\n\nAdd project-specific guidance for the agent here.\n"
+  );
+
   console.log("\nWile config complete.");
   console.log(
     "Add project env vars to .wile/secrets/.env.project when needed."
   );
+  if (!hadAdditionalInstructions) {
+    console.log(
+      "Created .wile/additional-instructions.md for extra agent guidance (optional)."
+    );
+  }
 };

@@ -69,6 +69,7 @@ fi
 
 REPO_SOURCE="${WILE_REPO_SOURCE:-github}"
 LOCAL_REPO_PATH="${WILE_LOCAL_REPO_PATH:-/home/wile/workspace/repo}"
+ADDITIONAL_INSTRUCTIONS_PATH="${WILE_ADDITIONAL_INSTRUCTIONS:-}"
 
 if [ "$REPO_SOURCE" = "local" ]; then
   if [ ! -d "$LOCAL_REPO_PATH" ]; then
@@ -183,6 +184,12 @@ else
     echo "Branch $BRANCH_NAME does not exist remotely. Creating it..."
     git checkout -b "$BRANCH_NAME"
     git push -u origin "$BRANCH_NAME"
+  fi
+fi
+
+if [ -n "$ADDITIONAL_INSTRUCTIONS_PATH" ] && [ -f "$ADDITIONAL_INSTRUCTIONS_PATH" ]; then
+  if [ -s "$ADDITIONAL_INSTRUCTIONS_PATH" ]; then
+    echo "  Extra:      Using additional instructions"
   fi
 fi
 

@@ -11,6 +11,7 @@ CLAUDE_MODEL=${CC_CLAUDE_MODEL:-sonnet}
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROMPT_FILE="$SCRIPT_DIR/prompt.md"
 SETUP_PROMPT_FILE="$SCRIPT_DIR/prompt-setup.md"
+ADDITIONAL_PROMPT_FILE="${WILE_ADDITIONAL_INSTRUCTIONS:-}"
 
 echo "══════════════════════════════════════════════════════"
 echo "  🗡️  WILE - Autonomous Coding Agent"
@@ -24,6 +25,17 @@ echo ""
 if [ ! -f "$PROMPT_FILE" ]; then
   echo "ERROR: Prompt file not found: $PROMPT_FILE"
   exit 1
+fi
+
+if [ -n "$ADDITIONAL_PROMPT_FILE" ] && [ -f "$ADDITIONAL_PROMPT_FILE" ]; then
+  if [ -s "$ADDITIONAL_PROMPT_FILE" ]; then
+    if [ -n "$(tr -d '[:space:]' < "$ADDITIONAL_PROMPT_FILE")" ]; then
+      PROMPT_FILE="/tmp/wile-prompt.md"
+      cat "$SCRIPT_DIR/prompt.md" > "$PROMPT_FILE"
+      printf "\n\n" >> "$PROMPT_FILE"
+      cat "$ADDITIONAL_PROMPT_FILE" >> "$PROMPT_FILE"
+    fi
+  fi
 fi
 
 # ════════════════════════════════════════════════════════════

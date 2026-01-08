@@ -166,7 +166,7 @@
         "GITHUB_REPO_URL documented",
         "BRANCH_NAME documented",
         "MAX_ITERATIONS documented (default 25)",
-        "ENV_FORWARD_* pattern documented for project env vars",
+        "Project env vars are forwarded from .env.project",
         "packages/agent/README.md with usage instructions"
       ],
       "priority": 11,
@@ -248,6 +248,7 @@
         "Creates .wile/.gitignore that ignores secrets/ and screenshots/",
         "Creates .wile/prd.json if missing with an empty userStories array",
         "Creates .wile/prd.json.example with the first 6 stories from the test-tictactoe example",
+        "Creates .wile/additional-instructions.md if missing for optional extra agent guidance",
         "Re-running config allows pressing enter to keep existing values",
         "Shows a success message and tells the user to add project env vars to .wile/secrets/.env.project"
       ],
