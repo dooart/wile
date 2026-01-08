@@ -10,6 +10,11 @@
     "build": "bun build ./src/cli.ts --outdir ./dist --target node",
     "dev": "bun run ./src/cli.ts"
   },
+  "dependencies": {
+    "commander": "^14.0.2",
+    "dotenv": "^17.2.3",
+    "prompts": "^2.4.2"
+  },
   "keywords": [
     "ai",
     "coding",
