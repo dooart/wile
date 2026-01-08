@@ -1,5 +1,5 @@
 {
-  "name": "berserk-monorepo",
+  "name": "wile-monorepo",
   "private": true,
   "workspaces": [
     "packages/*"

@@ -23,7 +23,7 @@
         "Based on Ubuntu 22.04 LTS",
         "Installs: git, curl, bun, Node.js 20 LTS",
         "Installs: Python 3.11 with pip",
-        "Sets up non-root user 'berserk'",
+        "Sets up non-root user 'wile'",
         "Configures swap (8GB), zswap with lz4, earlyoom",
         "Sets vm.swappiness=10",
         "Sets NODE_OPTIONS=--max-old-space-size=4096"
@@ -59,9 +59,9 @@
     },
     {
       "id": "US-005",
-      "title": "Create berserk.sh main loop script",
+      "title": "Create wile.sh main loop script",
       "acceptanceCriteria": [
-        "packages/agent/scripts/berserk.sh exists",
+        "packages/agent/scripts/wile.sh exists",
         "Accepts MAX_ITERATIONS as argument (default 25)",
         "Reads prompt from packages/agent/scripts/prompt.md",
         "Pipes prompt to claude --dangerously-skip-permissions",
@@ -78,14 +78,14 @@
       "title": "Create prompt.md agent instructions",
       "acceptanceCriteria": [
         "packages/agent/scripts/prompt.md exists",
-        "Instructions to read berserk.json from repo root",
-        "Instructions to read .berserk-temp/progress.txt",
+        "Instructions to read .wile/prd.json from repo root",
+        "Instructions to read .wile-temp/progress.txt",
         "Instructions to pick highest priority story where passes=false",
         "Instructions to implement ONE story per iteration",
         "Instructions to run tests and typecheck",
         "Instructions to commit with format: feat: [ID] - [Title]",
         "Instructions to push after each commit",
-        "Instructions to update berserk.json passes=true",
+        "Instructions to update .wile/prd.json passes=true",
         "Instructions to append learnings to progress.txt",
         "Stop condition: reply <promise>COMPLETE</promise> when all pass"
       ],
@@ -100,16 +100,16 @@
         "packages/agent/entrypoint.sh exists",
         "Clones repo from GITHUB_REPO_URL env var",
         "Checks out BRANCH_NAME env var",
-        "Creates .berserk-temp/ directory",
-        "Nukes .berserk-temp/ if it exists",
-        "Adds .berserk-temp/ to .gitignore if not present",
-        "Creates initial .berserk-temp/progress.txt",
+        "Creates .wile-temp/ directory",
+        "Nukes .wile-temp/ if it exists",
+        "Adds .wile-temp/ to .gitignore if not present",
+        "Creates initial .wile-temp/progress.txt",
         "Commits gitignore changes",
         "Pushes initial commit",
-        "Runs berserk.sh with MAX_ITERATIONS",
+        "Runs wile.sh with MAX_ITERATIONS",
         "On completion: ensures final state is pushed",
         "On partial completion: commits WIP with explanation",
-        "On no changes: creates .berserk-temp/failed-{timestamp}.txt"
+        "On no changes: creates .wile-temp/failed-{timestamp}.txt"
       ],
       "priority": 7,
       "passes": true,
@@ -119,9 +119,9 @@
       "id": "US-008",
       "title": "Configure git in Docker",
       "acceptanceCriteria": [
-        "Git configured with berserk bot identity",
-        "user.name = 'Berserk Bot'",
-        "user.email = 'berserk@bot.local'",
+        "Git configured with wile bot identity",
+        "user.name = 'Wile Bot'",
+        "user.email = 'wile@bot.local'",
         "GitHub token auth works via GITHUB_TOKEN env var",
         "Can clone, commit, push to private repos"
       ],
@@ -150,7 +150,7 @@
         "prompt.md includes instructions for browser verification",
         "When acceptance criteria mention UI/visual checks",
         "Agent should use Playwright to screenshot",
-        "Screenshots saved to .berserk-temp/screenshots/",
+        "Screenshots saved to .wile-temp/screenshots/",
         "Include browser-test.ts usage examples in prompt"
       ],
       "priority": 10,
@@ -180,7 +180,7 @@
       "acceptanceCriteria": [
         "Can run docker compose up --build successfully",
         "Container clones a test repo",
-        "Container creates branch and .berserk-temp/",
+        "Container creates branch and .wile-temp/",
         "Container runs at least one iteration",
         "Container commits and pushes changes",
         "Logs are visible and informative"
@@ -195,7 +195,7 @@
       "acceptanceCriteria": [
         "packages/cli/package.json configured properly",
         "bin field points to dist/cli.js",
-        "name is 'berserk'",
+        "name is 'wile'",
         "TypeScript configured with tsconfig.json",
         "Entry point src/cli.ts with shebang #!/usr/bin/env node"
       ],
@@ -220,9 +220,9 @@
       "title": "Create CLI entry point with commander",
       "acceptanceCriteria": [
         "src/cli.ts parses commands: config, run",
-        "berserk config triggers config flow",
-        "berserk run --branch=X triggers run flow",
-        "berserk run --repo=X --branch=Y works for non-local",
+        "wile config triggers config flow",
+        "wile run --branch=X triggers run flow",
+        "wile run --repo=X --branch=Y works for non-local",
         "Help text is clear and useful",
         "Version flag works"
       ],
@@ -232,7 +232,7 @@
     },
     {
       "id": "US-104",
-      "title": "Implement 'berserk config' command",
+      "title": "Implement 'wile config' command",
       "acceptanceCriteria": [
         "Uses prompts for interactive prompts and inject-based testing",
         "Prompts for GitHub token (password input)",
@@ -242,15 +242,15 @@
         "Radio prompt for Claude Code auth: OAuth token vs API key",
         "Shows a tip describing how to obtain the selected auth",
         "When Claude Code is chosen, prompts for default model: sonnet or opus",
-        "Writes .berserk/secrets/.env in the current project",
-        "Required keys in .berserk/secrets/.env: CODING_AGENT, GITHUB_TOKEN, GITHUB_REPO_URL, BRANCH_NAME, and one of CC_CLAUDE_CODE_OAUTH_TOKEN or CC_ANTHROPIC_API_KEY",
-        "Writes CC_CLAUDE_MODEL in .berserk/secrets/.env when Claude Code is selected",
-        "Creates .berserk/secrets/.env.project with a comment explaining it is forwarded into the container",
-        "Creates .berserk/.gitignore that ignores secrets/ and screenshots/",
-        "Creates .berserk/prd.json if missing with an empty userStories array",
-        "Creates .berserk/prd.json.example with the first 6 stories from the test-tictactoe example",
+        "Writes .wile/secrets/.env in the current project",
+        "Required keys in .wile/secrets/.env: CODING_AGENT, GITHUB_TOKEN, GITHUB_REPO_URL, BRANCH_NAME, and one of CC_CLAUDE_CODE_OAUTH_TOKEN or CC_ANTHROPIC_API_KEY",
+        "Writes CC_CLAUDE_MODEL in .wile/secrets/.env when Claude Code is selected",
+        "Creates .wile/secrets/.env.project with a comment explaining it is forwarded into the container",
+        "Creates .wile/.gitignore that ignores secrets/ and screenshots/",
+        "Creates .wile/prd.json if missing with an empty userStories array",
+        "Creates .wile/prd.json.example with the first 6 stories from the test-tictactoe example",
         "Re-running config allows pressing enter to keep existing values",
-        "Shows a success message and tells the user to add project env vars to .berserk/secrets/.env.project"
+        "Shows a success message and tells the user to add project env vars to .wile/secrets/.env.project"
       ],
       "priority": 4,
       "passes": true,
@@ -260,7 +260,7 @@
       "id": "US-105",
       "title": "Implement .env.project handling in config",
       "acceptanceCriteria": [
-        "After config, creates .berserk/secrets/.env.project",
+        "After config, creates .wile/secrets/.env.project",
         "Includes a comment explaining env vars in this file are forwarded into the container",
         "File is created if missing and preserved on rerun"
       ],
@@ -273,8 +273,8 @@
       "title": "Create config reading utilities",
       "acceptanceCriteria": [
         "src/lib/config.ts exists",
-        "Reads .berserk/secrets/.env",
-        "Reads .berserk/secrets/.env.project",
+        "Reads .wile/secrets/.env",
+        "Reads .wile/secrets/.env.project",
         "Validates required keys are present",
         "Required keys: CODING_AGENT=CC, GITHUB_TOKEN, GITHUB_REPO_URL, BRANCH_NAME, and one of CC_CLAUDE_CODE_OAUTH_TOKEN or CC_ANTHROPIC_API_KEY",
         "Returns typed config object",
@@ -298,24 +298,24 @@
     },
     {
       "id": "US-108",
-      "title": "Implement 'berserk run' command",
+      "title": "Implement 'wile run' command",
       "acceptanceCriteria": [
-        "Reads config from .berserk/secrets",
-        "Validates .berserk is configured: .berserk/.gitignore includes secrets/ and screenshots/",
-        "Validates .berserk/secrets/.env exists and has required keys",
-        "Validates .berserk/prd.json exists",
+        "Reads config from .wile/secrets",
+        "Validates .wile is configured: .wile/.gitignore includes secrets/ and screenshots/",
+        "Validates .wile/secrets/.env exists and has required keys",
+        "Validates .wile/prd.json exists",
         "If all stories are passes=true, exits early with friendly message",
-        "If .berserk is not configured, exits with message to run bunx berserk config",
+        "If .wile is not configured, exits with message to run bunx wile config",
         "--branch flag is required",
         "--repo flag optional (can detect from current dir)",
         "--max-iterations flag optional (default 25)",
         "--test flag runs inside Docker with mocked agent, skipping GitHub/Claude",
         "In --test mode, skips .env required key validation",
         "In --test mode, mounts the current directory into the container and applies changes locally",
-        "In --test mode, forwards .berserk/secrets/.env and .berserk/secrets/.env.project into the container for inspection",
-        "In --test mode, sets BERSERK_TEST=true to trigger mocked agent behavior in the container",
+        "In --test mode, forwards .wile/secrets/.env and .wile/secrets/.env.project into the container for inspection",
+        "In --test mode, sets WILE_TEST=true to trigger mocked agent behavior in the container",
         "In --test mode, entrypoint uses the mounted repo path instead of cloning from GitHub",
-        "Forwards .berserk/secrets/.env and .berserk/secrets/.env.project into the container",
+        "Forwards .wile/secrets/.env and .wile/secrets/.env.project into the container",
         "Shows how to monitor progress (git log, etc)"
       ],
       "priority": 8,
@@ -324,16 +324,30 @@
     },
     {
       "id": "US-108A",
-      "title": "Add run session logging to .berserk/logs",
+      "title": "Add run session logging to .wile/logs",
       "acceptanceCriteria": [
-        "berserk config ensures .berserk/.gitignore includes logs/",
-        "berserk run creates .berserk/logs/run-YYYYMMDD_HHMMSS.log before executing",
+        "wile config ensures .wile/.gitignore includes logs/",
+        "wile run creates .wile/logs/run-YYYYMMDD_HHMMSS.log before executing",
         "CLI run output is streamed to console and appended to the log file",
-        "--test runs also write log files under .berserk/logs",
+        "--test runs also write log files under .wile/logs",
         "Test verifies log file exists and includes mocked test mode output"
       ],
       "priority": 9,
       "passes": true,
+      "notes": "Phase 1 - CLI"
+    },
+    {
+      "id": "US-108B",
+      "title": "Publish CLI to npm for bunx usage",
+      "acceptanceCriteria": [
+        "CLI build produces dist/cli.js with executable shebang",
+        "Package metadata is ready for npm publish (name, version, description)",
+        "README includes setup, config, and run instructions",
+        "npm publish succeeds under user account",
+        "bunx wile works from a separate project repo"
+      ],
+      "priority": 10,
+      "passes": false,
       "notes": "Phase 1 - CLI. STOP HERE. DO NOT CONTINUE WITHOUT HUMAN APPROVAL."
     },
     {
@@ -346,7 +360,7 @@
         "Uses Ubuntu 22.04 AMI",
         "Configures security group for outbound only",
         "Passes UserData script for bootstrap",
-        "Tags instance with berserk metadata",
+        "Tags instance with wile metadata",
         "Returns instance ID"
       ],
       "priority": 20,
@@ -359,7 +373,7 @@
       "acceptanceCriteria": [
         "src/lib/userdata.ts generates bash script",
         "Installs Docker",
-        "Pulls berserk Docker image from registry",
+        "Pulls wile Docker image from registry",
         "Passes all env vars to container",
         "Runs container with appropriate flags",
         "Schedules self-termination on completion",
@@ -400,9 +414,9 @@
     },
     {
       "id": "US-113",
-      "title": "Add 'berserk status' command",
+      "title": "Add 'wile status' command",
       "acceptanceCriteria": [
-        "Lists running berserk EC2 instances",
+        "Lists running wile EC2 instances",
         "Shows instance ID, repo, branch, uptime",
         "Shows status (running, terminated)",
         "Can filter by repo"
@@ -413,9 +427,9 @@
     },
     {
       "id": "US-114",
-      "title": "Add 'berserk stop' command",
+      "title": "Add 'wile stop' command",
       "acceptanceCriteria": [
-        "Terminates a running berserk instance by ID",
+        "Terminates a running wile instance by ID",
         "Confirms before terminating",
         "Shows success message"
       ],
@@ -428,9 +442,9 @@
       "title": "Build and publish CLI to npm",
       "acceptanceCriteria": [
         "bun build produces dist/cli.js",
-        "Package published to npm as 'berserk'",
-        "bunx berserk config works",
-        "bunx berserk run --branch=X works",
+        "Package published to npm as 'wile'",
+        "bunx wile config works",
+        "bunx wile run --branch=X works",
         "README with full usage instructions"
       ],
       "priority": 26,
@@ -441,8 +455,8 @@
       "id": "US-116",
       "title": "End-to-end test",
       "acceptanceCriteria": [
-        "Create test repo with simple berserk.json",
-        "Run bunx berserk run --repo=test --branch=test",
+        "Create test repo with simple .wile/prd.json",
+        "Run bunx wile run --repo=test --branch=test",
         "Verify EC2 spawns",
         "Verify commits appear on branch",
         "Verify instance self-terminates",

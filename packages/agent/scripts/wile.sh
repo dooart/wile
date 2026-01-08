@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Berserk - Autonomous AI coding loop
+# Wile - Autonomous AI coding loop
 # Pipes prompt to Claude Code repeatedly until all tasks complete
 #
 
@@ -13,7 +13,7 @@ PROMPT_FILE="$SCRIPT_DIR/prompt.md"
 SETUP_PROMPT_FILE="$SCRIPT_DIR/prompt-setup.md"
 
 echo "══════════════════════════════════════════════════════"
-echo "  🗡️  BERSERK - Autonomous Coding Agent"
+echo "  🗡️  WILE - Autonomous Coding Agent"
 echo "══════════════════════════════════════════════════════"
 echo "  Max iterations: $MAX_ITERATIONS"
 echo "  Model:          $CLAUDE_MODEL"

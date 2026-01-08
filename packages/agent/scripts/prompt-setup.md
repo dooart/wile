@@ -1,13 +1,13 @@
-# Berserk Setup (Iteration 0)
+# Wile Setup (Iteration 0)
 
-You are running the setup phase for a Berserk autonomous coding session.
+You are running the setup phase for a Wile autonomous coding session.
 
 ## Tasks
 
-1. Verify `.berserk/prd.json` exists and is valid JSON:
+1. Verify `.wile/prd.json` exists and is valid JSON:
 
 ```bash
-cat .berserk/prd.json
+cat .wile/prd.json
 ```
 
 If the file is missing or invalid JSON, respond with:

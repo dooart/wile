@@ -1,4 +1,4 @@
-# Berserk Agent Instructions
+# Wile Agent Instructions
 
 You are an autonomous coding agent running in a loop. Each iteration, you complete ONE user story from the backlog, then exit. The loop will call you again for the next story.
 
@@ -6,13 +6,13 @@ You are an autonomous coding agent running in a loop. Each iteration, you comple
 
 ### 1. Read the Backlog
 ```bash
-cat .berserk/prd.json
+cat .wile/prd.json
 ```
 Parse the `userStories` array. Find the highest priority story where `passes: false`.
 
 ### 2. Read Progress Log
 ```bash
-cat .berserk/progress.txt
+cat .wile/progress.txt
 ```
 Check the **Codebase Patterns** section at the top for learnings from previous iterations. Apply these patterns to avoid repeating mistakes.
 
@@ -21,7 +21,7 @@ Check the **Codebase Patterns** section at the top for learnings from previous i
 git branch --show-current
 git status
 ```
-Ensure you're on the correct branch specified in `.berserk/prd.json`.
+Ensure you're on the correct branch specified in `.wile/prd.json`.
 
 ### 4. Implement the Story
 Pick the highest priority story where `passes: false` and implement it completely.
@@ -48,23 +48,23 @@ git commit -m "feat: [STORY-ID] - [Story Title]"
 git push
 ```
 
-Use the exact story ID and title from `.berserk/prd.json`.
+Use the exact story ID and title from `.wile/prd.json`.
 
 ### 7. Update prd.json
 Set `passes: true` for the completed story:
 ```bash
-# Edit .berserk/prd.json to mark the story as complete
+# Edit .wile/prd.json to mark the story as complete
 ```
 
 Commit and push this change:
 ```bash
-git add .berserk/prd.json
+git add .wile/prd.json
 git commit -m "chore: mark [STORY-ID] complete"
 git push
 ```
 
 ### 8. Log Your Progress
-**APPEND** to `.berserk/progress.txt`:
+**APPEND** to `.wile/progress.txt`:
 
 ```markdown
 ---
@@ -88,14 +88,14 @@ If you discovered important patterns, also add them to the **Codebase Patterns**
 
 Commit and push:
 ```bash
-git add .berserk/progress.txt
+git add .wile/progress.txt
 git commit -m "docs: log progress for [STORY-ID]"
 git push
 ```
 
 ## Stop Condition
 
-After completing steps 1-8, check if ALL stories in `.berserk/prd.json` have `passes: true`.
+After completing steps 1-8, check if ALL stories in `.wile/prd.json` have `passes: true`.
 
 **If ALL stories pass**, respond with exactly:
 ```
@@ -146,7 +146,7 @@ const { chromium } = require('playwright');
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('http://localhost:3000/your-page');
   await page.waitForLoadState('networkidle');
-  await page.screenshot({ path: '.berserk/screenshots/verification.png', fullPage: true });
+  await page.screenshot({ path: '.wile/screenshots/verification.png', fullPage: true });
   console.log('Screenshot saved');
   await browser.close();
 })();
@@ -169,7 +169,7 @@ const { chromium } = require('playwright');
 "
 ```
 
-Save screenshots to `.berserk/screenshots/` with descriptive names.
+Save screenshots to `.wile/screenshots/` with descriptive names.
 
 ## Error Recovery
 

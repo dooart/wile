@@ -30,9 +30,9 @@ RUN add-apt-repository ppa:deadsnakes/ppa -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
-RUN useradd -m -s /bin/bash berserk \
-    && mkdir -p /home/berserk/workspace \
-    && chown -R berserk:berserk /home/berserk
+RUN useradd -m -s /bin/bash wile \
+    && mkdir -p /home/wile/workspace \
+    && chown -R wile:wile /home/wile
 
 # Memory optimization settings per Claude Code specs
 ENV NODE_OPTIONS="--max-old-space-size=4096"
@@ -80,18 +80,18 @@ RUN npm install -g playwright \
     && chmod -R 755 /opt/playwright-browsers
 
 # Copy scripts
-COPY scripts/ /home/berserk/scripts/
-COPY entrypoint.sh /home/berserk/entrypoint.sh
+COPY scripts/ /home/wile/scripts/
+COPY entrypoint.sh /home/wile/entrypoint.sh
 
-RUN chmod +x /home/berserk/entrypoint.sh \
-    && chmod +x /home/berserk/scripts/*.sh 2>/dev/null || true \
-    && chown -R berserk:berserk /home/berserk
+RUN chmod +x /home/wile/entrypoint.sh \
+    && chmod +x /home/wile/scripts/*.sh 2>/dev/null || true \
+    && chown -R wile:wile /home/wile
 
 # Working directory
-WORKDIR /home/berserk/workspace
+WORKDIR /home/wile/workspace
 
 # Switch to non-root user
-USER berserk
+USER wile
 
 # Default command
-ENTRYPOINT ["/home/berserk/entrypoint.sh"]
+ENTRYPOINT ["/home/wile/entrypoint.sh"]

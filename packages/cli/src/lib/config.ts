@@ -2,8 +2,8 @@ import dotenv from "dotenv";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-export type BerserkPaths = {
-  berserkDir: string;
+export type WilePaths = {
+  wileDir: string;
   secretsDir: string;
   envPath: string;
   envProjectPath: string;
@@ -11,7 +11,7 @@ export type BerserkPaths = {
   prdPath: string;
 };
 
-export type BerserkConfig = {
+export type WileConfig = {
   codingAgent: "CC";
   githubToken: string;
   githubRepoUrl: string;
@@ -22,16 +22,16 @@ export type BerserkConfig = {
   envProject: Record<string, string>;
 };
 
-export const getBerserkPaths = (cwd: string = process.cwd()): BerserkPaths => {
-  const berserkDir = join(cwd, ".berserk");
-  const secretsDir = join(berserkDir, "secrets");
+export const getWilePaths = (cwd: string = process.cwd()): WilePaths => {
+  const wileDir = join(cwd, ".wile");
+  const secretsDir = join(wileDir, "secrets");
   return {
-    berserkDir,
+    wileDir,
     secretsDir,
     envPath: join(secretsDir, ".env"),
     envProjectPath: join(secretsDir, ".env.project"),
-    gitignorePath: join(berserkDir, ".gitignore"),
-    prdPath: join(berserkDir, "prd.json")
+    gitignorePath: join(wileDir, ".gitignore"),
+    prdPath: join(wileDir, "prd.json")
   };
 };
 
@@ -49,14 +49,14 @@ const ensureRequired = (condition: boolean, message: string) => {
   }
 };
 
-export const readBerserkConfig = (options: { cwd?: string; validate?: boolean } = {}) => {
-  const paths = getBerserkPaths(options.cwd);
+export const readWileConfig = (options: { cwd?: string; validate?: boolean } = {}) => {
+  const paths = getWilePaths(options.cwd);
   const validate = options.validate ?? true;
 
   if (validate) {
     ensureRequired(
       existsSync(paths.envPath),
-      "Missing .berserk/secrets/.env. Run 'bunx berserk config' first."
+      "Missing .wile/secrets/.env. Run 'bunx wile config' first."
     );
   }
 
@@ -66,23 +66,23 @@ export const readBerserkConfig = (options: { cwd?: string; validate?: boolean } 
   if (validate) {
     ensureRequired(
       env.CODING_AGENT === "CC",
-      "CODING_AGENT must be set to CC in .berserk/secrets/.env. Run 'bunx berserk config'."
+      "CODING_AGENT must be set to CC in .wile/secrets/.env. Run 'bunx wile config'."
     );
     ensureRequired(
       Boolean(env.GITHUB_TOKEN),
-      "GITHUB_TOKEN is required in .berserk/secrets/.env. Run 'bunx berserk config'."
+      "GITHUB_TOKEN is required in .wile/secrets/.env. Run 'bunx wile config'."
     );
     ensureRequired(
       Boolean(env.GITHUB_REPO_URL),
-      "GITHUB_REPO_URL is required in .berserk/secrets/.env. Run 'bunx berserk config'."
+      "GITHUB_REPO_URL is required in .wile/secrets/.env. Run 'bunx wile config'."
     );
     ensureRequired(
       Boolean(env.BRANCH_NAME),
-      "BRANCH_NAME is required in .berserk/secrets/.env. Run 'bunx berserk config'."
+      "BRANCH_NAME is required in .wile/secrets/.env. Run 'bunx wile config'."
     );
     ensureRequired(
       Boolean(env.CC_CLAUDE_CODE_OAUTH_TOKEN || env.CC_ANTHROPIC_API_KEY),
-      "Either CC_CLAUDE_CODE_OAUTH_TOKEN or CC_ANTHROPIC_API_KEY is required in .berserk/secrets/.env."
+      "Either CC_CLAUDE_CODE_OAUTH_TOKEN or CC_ANTHROPIC_API_KEY is required in .wile/secrets/.env."
     );
   }
 

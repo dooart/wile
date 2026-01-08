@@ -1,4 +1,4 @@
-# Berserk Agent
+# Wile Agent
 
 Autonomous AI coding agent that runs in a Docker container. Ships features while you sleep.
 
@@ -22,7 +22,7 @@ docker compose up --build
 1. Container clones your repository
 2. Checks out the specified branch
 3. **Iteration 0 (Setup)**: Sets up .gitignore, initializes progress.txt
-4. Reads `.berserk/prd.json` from repo
+4. Reads `.wile/prd.json` from repo
 5. Loops through user stories, implementing one per iteration:
    - Picks highest priority story where `passes: false`
    - Implements the feature/fix
@@ -34,18 +34,18 @@ docker compose up --build
 
 ## Project Structure
 
-Your repository must have a `.berserk/` folder:
+Your repository must have a `.wile/` folder:
 
 ```
 your-repo/
-├── .berserk/
+├── .wile/
 │   ├── prd.json          # User stories (required)
 │   ├── progress.txt      # Learnings log (created by agent)
 │   └── screenshots/      # Visual verification (created by agent)
 └── ... your code ...
 ```
 
-## .berserk/prd.json Format
+## .wile/prd.json Format
 
 ```json
 {
@@ -123,7 +123,7 @@ For UI work, tell the agent how to verify:
 
 ## Output Files
 
-The `.berserk/` folder is **tracked in git** (except screenshots):
+The `.wile/` folder is **tracked in git** (except screenshots):
 
 - `prd.json` - User stories / Product Requirements Document
 - `progress.txt` - Log of completed work and learnings
@@ -140,11 +140,11 @@ git log --oneline origin/your-branch
 Check the progress log:
 
 ```bash
-git show origin/your-branch:.berserk/progress.txt
+git show origin/your-branch:.wile/progress.txt
 ```
 
 Check story status:
 
 ```bash
-git show origin/your-branch:.berserk/prd.json | jq '.userStories[] | {id, title, passes}'
+git show origin/your-branch:.wile/prd.json | jq '.userStories[] | {id, title, passes}'
 ```

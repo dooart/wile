@@ -5,5 +5,5 @@ dist/
 .env.project
 *.log
 .DS_Store
-.berserk-temp/
+.wile-temp/
 opensrc/

@@ -1,11 +1,11 @@
 #!/bin/bash
-# Host-level setup for EC2 instances running Berserk
+# Host-level setup for EC2 instances running Wile
 # These settings cannot be configured inside Docker containers
 # Run this script on EC2 UserData or manually on the host
 
 set -e
 
-echo "=== Berserk Host Setup ==="
+echo "=== Wile Host Setup ==="
 
 # Configure swap (8GB)
 echo "Configuring 8GB swap..."

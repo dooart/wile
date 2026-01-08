@@ -163,7 +163,7 @@ const prompt = async <T>(questions: prompts.PromptObject<T> | prompts.PromptObje
   prompts(questions, { onCancel });
 
 const maybeInject = () => {
-  const raw = process.env.BERSERK_PROMPTS_INJECT;
+  const raw = process.env.WILE_PROMPTS_INJECT;
   if (!raw) {
     return;
   }
@@ -173,7 +173,7 @@ const maybeInject = () => {
       prompts.inject(values);
     }
   } catch {
-    console.warn("Warning: failed to parse BERSERK_PROMPTS_INJECT JSON.");
+    console.warn("Warning: failed to parse WILE_PROMPTS_INJECT JSON.");
   }
 };
 
@@ -181,13 +181,13 @@ export const runConfig = async () => {
   maybeInject();
 
   const cwd = process.cwd();
-  const berserkDir = join(cwd, ".berserk");
-  const secretsDir = join(berserkDir, "secrets");
+  const wileDir = join(cwd, ".wile");
+  const secretsDir = join(wileDir, "secrets");
   const envPath = join(secretsDir, ".env");
   const envProjectPath = join(secretsDir, ".env.project");
-  const gitignorePath = join(berserkDir, ".gitignore");
-  const prdPath = join(berserkDir, "prd.json");
-  const prdExamplePath = join(berserkDir, "prd.json.example");
+  const gitignorePath = join(wileDir, ".gitignore");
+  const prdPath = join(wileDir, "prd.json");
+  const prdExamplePath = join(wileDir, "prd.json.example");
 
   await mkdir(secretsDir, { recursive: true });
 
@@ -317,8 +317,8 @@ export const runConfig = async () => {
 
   await writeIfMissing(prdExamplePath, JSON.stringify(prdExample, null, 2) + "\n");
 
-  console.log("\nBerserk config complete.");
+  console.log("\nWile config complete.");
   console.log(
-    "Add project env vars to .berserk/secrets/.env.project when needed."
+    "Add project env vars to .wile/secrets/.env.project when needed."
   );
 };

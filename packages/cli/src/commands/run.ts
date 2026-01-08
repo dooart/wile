@@ -2,7 +2,7 @@ import { existsSync, readFileSync, mkdirSync, createWriteStream, writeFileSync }
 import { spawnSync } from "node:child_process";
 import { resolve, join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { readBerserkConfig } from "../lib/config";
+import { readWileConfig } from "../lib/config";
 
 const readJson = (path: string) => {
   try {
@@ -15,7 +15,7 @@ const readJson = (path: string) => {
 
 const validateGitignore = (path: string) => {
   if (!existsSync(path)) {
-    throw new Error("Missing .berserk/.gitignore. Run 'bunx berserk config'.");
+    throw new Error("Missing .wile/.gitignore. Run 'bunx wile config'.");
   }
   const contents = readFileSync(path, "utf8");
   const missing: string[] = [];
@@ -24,7 +24,7 @@ const validateGitignore = (path: string) => {
   if (!contents.includes("logs/")) missing.push("logs/");
   if (missing.length > 0) {
     throw new Error(
-      `Missing ${missing.join(", ")} in .berserk/.gitignore. Run 'bunx berserk config'.`
+      `Missing ${missing.join(", ")} in .wile/.gitignore. Run 'bunx wile config'.`
     );
   }
 };
@@ -37,7 +37,7 @@ const hasPendingStories = (prd: { userStories?: { passes?: boolean; priority?: n
 };
 
 const buildAgentImage = (agentDir: string) => {
-  const result = spawnSync("docker", ["build", "-t", "berserk-agent:local", agentDir], {
+  const result = spawnSync("docker", ["build", "-t", "wile-agent:local", agentDir], {
     stdio: "inherit"
   });
   if (result.status !== 0) {
@@ -46,7 +46,7 @@ const buildAgentImage = (agentDir: string) => {
 };
 
 const resolveAgentDir = () => {
-  const override = process.env.BERSERK_AGENT_DIR;
+  const override = process.env.WILE_AGENT_DIR;
   if (override && existsSync(override)) {
     return override;
   }
@@ -90,7 +90,7 @@ const runDockerWithLogging = (args: string[], logPath: string) => {
   }
 };
 
-export const runBerserk = (options: {
+export const runWile = (options: {
   branch: string;
   repo?: string;
   maxIterations: string;
@@ -101,7 +101,7 @@ export const runBerserk = (options: {
   let paths;
   let config;
   try {
-    const result = readBerserkConfig({ cwd, validate: !options.test });
+    const result = readWileConfig({ cwd, validate: !options.test });
     paths = result.paths;
     config = result.config;
   } catch (error) {
@@ -117,13 +117,13 @@ export const runBerserk = (options: {
   }
 
   if (!existsSync(paths.prdPath)) {
-    console.error("Missing .berserk/prd.json. Run 'bunx berserk config'.");
+    console.error("Missing .wile/prd.json. Run 'bunx wile config'.");
     process.exit(1);
   }
 
   const prd = readJson(paths.prdPath);
   if (!hasPendingStories(prd)) {
-    console.log("No pending stories in .berserk/prd.json. Add a story to run Berserk.");
+    console.log("No pending stories in .wile/prd.json. Add a story to run Wile.");
     return;
   }
 
@@ -135,11 +135,11 @@ export const runBerserk = (options: {
   if (options.test) {
     dockerArgs.push(
       "-e",
-      "BERSERK_TEST=true",
+      "WILE_TEST=true",
       "-e",
-      "BERSERK_TEST_REPO_PATH=/home/berserk/workspace/repo",
+      "WILE_TEST_REPO_PATH=/home/wile/workspace/repo",
       "-v",
-      `${cwd}:/home/berserk/workspace/repo`
+      `${cwd}:/home/wile/workspace/repo`
     );
   }
 
@@ -161,9 +161,9 @@ export const runBerserk = (options: {
     dockerArgs.push("--env-file", envFile);
   }
 
-  dockerArgs.push("berserk-agent:local");
+  dockerArgs.push("wile-agent:local");
 
-  const logsDir = join(paths.berserkDir, "logs");
+  const logsDir = join(paths.wileDir, "logs");
   mkdirSync(logsDir, { recursive: true });
   const logPath = join(logsDir, `run-${getTimestamp()}.log`);
 
@@ -175,7 +175,7 @@ export const runBerserk = (options: {
 
   runDockerWithLogging(dockerArgs, logPath);
 
-  const finishMessage = "Berserk run complete. Monitor progress with git log in your repo.\n";
+  const finishMessage = "Wile run complete. Monitor progress with git log in your repo.\n";
   process.stdout.write(finishMessage);
   writeFileSync(logPath, finishMessage, { flag: "a" });
 };

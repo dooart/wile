@@ -1,10 +1,10 @@
 version: '3.8'
 
 services:
-  berserk:
+  wile:
     build: .
-    image: berserk-agent:local
-    container_name: berserk-agent
+    image: wile-agent:local
+    container_name: wile-agent
 
     # Environment variables from .env file
     env_file:
@@ -12,7 +12,7 @@ services:
 
     # Override for local testing (optional - mount local repo)
     # volumes:
-    #   - /path/to/local/repo:/home/berserk/workspace/repo
+    #   - /path/to/local/repo:/home/wile/workspace/repo
 
     # Keep stdin open for debugging
     stdin_open: true

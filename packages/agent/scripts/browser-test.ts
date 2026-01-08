@@ -1,12 +1,12 @@
 /**
- * Browser testing helper for Berserk agent
+ * Browser testing helper for Wile agent
  *
  * Usage:
  *   npx tsx browser-test.ts screenshot <url> <output-path>
  *   npx tsx browser-test.ts verify <url> <selector>
  *
  * Examples:
- *   npx tsx browser-test.ts screenshot http://localhost:3000 .berserk-temp/screenshots/home.png
+ *   npx tsx browser-test.ts screenshot http://localhost:3000 .wile-temp/screenshots/home.png
  *   npx tsx browser-test.ts verify http://localhost:3000/login "form#login"
  */
 
