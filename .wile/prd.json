@@ -347,7 +347,7 @@
         "bunx wile works from a separate project repo"
       ],
       "priority": 10,
-      "passes": false,
+      "passes": true,
       "notes": "Phase 1 - CLI. STOP HERE. DO NOT CONTINUE WITHOUT HUMAN APPROVAL."
     },
     {
