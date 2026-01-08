@@ -24,11 +24,11 @@ fi
 
 cd "$CLI_DIR"
 
-node - "$1" <<'NODE'
+BUMP="$1" node - <<'NODE'
 const fs = require("fs");
 const path = require("path");
 
-const bump = process.argv[1];
+const bump = process.env.BUMP;
 const file = path.join(process.cwd(), "package.json");
 const data = JSON.parse(fs.readFileSync(file, "utf8"));
 const [major, minor, patch] = (data.version || "0.0.0").split(".").map(Number);
