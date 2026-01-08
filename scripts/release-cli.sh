@@ -49,7 +49,7 @@ fs.writeFileSync(file, JSON.stringify(data, null, 2) + "\n");
 NODE
 VERSION=$(node -p "require('./package.json').version")
 
-git -C "$ROOT_DIR" add "$CLI_DIR/package.json" "$CLI_DIR/package-lock.json" 2>/dev/null || true
+git -C "$ROOT_DIR" add packages/cli/package.json
 git -C "$ROOT_DIR" commit -m "release v$VERSION"
 
 bun run build
