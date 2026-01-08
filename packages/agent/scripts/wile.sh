@@ -29,10 +29,11 @@ fi
 
 if [ -n "$ADDITIONAL_PROMPT_FILE" ] && [ -f "$ADDITIONAL_PROMPT_FILE" ]; then
   if [ -s "$ADDITIONAL_PROMPT_FILE" ]; then
-    if [ -n "$(tr -d '[:space:]' < "$ADDITIONAL_PROMPT_FILE")" ]; then
+    STRIPPED_CONTENT=$(sed '/<!--/,/-->/d' "$ADDITIONAL_PROMPT_FILE" | tr -d '[:space:]')
+    if [ -n "$STRIPPED_CONTENT" ]; then
       PROMPT_FILE="/tmp/wile-prompt.md"
       cat "$SCRIPT_DIR/prompt.md" > "$PROMPT_FILE"
-      printf "\n\n" >> "$PROMPT_FILE"
+      printf "\n\n## Additional Instructions\n\n" >> "$PROMPT_FILE"
       cat "$ADDITIONAL_PROMPT_FILE" >> "$PROMPT_FILE"
     fi
   fi

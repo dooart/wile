@@ -13,6 +13,8 @@ cd "$ROOT_DIR/packages/cli"
 bun test
 bun run build
 
+sh "$ROOT_DIR/packages/agent/scripts/test-additional-instructions.sh"
+
 TMP_DIR=$(mktemp -d /tmp/wile-local-test-XXXXXX)
 cleanup() {
   rm -rf "$TMP_DIR"

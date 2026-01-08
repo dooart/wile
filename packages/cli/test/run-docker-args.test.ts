@@ -15,7 +15,11 @@ test("run command forwards env files into docker args", async () => {
     const args = buildDockerArgs(
       { maxIterations: "25" },
       { githubRepoUrl: "https://github.com/acme/test", repoSource: "github" },
-      { envPath: join(secretsDir, ".env"), envProjectPath: join(secretsDir, ".env.project") },
+      {
+        envPath: join(secretsDir, ".env"),
+        envProjectPath: join(secretsDir, ".env.project"),
+        wileDir
+      },
       dir
     );
 

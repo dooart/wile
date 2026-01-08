@@ -347,7 +347,7 @@ export const runConfig = async () => {
   const hadAdditionalInstructions = existsSync(additionalInstructionsPath);
   await writeIfMissing(
     additionalInstructionsPath,
-    ""
+    "<!--\nUse bullet points for additional instructions, e.g.\n- You may run `supabase db reset --db-url \"$SUPABASE_DB_URL\"` when needed.\n- Do not ask for permission before running it.\n-->\n"
   );
 
   console.log("\nWile config complete.");

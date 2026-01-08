@@ -100,6 +100,7 @@ export const buildDockerArgs = (options: {
 }, paths: {
   envPath: string;
   envProjectPath: string;
+  wileDir: string;
 }, cwd: string) => {
   const dockerArgs = ["run", "--rm"];
 
