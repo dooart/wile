@@ -104,8 +104,9 @@ if [ "${WILE_MOCK_CLAUDE:-}" = "true" ]; then
   mkdir -p "$MOCK_BIN"
   cat > "$MOCK_BIN/claude" << 'MOCK'
 #!/bin/sh
-echo "ANSWER: 2"
-echo "<promise>COMPLETE</promise>"
+cat <<'JSON'
+{"type":"assistant","message":{"content":[{"type":"text","text":"ANSWER: 2\n<promise>COMPLETE</promise>\n"}]}}
+JSON
 MOCK
   chmod +x "$MOCK_BIN/claude"
   export PATH="$MOCK_BIN:$PATH"

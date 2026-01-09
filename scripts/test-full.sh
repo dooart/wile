@@ -20,6 +20,7 @@ if [ -z "${GITHUB_REPO_URL:-}" ] || [ -z "${GITHUB_TOKEN:-}" ]; then
 fi
 
 sh "$ROOT_DIR/scripts/test-claude-logs.sh"
+sh "$ROOT_DIR/scripts/test-claude-logs-real.sh"
 
 case "$GITHUB_REPO_URL" in
   https://*)
