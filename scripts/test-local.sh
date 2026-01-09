@@ -26,6 +26,7 @@ if [ ! -f "$ROOT_DIR/packages/cli/dist/agent/entrypoint.sh" ]; then
 fi
 
 sh "$ROOT_DIR/packages/agent/scripts/test-additional-instructions.sh"
+sh "$ROOT_DIR/packages/agent/scripts/test-iteration-limit.sh"
 
 TMP_DIR=$(mktemp -d /tmp/wile-local-test-XXXXXX)
 cleanup() {
