@@ -12,6 +12,16 @@ fi
 cd "$ROOT_DIR/packages/cli"
 bun test
 bun run build
+./build.sh
+
+if [ ! -f "$ROOT_DIR/packages/cli/dist/agent/Dockerfile" ]; then
+  echo "error: bundled agent Dockerfile missing in dist/agent" >&2
+  exit 1
+fi
+if [ ! -f "$ROOT_DIR/packages/cli/dist/agent/entrypoint.sh" ]; then
+  echo "error: bundled agent entrypoint missing in dist/agent" >&2
+  exit 1
+fi
 
 sh "$ROOT_DIR/packages/agent/scripts/test-additional-instructions.sh"
 

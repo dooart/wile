@@ -54,8 +54,7 @@ VERSION=$(node -p "require('./package.json').version")
 git -C "$ROOT_DIR" add packages/cli/package.json
 git -C "$ROOT_DIR" commit -m "release v$VERSION"
 
-bun run build
-chmod +x dist/cli.js
+./build.sh
 
 node -e "const fs=require('fs');const data=fs.readFileSync('dist/cli.js','utf8');if(!data.startsWith('#!/usr/bin/env node')){console.error('missing shebang');process.exit(1);}"
 

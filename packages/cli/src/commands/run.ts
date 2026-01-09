@@ -77,6 +77,10 @@ const resolveAgentDir = () => {
     return foundFromCwd;
   }
   const here = dirname(fileURLToPath(import.meta.url));
+  const bundledAgentDir = join(here, "agent");
+  if (existsSync(bundledAgentDir)) {
+    return bundledAgentDir;
+  }
   const cliRoot = resolve(here, "..", "..", "..");
   const agentDir = join(cliRoot, "agent");
   if (!existsSync(agentDir)) {
