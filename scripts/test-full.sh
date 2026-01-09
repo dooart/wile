@@ -19,6 +19,8 @@ if [ -z "${GITHUB_REPO_URL:-}" ] || [ -z "${GITHUB_TOKEN:-}" ]; then
   exit 1
 fi
 
+sh "$ROOT_DIR/scripts/test-claude-logs.sh"
+
 case "$GITHUB_REPO_URL" in
   https://*)
     AUTH_URL=$(echo "$GITHUB_REPO_URL" | sed "s|https://|https://x-access-token:${GITHUB_TOKEN}@|")

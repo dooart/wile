@@ -49,7 +49,7 @@ echo "════════════════════════�
 echo ""
 
 if [ -f "$SETUP_PROMPT_FILE" ]; then
-  OUTPUT=$(cat "$SETUP_PROMPT_FILE" | claude --model "$CLAUDE_MODEL" --dangerously-skip-permissions 2>&1 | tee /dev/stderr) || true
+  OUTPUT=$(cat "$SETUP_PROMPT_FILE" | claude --model "$CLAUDE_MODEL" --verbose --dangerously-skip-permissions 2>&1 | tee /dev/stderr) || true
 
   # Check if setup failed critically
   if echo "$OUTPUT" | grep -q "<promise>SETUP_FAILED</promise>"; then
@@ -80,7 +80,7 @@ for i in $(seq 1 $MAX_ITERATIONS); do
   # Pipe prompt to Claude Code
   # --dangerously-skip-permissions allows autonomous operation
   # Capture output while also displaying it (tee to stderr)
-  OUTPUT=$(cat "$PROMPT_FILE" | claude --model "$CLAUDE_MODEL" --dangerously-skip-permissions 2>&1 | tee /dev/stderr) || true
+  OUTPUT=$(cat "$PROMPT_FILE" | claude --model "$CLAUDE_MODEL" --verbose --dangerously-skip-permissions 2>&1 | tee /dev/stderr) || true
 
   # Check for completion signal
   if echo "$OUTPUT" | grep -q "<promise>COMPLETE</promise>"; then
