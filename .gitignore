@@ -10,3 +10,5 @@ dist/
 opensrc/
 
 .npmrc
+
+packages/cli/.npmrc
