@@ -2,9 +2,10 @@
   "name": "wile-monorepo",
   "private": true,
   "scripts": {
-    "tsc": "bun run --cwd packages/cli tsc && bun run --cwd packages/agent tsc",
-    "lint": "bun run --cwd packages/cli lint && bun run --cwd packages/agent lint",
-    "check": "bun run tsc && bun run lint"
+    "tsc": "bun run --cwd packages/cli tsc",
+    "lint": "bun run --cwd packages/cli lint",
+    "lint:agent": "bash -n packages/agent/entrypoint.sh packages/agent/scripts/*.sh",
+    "check": "bun run tsc && bun run lint && bun run lint:agent"
   },
   "workspaces": [
     "packages/*"
