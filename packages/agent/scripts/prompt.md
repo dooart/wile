@@ -98,7 +98,8 @@ After completing steps 1-8, check if ALL stories in `.wile/prd.json` have `passe
 4. **Fix related files** - If typecheck requires changes in other files, make them (this is not scope creep)
 5. **Be idempotent** - Use `IF NOT EXISTS` for migrations, check before creating files
 6. **No interactive prompts** - Use `echo -e "\n\n\n" |` if a command might prompt
-7. **NEVER commit node_modules, dist, or build artifacts** - .gitignore should already be set up by iteration 0
+7. **NEVER commit node_modules, dist, or build artifacts** - .gitignore should already be set up at the start of the run
+8. **Use acceptance criteria as verification steps** - Run commands to confirm outputs or write tests that fail if the feature is removed
 
 ## Common Patterns
 
