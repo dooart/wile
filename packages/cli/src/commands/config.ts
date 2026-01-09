@@ -373,7 +373,7 @@ export const runConfig = async () => {
       "Environment notes:",
       "- Playwright (Chromium) is available in the agent container for UI checks.",
       "- Project env vars can be passed via `.wile/secrets/.env.project`.",
-      "- The container has outbound internet access by default."
+      "- The container has outbound internet access by default.",
       ""
     ].join("\n")
   );

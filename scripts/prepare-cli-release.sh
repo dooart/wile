@@ -22,6 +22,8 @@ if ! git -C "$ROOT_DIR" diff --quiet || ! git -C "$ROOT_DIR" diff --staged --qui
   exit 1
 fi
 
+sh "$ROOT_DIR/scripts/test-local.sh"
+
 cd "$CLI_DIR"
 
 BUMP="$1" node - <<'NODE'
