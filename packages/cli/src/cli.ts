@@ -29,7 +29,9 @@ program
   .option("--repo <repo>", "Repository URL or local path")
   .option("--max-iterations <count>", "Maximum iterations", "25")
   .option("--test", "Run in test mode")
-  .action((options: { repo?: string; maxIterations: string; test?: boolean }) => {
+  .option("--debug", "Print debug info before running")
+  .action(
+    (options: { repo?: string; maxIterations: string; test?: boolean; debug?: boolean }) => {
     runWile(options);
   });
 

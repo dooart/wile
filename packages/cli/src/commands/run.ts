@@ -4,6 +4,21 @@ import { resolve, join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readWileConfig } from "../lib/config";
 
+const findAgentDir = (startDir: string) => {
+  let current = startDir;
+  while (true) {
+    const candidate = join(current, "packages", "agent");
+    if (existsSync(candidate)) {
+      return candidate;
+    }
+    const parent = dirname(current);
+    if (parent === current) {
+      return null;
+    }
+    current = parent;
+  }
+};
+
 const readJson = (path: string) => {
   try {
     const contents = readFileSync(path, "utf8");
@@ -52,18 +67,18 @@ const resolveAgentDir = () => {
   }
   const initCwd = process.env.INIT_CWD;
   if (initCwd) {
-    const initAgentDir = join(initCwd, "packages", "agent");
-    if (existsSync(initAgentDir)) {
-      return initAgentDir;
+    const found = findAgentDir(initCwd);
+    if (found) {
+      return found;
     }
   }
-  const cwdAgentDir = join(process.cwd(), "packages", "agent");
-  if (existsSync(cwdAgentDir)) {
-    return cwdAgentDir;
+  const foundFromCwd = findAgentDir(process.cwd());
+  if (foundFromCwd) {
+    return foundFromCwd;
   }
   const here = dirname(fileURLToPath(import.meta.url));
   const cliRoot = resolve(here, "..", "..", "..");
-  const agentDir = join(cliRoot, "..", "agent");
+  const agentDir = join(cliRoot, "agent");
   if (!existsSync(agentDir)) {
     throw new Error("Unable to locate packages/agent. Run from the monorepo.");
   }
@@ -168,6 +183,7 @@ export const runWile = (options: {
   repo?: string;
   maxIterations: string;
   test?: boolean;
+  debug?: boolean;
 }) => {
   const cwd = process.cwd();
 
@@ -180,6 +196,17 @@ export const runWile = (options: {
   } catch (error) {
     console.error((error as Error).message);
     process.exit(1);
+  }
+
+  if (options.debug) {
+    const initCwd = process.env.INIT_CWD ?? "(unset)";
+    console.log("Debug:");
+    console.log(`- cwd: ${cwd}`);
+    console.log(`- INIT_CWD: ${initCwd}`);
+    console.log(`- WILE_AGENT_DIR: ${process.env.WILE_AGENT_DIR ?? "(unset)"}`);
+    console.log(`- repoSource: ${config.repoSource}`);
+    console.log(`- githubRepoUrl: ${config.githubRepoUrl || "(empty)"}`);
+    console.log(`- branchName: ${config.branchName || "(empty)"}`);
   }
 
   try {
