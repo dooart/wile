@@ -50,6 +50,13 @@ const resolveAgentDir = () => {
   if (override && existsSync(override)) {
     return override;
   }
+  const initCwd = process.env.INIT_CWD;
+  if (initCwd) {
+    const initAgentDir = join(initCwd, "packages", "agent");
+    if (existsSync(initAgentDir)) {
+      return initAgentDir;
+    }
+  }
   const cwdAgentDir = join(process.cwd(), "packages", "agent");
   if (existsSync(cwdAgentDir)) {
     return cwdAgentDir;
