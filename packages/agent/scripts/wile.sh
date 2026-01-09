@@ -14,7 +14,7 @@ SETUP_PROMPT_FILE="$SCRIPT_DIR/prompt-setup.md"
 ADDITIONAL_PROMPT_FILE="${WILE_ADDITIONAL_INSTRUCTIONS:-}"
 
 echo "══════════════════════════════════════════════════════"
-echo "  🗡️  WILE - Autonomous Coding Agent"
+echo "  🌵  WILE - Autonomous Coding Agent"
 echo "══════════════════════════════════════════════════════"
 echo "  Max iterations: $MAX_ITERATIONS"
 echo "  Model:          $CLAUDE_MODEL"

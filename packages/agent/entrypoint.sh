@@ -7,7 +7,7 @@
 set -e
 
 echo "══════════════════════════════════════════════════════"
-echo "  🗡️  WILE - Container Startup"
+echo "  🌵  WILE - Container Startup"
 echo "══════════════════════════════════════════════════════"
 
 if [ "${WILE_TEST:-}" = "true" ]; then
@@ -161,7 +161,7 @@ echo ""
 
 # Configure git
 echo "Configuring git..."
-git config --global user.name "Wile Bot"
+git config --global user.name "wile"
 git config --global user.email "wile@bot.local"
 git config --global credential.helper store
 
