@@ -31,8 +31,8 @@ program
   .option("--test", "Run in test mode")
   .option("--debug", "Print debug info before running")
   .action(
-    (options: { repo?: string; maxIterations: string; test?: boolean; debug?: boolean }) => {
-    runWile(options);
-  });
+    async (options: { repo?: string; maxIterations: string; test?: boolean; debug?: boolean }) => {
+      await runWile(options);
+    });
 
 program.parse(process.argv);

@@ -98,6 +98,19 @@ MAX_ITERATIONS=${MAX_ITERATIONS:-25}
 SCRIPT_DIR="/home/wile/scripts"
 WORKSPACE="/home/wile/workspace"
 
+if [ "${WILE_MOCK_CLAUDE:-}" = "true" ]; then
+  echo "  Claude:     Mocked"
+  MOCK_BIN="/home/wile/mock-bin"
+  mkdir -p "$MOCK_BIN"
+  cat > "$MOCK_BIN/claude" << 'MOCK'
+#!/bin/sh
+echo "ANSWER: 2"
+echo "<promise>COMPLETE</promise>"
+MOCK
+  chmod +x "$MOCK_BIN/claude"
+  export PATH="$MOCK_BIN:$PATH"
+fi
+
 # Set up Claude Code authentication
 if [ -n "$CC_CLAUDE_CODE_OAUTH_TOKEN" ]; then
   echo "  Auth:       OAuth (Pro/Max subscription)"

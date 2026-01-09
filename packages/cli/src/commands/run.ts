@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, mkdirSync, createWriteStream, writeFileSync } from "node:fs";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { resolve, join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readWileConfig } from "../lib/config";
@@ -97,28 +97,37 @@ const getTimestamp = () => {
   )}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
 };
 
-const runDockerWithLogging = (args: string[], logPath: string) => {
-  const logStream = createWriteStream(logPath, { flags: "a" });
-  const result = spawnSync("docker", args, {
-    stdio: ["inherit", "pipe", "pipe"]
+const runDockerWithLogging = (args: string[], logPath: string) =>
+  new Promise<void>((resolvePromise, rejectPromise) => {
+    const logStream = createWriteStream(logPath, { flags: "a" });
+    const child = spawn("docker", args, {
+      stdio: ["inherit", "pipe", "pipe"]
+    });
+
+    child.stdout.on("data", (chunk) => {
+      process.stdout.write(chunk);
+      logStream.write(chunk);
+    });
+
+    child.stderr.on("data", (chunk) => {
+      process.stderr.write(chunk);
+      logStream.write(chunk);
+    });
+
+    child.on("error", (error) => {
+      logStream.end();
+      rejectPromise(error);
+    });
+
+    child.on("close", (code) => {
+      logStream.end();
+      if (code !== 0) {
+        rejectPromise(new Error("Docker run failed."));
+        return;
+      }
+      resolvePromise();
+    });
   });
-
-  if (result.stdout) {
-    process.stdout.write(result.stdout);
-    logStream.write(result.stdout);
-  }
-
-  if (result.stderr) {
-    process.stderr.write(result.stderr);
-    logStream.write(result.stderr);
-  }
-
-  logStream.end();
-
-  if (result.status !== 0) {
-    throw new Error("Docker run failed.");
-  }
-};
 
 export const buildDockerArgs = (options: {
   repo?: string;
@@ -183,7 +192,7 @@ export const buildDockerArgs = (options: {
   return dockerArgs;
 };
 
-export const runWile = (options: {
+export const runWile = async (options: {
   repo?: string;
   maxIterations: string;
   test?: boolean;
@@ -251,7 +260,7 @@ export const runWile = (options: {
     console.log(`- logPath: ${logPath}`);
   }
 
-  runDockerWithLogging(dockerArgs, logPath);
+  await runDockerWithLogging(dockerArgs, logPath);
 
   const finishMessage = "Wile run complete. Monitor progress with git log in your repo.\n";
   process.stdout.write(finishMessage);

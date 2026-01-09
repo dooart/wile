@@ -65,6 +65,11 @@ git commit -m "chore: seed claude log test" >/dev/null
 git push origin main >/dev/null
 
 cp "$ENV_TEST" .wile/secrets/.env
+if grep -q "^WILE_MOCK_CLAUDE=" .wile/secrets/.env; then
+  sed -i '' "s/^WILE_MOCK_CLAUDE=.*/WILE_MOCK_CLAUDE=true/" .wile/secrets/.env
+else
+  echo "WILE_MOCK_CLAUDE=true" >> .wile/secrets/.env
+fi
 if grep -q "^WILE_REPO_SOURCE=" .wile/secrets/.env; then
   sed -i '' "s/^WILE_REPO_SOURCE=.*/WILE_REPO_SOURCE=local/" .wile/secrets/.env
 else
