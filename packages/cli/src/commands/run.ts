@@ -50,6 +50,10 @@ const resolveAgentDir = () => {
   if (override && existsSync(override)) {
     return override;
   }
+  const cwdAgentDir = join(process.cwd(), "packages", "agent");
+  if (existsSync(cwdAgentDir)) {
+    return cwdAgentDir;
+  }
   const here = dirname(fileURLToPath(import.meta.url));
   const cliRoot = resolve(here, "..", "..", "..");
   const agentDir = join(cliRoot, "..", "agent");
