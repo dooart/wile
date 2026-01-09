@@ -18,7 +18,7 @@ const prdExample = {
         "npm run build produces dist/ folder"
       ],
       priority: 1,
-      passes: true,
+      passes: false,
       notes: "Use TypeScript. Keep it minimal."
     },
     {
@@ -33,7 +33,7 @@ const prdExample = {
         "Squares have visible borders"
       ],
       priority: 2,
-      passes: true,
+      passes: false,
       notes: "Just the visual grid, no game logic yet"
     },
     {
@@ -48,7 +48,7 @@ const prdExample = {
         "Cannot click already-filled square"
       ],
       priority: 3,
-      passes: true,
+      passes: false,
       notes: "Use React state for board and current player"
     },
     {
@@ -63,7 +63,7 @@ const prdExample = {
         "No more moves allowed after win"
       ],
       priority: 4,
-      passes: true,
+      passes: false,
       notes: "Check all 8 possible winning combinations"
     },
     {
@@ -77,7 +77,7 @@ const prdExample = {
         "Reset clears any win/draw message"
       ],
       priority: 5,
-      passes: true,
+      passes: false,
       notes: "Complete the game loop"
     },
     {
@@ -90,7 +90,7 @@ const prdExample = {
         "X indicator in blue, O indicator in red"
       ],
       priority: 6,
-      passes: true,
+      passes: false,
       notes: "Polish the UX"
     }
   ]
@@ -190,6 +190,7 @@ export const runConfig = async () => {
   const prdPath = join(wileDir, "prd.json");
   const prdExamplePath = join(wileDir, "prd.json.example");
   const additionalInstructionsPath = join(wileDir, "additional-instructions.md");
+  const agentsPath = join(wileDir, "AGENTS.md");
 
   await mkdir(secretsDir, { recursive: true });
 
@@ -348,6 +349,33 @@ export const runConfig = async () => {
   await writeIfMissing(
     additionalInstructionsPath,
     "<!--\nUse bullet points for additional instructions, e.g.\n- You may run `supabase db reset --db-url \"$SUPABASE_DB_URL\"` when needed.\n- Do not ask for permission before running it.\n-->\n"
+  );
+
+  await writeIfMissing(
+    agentsPath,
+    [
+      "# PRD authoring guidance for Wile",
+      "",
+      "Wile reads `.wile/prd.json` each iteration, picks the highest-priority story",
+      "with `passes: false`, implements exactly one story, marks it complete, logs",
+      "progress, and repeats until all stories pass. The PRD should be written so",
+      "each story is independently actionable and verifiable.",
+      "",
+      "Guidelines:",
+      "- Use clear, testable acceptance criteria (one behavior per bullet).",
+      "- Keep IDs stable and unique (e.g., US-123).",
+      "- Avoid vague terms like \"should\" or \"nice\".",
+      "- Keep stories small enough to finish in one iteration.",
+      "- Mark `passes: false` for work not done yet.",
+      "- Place the STOP HERE note only on the last story that requires human approval.",
+      "- Prefer concrete files/commands when verification matters.",
+      "",
+      "Environment notes:",
+      "- Playwright (Chromium) is available in the agent container for UI checks.",
+      "- Project env vars can be passed via `.wile/secrets/.env.project`.",
+      "- The container has outbound internet access by default."
+      ""
+    ].join("\n")
   );
 
   console.log("\nWile config complete.");

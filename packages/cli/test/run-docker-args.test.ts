@@ -26,5 +26,6 @@ test("run command forwards env files into docker args", async () => {
     const joined = args.join(" ");
     expect(joined).toContain(`--env-file ${join(secretsDir, ".env")}`);
     expect(joined).toContain(`--env-file ${join(secretsDir, ".env.project")}`);
+    expect(joined).not.toContain("AGENTS.md");
   });
 });
