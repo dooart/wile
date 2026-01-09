@@ -100,6 +100,9 @@ After completing steps 1-8, check if ALL stories in `.wile/prd.json` have `passe
 6. **No interactive prompts** - Use `echo -e "\n\n\n" |` if a command might prompt
 7. **NEVER commit node_modules, dist, or build artifacts** - .gitignore should already be set up at the start of the run
 8. **Use acceptance criteria as verification steps** - Run commands to confirm outputs or write tests that fail if the feature is removed
+9. **Integration tests must validate real system behavior, not just the harness**
+10. **If you discover reusable, module-specific guidance, add it to the nearest AGENTS.md**
+    Note: Never update .wile/AGENTS.md.
 
 ## Common Patterns
 
