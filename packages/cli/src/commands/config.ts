@@ -373,6 +373,7 @@ export const runConfig = async () => {
       "- Mark `passes: false` for work not done yet.",
       "- Place the STOP HERE note only on the last story that requires human approval.",
       "- Prefer concrete files/commands only when they reflect the real outcome.",
+      "- Integration tests must validate real system behavior, not just the harness.",
       "- If you discover reusable, module-specific guidance, add it to the nearest AGENTS.md.",
       "  Note: Never update .wile/AGENTS.md.",
       "",
