@@ -61,6 +61,7 @@ if [ -z "$LOG_FILE" ]; then
 fi
 
 grep -q "TEST MODE" "$LOG_FILE"
+grep -q "Marked US-TEST-001 complete" "$LOG_FILE"
 grep -q "\"passes\": true" "$TMP_DIR/.wile/prd.json"
 grep -q "Mocked test mode completion" "$TMP_DIR/.wile/progress.txt"
 

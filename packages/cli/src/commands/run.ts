@@ -239,11 +239,16 @@ export const runWile = (options: {
   const logsDir = join(paths.wileDir, "logs");
   mkdirSync(logsDir, { recursive: true });
   const logPath = join(logsDir, `run-${getTimestamp()}.log`);
+  writeFileSync(logPath, "", { flag: "w" });
 
   if (options.test) {
     const message = "TEST MODE: running mocked agent inside Docker.\n";
     process.stdout.write(message);
     writeFileSync(logPath, message, { flag: "a" });
+  }
+  if (options.debug) {
+    console.log(`- logsDir: ${logsDir}`);
+    console.log(`- logPath: ${logPath}`);
   }
 
   runDockerWithLogging(dockerArgs, logPath);
