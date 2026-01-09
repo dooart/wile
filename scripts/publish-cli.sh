@@ -16,6 +16,8 @@ fi
 
 cd "$CLI_DIR"
 
+export NPM_CONFIG_USERCONFIG="$ROOT_DIR/.npmrc"
+
 if ! npm whoami >/dev/null 2>&1; then
   echo "error: npm is not authenticated. run 'npm login' in packages/cli first." >&2
   exit 1
