@@ -373,6 +373,8 @@ export const runConfig = async () => {
       "- Mark `passes: false` for work not done yet.",
       "- Place the STOP HERE note only on the last story that requires human approval.",
       "- Prefer concrete files/commands only when they reflect the real outcome.",
+      "- If you discover reusable, module-specific guidance, add it to the nearest AGENTS.md.",
+      "  Note: Never update .wile/AGENTS.md.",
       "",
       "Environment notes:",
       "- Playwright (Chromium) is available in the agent container for UI checks.",
