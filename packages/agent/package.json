@@ -2,5 +2,9 @@
   "name": "@wile/agent",
   "version": "0.1.0",
   "private": true,
-  "description": "Wile autonomous coding agent - Docker image and scripts"
+  "description": "Wile autonomous coding agent - Docker image and scripts",
+  "scripts": {
+    "tsc": "echo \"skipped: no typescript sources in packages/agent\"",
+    "lint": "bash -n entrypoint.sh scripts/*.sh"
+  }
 }

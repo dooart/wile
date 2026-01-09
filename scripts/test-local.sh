@@ -4,6 +4,8 @@ set -euo pipefail
 ROOT_DIR=$(cd "$(dirname "$0")/.." && pwd)
 ENV_TEST="$ROOT_DIR/.wile/secrets/.env.test"
 
+bun run check
+
 if [ ! -f "$ENV_TEST" ]; then
   echo "error: missing $ENV_TEST" >&2
   exit 1

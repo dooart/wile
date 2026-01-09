@@ -160,8 +160,9 @@ const onCancel = () => {
   process.exit(1);
 };
 
-const prompt = async <T>(questions: prompts.PromptObject<T> | prompts.PromptObject<T>[]) =>
-  prompts(questions, { onCancel });
+const prompt = async (
+  questions: prompts.PromptObject | prompts.PromptObject[]
+) => prompts(questions, { onCancel });
 
 const maybeInject = () => {
   const raw = process.env.WILE_PROMPTS_INJECT;

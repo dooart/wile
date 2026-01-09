@@ -1,6 +1,11 @@
 {
   "name": "wile-monorepo",
   "private": true,
+  "scripts": {
+    "tsc": "bun run --cwd packages/cli tsc && bun run --cwd packages/agent tsc",
+    "lint": "bun run --cwd packages/cli lint && bun run --cwd packages/agent lint",
+    "check": "bun run tsc && bun run lint"
+  },
   "workspaces": [
     "packages/*"
   ]

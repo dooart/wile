@@ -15,7 +15,9 @@
     "build": "bun build ./src/cli.ts --outdir ./dist --target node",
     "dev": "bun run ./src/cli.ts",
     "prepublishOnly": "./build.sh",
-    "test": "bun test"
+    "test": "bun test",
+    "tsc": "tsc --noEmit",
+    "lint": "eslint . --max-warnings=0"
   },
   "dependencies": {
     "commander": "^14.0.2",
@@ -29,5 +31,12 @@
     "agent",
     "claude"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@types/prompts": "^2.4.9",
+    "@typescript-eslint/eslint-plugin": "^8.52.0",
+    "@typescript-eslint/parser": "^8.52.0",
+    "eslint": "8.57.0",
+    "typescript": "^5.9.3"
+  }
 }
