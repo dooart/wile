@@ -23,10 +23,16 @@ fi
 cd "$CLI_DIR"
 
 if [ -z "${NPM_TOKEN:-}" ]; then
+  echo "note: NPM_TOKEN is not set; using npm login/session auth" >&2
   if ! npm whoami >/dev/null 2>&1; then
     echo "error: npm is not authenticated. set NPM_TOKEN or run 'npm login' in packages/cli first." >&2
     exit 1
   fi
+else
+  TOKEN_LEN=${#NPM_TOKEN}
+  TOKEN_HEAD=$(printf "%s" "$NPM_TOKEN" | cut -c1-4)
+  TOKEN_TAIL=$(printf "%s" "$NPM_TOKEN" | rev | cut -c1-4 | rev)
+  echo "note: NPM_TOKEN is set (len=$TOKEN_LEN, head=${TOKEN_HEAD}..., tail=...${TOKEN_TAIL}); using token auth for publish" >&2
 fi
 
 VERSION=$(node -p "require('./package.json').version")
