@@ -16,11 +16,17 @@ fi
 
 cd "$CLI_DIR"
 
-export NPM_CONFIG_USERCONFIG="$ROOT_DIR/.npmrc"
+if [ -f "$CLI_DIR/.npmrc" ]; then
+  export NPM_CONFIG_USERCONFIG="$CLI_DIR/.npmrc"
+elif [ -f "$ROOT_DIR/.npmrc" ]; then
+  export NPM_CONFIG_USERCONFIG="$ROOT_DIR/.npmrc"
+fi
 
-if ! npm whoami >/dev/null 2>&1; then
-  echo "error: npm is not authenticated. run 'npm login' in packages/cli first." >&2
-  exit 1
+if [ ! -f "$CLI_DIR/.npmrc" ] && [ ! -f "$ROOT_DIR/.npmrc" ]; then
+  if ! npm whoami >/dev/null 2>&1; then
+    echo "error: npm is not authenticated. run 'npm login' in packages/cli first." >&2
+    exit 1
+  fi
 fi
 
 VERSION=$(node -p "require('./package.json').version")
