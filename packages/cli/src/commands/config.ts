@@ -246,9 +246,15 @@ export const runConfig = async () => {
     message: "Default Claude model",
     choices: [
       { title: "sonnet", value: "sonnet" },
-      { title: "opus", value: "opus" }
+      { title: "opus", value: "opus" },
+      { title: "haiku", value: "haiku" }
     ],
-    initial: existingEnv.CC_CLAUDE_MODEL === "opus" ? 1 : 0
+    initial:
+      existingEnv.CC_CLAUDE_MODEL === "opus"
+        ? 1
+        : existingEnv.CC_CLAUDE_MODEL === "haiku"
+          ? 2
+          : 0
   });
 
   const repoSourceResponse = await prompt({

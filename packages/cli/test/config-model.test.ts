@@ -61,3 +61,28 @@ test("config writes sonnet model when selected", async () => {
     expect(env.CC_CLAUDE_MODEL).toBe("sonnet");
   });
 });
+
+test("config writes haiku model when selected", async () => {
+  await withTempDir(async (dir) => {
+    await mkdir(join(dir, ".wile", "secrets"), { recursive: true });
+    setInject([
+      "CC",
+      "oauth",
+      "oauth-token",
+      "haiku",
+      "github",
+      "gh-token",
+      "https://github.com/acme/test",
+      "main"
+    ]);
+
+    try {
+      await runConfig();
+    } finally {
+      clearInject();
+    }
+
+    const env = await readEnvFile(join(dir, ".wile", "secrets", ".env"));
+    expect(env.CC_CLAUDE_MODEL).toBe("haiku");
+  });
+});
