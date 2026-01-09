@@ -17,6 +17,7 @@ run_case() {
   mkdir -p "$SCRIPT_DIR" "$BIN_DIR"
 
   cp /Users/thiagoduarte/Projects/personal/wile/packages/agent/scripts/wile.sh "$SCRIPT_DIR/wile.sh"
+  cp /Users/thiagoduarte/Projects/personal/wile/packages/agent/scripts/claude-stream.js "$SCRIPT_DIR/claude-stream.js"
   chmod +x "$SCRIPT_DIR/wile.sh"
 
   echo "BASE PROMPT" > "$SCRIPT_DIR/prompt.md"
@@ -43,10 +44,10 @@ EOF
 
   CAPTURE="$TMP_DIR/capture.txt"
 
-  cat > "$BIN_DIR/claude" <<'EOF'
+cat > "$BIN_DIR/claude" <<'EOF'
 #!/bin/sh
 cat > "$CLAUDE_CAPTURE"
-echo "<promise>COMPLETE</promise>"
+printf '%s\n' '{"type":"assistant","message":{"content":[{"type":"text","text":"<promise>COMPLETE</promise>\\n"}]}}'
 EOF
   chmod +x "$BIN_DIR/claude"
 
