@@ -8,3 +8,5 @@ dist/
 .wile-temp/
 .wile/secrets/.env.test
 opensrc/
+
+.npmrc
