@@ -27,7 +27,7 @@ program
   .command("run")
   .description("Run Wile on a repository")
   .option("--repo <repo>", "Repository URL or local path")
-  .option("--max-iterations <count>", "Maximum iterations", "25")
+  .option("--max-iterations <count>", "Maximum iterations")
   .option("--test", "Run in test mode")
   .option("--debug", "Print debug info before running")
   .action(

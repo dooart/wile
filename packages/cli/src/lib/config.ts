@@ -18,6 +18,7 @@ export type WileConfig = {
   branchName: string;
   repoSource: "github" | "local";
   ccClaudeModel?: string;
+  maxIterations?: string;
   ccClaudeCodeOauthToken?: string;
   ccAnthropicApiKey?: string;
   envProject: Record<string, string>;
@@ -100,6 +101,7 @@ export const readWileConfig = (options: { cwd?: string; validate?: boolean } = {
       branchName: env.BRANCH_NAME ?? "",
       repoSource,
       ccClaudeModel: env.CC_CLAUDE_MODEL,
+      maxIterations: env.WILE_MAX_ITERATIONS,
       ccClaudeCodeOauthToken: env.CC_CLAUDE_CODE_OAUTH_TOKEN,
       ccAnthropicApiKey: env.CC_ANTHROPIC_API_KEY,
       envProject

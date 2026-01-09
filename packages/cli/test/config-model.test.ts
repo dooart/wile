@@ -23,7 +23,8 @@ test("config writes selected Claude model", async () => {
       "github",
       "gh-token",
       "https://github.com/acme/test",
-      "main"
+      "main",
+      12
     ]);
 
     try {
@@ -48,7 +49,8 @@ test("config writes sonnet model when selected", async () => {
       "github",
       "gh-token",
       "https://github.com/acme/test",
-      "main"
+      "main",
+      12
     ]);
 
     try {
@@ -73,7 +75,8 @@ test("config writes haiku model when selected", async () => {
       "github",
       "gh-token",
       "https://github.com/acme/test",
-      "main"
+      "main",
+      12
     ]);
 
     try {
@@ -84,5 +87,31 @@ test("config writes haiku model when selected", async () => {
 
     const env = await readEnvFile(join(dir, ".wile", "secrets", ".env"));
     expect(env.CC_CLAUDE_MODEL).toBe("haiku");
+  });
+});
+
+test("config writes max iterations when provided", async () => {
+  await withTempDir(async (dir) => {
+    await mkdir(join(dir, ".wile", "secrets"), { recursive: true });
+    setInject([
+      "CC",
+      "oauth",
+      "oauth-token",
+      "sonnet",
+      "github",
+      "gh-token",
+      "https://github.com/acme/test",
+      "main",
+      42
+    ]);
+
+    try {
+      await runConfig();
+    } finally {
+      clearInject();
+    }
+
+    const env = await readEnvFile(join(dir, ".wile", "secrets", ".env"));
+    expect(env.WILE_MAX_ITERATIONS).toBe("42");
   });
 });

@@ -25,6 +25,7 @@ test("config keeps existing values when inputs are empty", async () => {
         "GITHUB_REPO_URL=https://github.com/acme/existing",
         "BRANCH_NAME=existing-branch",
         "CC_CLAUDE_MODEL=sonnet",
+        "WILE_MAX_ITERATIONS=17",
         "CC_CLAUDE_CODE_OAUTH_TOKEN=existing-oauth"
       ].join("\n") + "\n"
     );
@@ -35,6 +36,7 @@ test("config keeps existing values when inputs are empty", async () => {
       "",
       "sonnet",
       "github",
+      "",
       "",
       "",
       ""
@@ -50,6 +52,7 @@ test("config keeps existing values when inputs are empty", async () => {
     expect(env.GITHUB_TOKEN).toBe("existing-token");
     expect(env.GITHUB_REPO_URL).toBe("https://github.com/acme/existing");
     expect(env.BRANCH_NAME).toBe("existing-branch");
+    expect(env.WILE_MAX_ITERATIONS).toBe("17");
     expect(env.CC_CLAUDE_CODE_OAUTH_TOKEN).toBe("existing-oauth");
     await access(join(secretsDir, ".env.project"));
   });

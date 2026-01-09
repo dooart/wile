@@ -25,6 +25,7 @@ This creates:
 
 Set `WILE_REPO_SOURCE=local` in `.wile/secrets/.env` to run against the current directory without GitHub.
 When `WILE_REPO_SOURCE=local`, GitHub credentials are optional.
+Set `WILE_MAX_ITERATIONS` in `.wile/secrets/.env` to change the default loop limit (default: 25).
 
 ## Run Wile
 

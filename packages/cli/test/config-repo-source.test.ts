@@ -15,7 +15,7 @@ const clearInject = () => {
 test("config skips GitHub prompts when repo source is local", async () => {
   await withTempDir(async (dir) => {
     await mkdir(join(dir, ".wile", "secrets"), { recursive: true });
-    setInject(["CC", "oauth", "oauth-token", "sonnet", "local", "main"]);
+    setInject(["CC", "oauth", "oauth-token", "sonnet", "local", "main", 12]);
 
     try {
       await runConfig();
@@ -41,7 +41,8 @@ test("config captures GitHub credentials when repo source is github", async () =
       "github",
       "gh-token",
       "https://github.com/acme/test",
-      "main"
+      "main",
+      12
     ]);
 
     try {

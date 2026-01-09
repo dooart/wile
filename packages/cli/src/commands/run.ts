@@ -194,7 +194,7 @@ export const buildDockerArgs = (options: {
 
 export const runWile = async (options: {
   repo?: string;
-  maxIterations: string;
+  maxIterations?: string;
   test?: boolean;
   debug?: boolean;
 }) => {
@@ -241,9 +241,15 @@ export const runWile = async (options: {
   }
 
   const agentDir = resolveAgentDir();
+  const resolvedIterations = options.maxIterations || config.maxIterations || "25";
   buildAgentImage(agentDir);
 
-  const dockerArgs = buildDockerArgs(options, config, paths, cwd);
+  const dockerArgs = buildDockerArgs(
+    { ...options, maxIterations: resolvedIterations },
+    config,
+    paths,
+    cwd
+  );
 
   const logsDir = join(paths.wileDir, "logs");
   mkdirSync(logsDir, { recursive: true });

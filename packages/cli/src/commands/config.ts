@@ -303,6 +303,22 @@ export const runConfig = async () => {
     initial: existingEnv.BRANCH_NAME ?? "main"
   });
 
+  const iterationsResponse = await prompt({
+    type: "number",
+    name: "maxIterations",
+    message: "Default max iterations",
+    initial: existingEnv.WILE_MAX_ITERATIONS
+      ? Number(existingEnv.WILE_MAX_ITERATIONS)
+      : 25
+  });
+  const fallbackIterations = existingEnv.WILE_MAX_ITERATIONS
+    ? Number(existingEnv.WILE_MAX_ITERATIONS)
+    : 25;
+  const maxIterations = Number.isFinite(iterationsResponse.maxIterations) &&
+    iterationsResponse.maxIterations > 0
+    ? iterationsResponse.maxIterations
+    : fallbackIterations;
+
   const authFallback =
     authMethod === "oauth"
       ? existingEnv.CC_CLAUDE_CODE_OAUTH_TOKEN
@@ -327,7 +343,8 @@ export const runConfig = async () => {
     `GITHUB_TOKEN=${githubToken ?? ""}`,
     `GITHUB_REPO_URL=${repoUrl ?? ""}`,
     `BRANCH_NAME=${branchName ?? "main"}`,
-    `CC_CLAUDE_MODEL=${defaultModelResponse.model as string}`
+    `CC_CLAUDE_MODEL=${defaultModelResponse.model as string}`,
+    `WILE_MAX_ITERATIONS=${maxIterations}`
   ];
 
   if (authMethod === "oauth") {
