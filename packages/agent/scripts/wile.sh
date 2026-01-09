@@ -17,6 +17,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROMPT_FILE="$SCRIPT_DIR/prompt.md"
 SETUP_PROMPT_FILE="$SCRIPT_DIR/prompt-setup.md"
 ADDITIONAL_PROMPT_FILE="${WILE_ADDITIONAL_INSTRUCTIONS:-}"
+TEE_TARGET="${WILE_TEE_TARGET:-/dev/stderr}"
+if ! ( : > "$TEE_TARGET" ) 2>/dev/null; then
+  TEE_TARGET="/dev/null"
+fi
 
 echo "══════════════════════════════════════════════════════"
 echo "  🌵  WILE - Autonomous Coding Agent"
@@ -82,7 +86,7 @@ echo "════════════════════════�
 echo ""
 
 if [ -f "$SETUP_PROMPT_FILE" ]; then
-  OUTPUT=$(run_agent "$SETUP_PROMPT_FILE" | tee /dev/stderr) || true
+  OUTPUT=$(run_agent "$SETUP_PROMPT_FILE" | tee "$TEE_TARGET") || true
 
   # Check if setup failed critically
   if echo "$OUTPUT" | grep -q "<promise>SETUP_FAILED</promise>"; then
@@ -113,7 +117,7 @@ for i in $(seq 1 $MAX_ITERATIONS); do
   # Pipe prompt to Claude Code
   # --dangerously-skip-permissions allows autonomous operation
   # Capture output while also displaying it (tee to stderr)
-  OUTPUT=$(run_agent "$PROMPT_FILE" | tee /dev/stderr) || true
+  OUTPUT=$(run_agent "$PROMPT_FILE" | tee "$TEE_TARGET") || true
 
   # Check for completion signal (tag must be on its own line; reject backticks/code fences)
   CLEAN_OUTPUT=$(printf '%s' "$OUTPUT" | tr -d '\r' | sed -e 's/[[:space:]]*$//')
