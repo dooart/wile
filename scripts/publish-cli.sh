@@ -16,13 +16,21 @@ fi
 
 cd "$CLI_DIR"
 
+NPMRC_PATH=""
 if [ -f "$CLI_DIR/.npmrc" ]; then
-  export NPM_CONFIG_USERCONFIG="$CLI_DIR/.npmrc"
+  NPMRC_PATH="$CLI_DIR/.npmrc"
 elif [ -f "$ROOT_DIR/.npmrc" ]; then
-  export NPM_CONFIG_USERCONFIG="$ROOT_DIR/.npmrc"
+  NPMRC_PATH="$ROOT_DIR/.npmrc"
 fi
 
-if [ ! -f "$CLI_DIR/.npmrc" ] && [ ! -f "$ROOT_DIR/.npmrc" ]; then
+USERCONFIG_ARG=""
+if [ -n "$NPMRC_PATH" ]; then
+  USERCONFIG_ARG="--userconfig $NPMRC_PATH"
+  if ! npm whoami $USERCONFIG_ARG >/dev/null 2>&1; then
+    echo "error: npm auth failed using $NPMRC_PATH. verify the token and try again." >&2
+    exit 1
+  fi
+else
   if ! npm whoami >/dev/null 2>&1; then
     echo "error: npm is not authenticated. run 'npm login' in packages/cli first." >&2
     exit 1
@@ -43,10 +51,10 @@ fi
 
 node -e "const fs=require('fs');const data=fs.readFileSync('dist/cli.js','utf8');if(!data.startsWith('#!/usr/bin/env node')){console.error('missing shebang');process.exit(1);}"
 
-PACK_FILE=$(npm pack)
+PACK_FILE=$(npm pack $USERCONFIG_ARG)
 rm -f "$PACK_FILE"
 
-npm publish
+npm publish $USERCONFIG_ARG
 
 git -C "$ROOT_DIR" tag "v$VERSION"
 git -C "$ROOT_DIR" push
