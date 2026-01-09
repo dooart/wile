@@ -4,6 +4,11 @@ set -euo pipefail
 ROOT_DIR=$(cd "$(dirname "$0")/.." && pwd)
 CLI_DIR="$ROOT_DIR/packages/cli"
 
+fail() {
+  echo "error: $1" >&2
+  exit 1
+}
+
 if [ "$#" -ne 1 ]; then
   echo "usage: $0 <patch|minor|major>" >&2
   exit 1
@@ -22,7 +27,7 @@ if ! git -C "$ROOT_DIR" diff --quiet || ! git -C "$ROOT_DIR" diff --staged --qui
   exit 1
 fi
 
-sh "$ROOT_DIR/scripts/test-local.sh"
+sh "$ROOT_DIR/scripts/test-local.sh" || fail "local tests failed"
 
 cd "$CLI_DIR"
 
@@ -54,8 +59,9 @@ VERSION=$(node -p "require('./package.json').version")
 git -C "$ROOT_DIR" add packages/cli/package.json
 git -C "$ROOT_DIR" commit -m "release v$VERSION"
 
-./build.sh
+./build.sh || fail "cli build failed"
 
-node -e "const fs=require('fs');const data=fs.readFileSync('dist/cli.js','utf8');if(!data.startsWith('#!/usr/bin/env node')){console.error('missing shebang');process.exit(1);}"
+node -e "const fs=require('fs');const data=fs.readFileSync('dist/cli.js','utf8');if(!data.startsWith('#!/usr/bin/env node')){console.error('missing shebang');process.exit(1);}" \
+  || fail "cli build is missing shebang"
 
 echo "prepared v$VERSION"
