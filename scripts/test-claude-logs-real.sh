@@ -83,7 +83,7 @@ else
 fi
 
 export WILE_AGENT_DIR="$ROOT_DIR/packages/agent"
-node "$ROOT_DIR/packages/cli/dist/cli.js" run --max-iterations 1
+node "$ROOT_DIR/packages/cli/dist/cli.js" run --max-iterations 3
 
 LOG_FILE=$(ls .wile/logs/run-*.log | head -n 1)
 if [ -z "$LOG_FILE" ]; then

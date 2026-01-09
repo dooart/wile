@@ -7,7 +7,12 @@
 set -e
 
 MAX_ITERATIONS=${1:-25}
+CODING_AGENT=${CODING_AGENT:-CC}
 CLAUDE_MODEL=${CC_CLAUDE_MODEL:-sonnet}
+OC_MODEL=${OC_MODEL:-glm-4.7}
+if [[ "$OC_MODEL" != */* ]]; then
+  OC_MODEL="z-ai/$OC_MODEL"
+fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROMPT_FILE="$SCRIPT_DIR/prompt.md"
 SETUP_PROMPT_FILE="$SCRIPT_DIR/prompt-setup.md"
@@ -16,8 +21,13 @@ ADDITIONAL_PROMPT_FILE="${WILE_ADDITIONAL_INSTRUCTIONS:-}"
 echo "══════════════════════════════════════════════════════"
 echo "  🌵  WILE - Autonomous Coding Agent"
 echo "══════════════════════════════════════════════════════"
+echo "  Agent:          $CODING_AGENT"
 echo "  Max iterations: $MAX_ITERATIONS"
-echo "  Model:          $CLAUDE_MODEL"
+if [ "$CODING_AGENT" = "OC" ]; then
+  echo "  Model:          $OC_MODEL"
+else
+  echo "  Model:          $CLAUDE_MODEL"
+fi
 echo "  Prompt file:    $PROMPT_FILE"
 echo "══════════════════════════════════════════════════════"
 echo ""
@@ -39,6 +49,29 @@ if [ -n "$ADDITIONAL_PROMPT_FILE" ] && [ -f "$ADDITIONAL_PROMPT_FILE" ]; then
   fi
 fi
 
+run_claude() {
+  local prompt_path="$1"
+  cat "$prompt_path" \
+    | claude --model "$CLAUDE_MODEL" --print --output-format stream-json --verbose --dangerously-skip-permissions \
+    | node "$SCRIPT_DIR/claude-stream.js"
+}
+
+run_opencode() {
+  local prompt_path="$1"
+  cat "$prompt_path" \
+    | opencode run --format json --model "openrouter/$OC_MODEL" \
+    | node "$SCRIPT_DIR/opencode-stream.js"
+}
+
+run_agent() {
+  local prompt_path="$1"
+  if [ "$CODING_AGENT" = "OC" ]; then
+    run_opencode "$prompt_path"
+  else
+    run_claude "$prompt_path"
+  fi
+}
+
 # ════════════════════════════════════════════════════════════
 # ITERATION 0: Setup
 # ════════════════════════════════════════════════════════════
@@ -49,12 +82,7 @@ echo "════════════════════════�
 echo ""
 
 if [ -f "$SETUP_PROMPT_FILE" ]; then
-  OUTPUT=$(
-    cat "$SETUP_PROMPT_FILE" \
-      | claude --model "$CLAUDE_MODEL" --print --output-format stream-json --verbose --dangerously-skip-permissions \
-      | node "$SCRIPT_DIR/claude-stream.js" \
-      | tee /dev/stderr
-  ) || true
+  OUTPUT=$(run_agent "$SETUP_PROMPT_FILE" | tee /dev/stderr) || true
 
   # Check if setup failed critically
   if echo "$OUTPUT" | grep -q "<promise>SETUP_FAILED</promise>"; then
@@ -85,20 +113,22 @@ for i in $(seq 1 $MAX_ITERATIONS); do
   # Pipe prompt to Claude Code
   # --dangerously-skip-permissions allows autonomous operation
   # Capture output while also displaying it (tee to stderr)
-  OUTPUT=$(
-    cat "$PROMPT_FILE" \
-      | claude --model "$CLAUDE_MODEL" --print --output-format stream-json --verbose --dangerously-skip-permissions \
-      | node "$SCRIPT_DIR/claude-stream.js" \
-      | tee /dev/stderr
-  ) || true
+  OUTPUT=$(run_agent "$PROMPT_FILE" | tee /dev/stderr) || true
 
-  # Check for completion signal
-  if echo "$OUTPUT" | grep -q "<promise>COMPLETE</promise>"; then
+  # Check for completion signal (tag must be on its own line; reject backticks/code fences)
+  CLEAN_OUTPUT=$(printf '%s' "$OUTPUT" | tr -d '\r' | sed -e 's/[[:space:]]*$//')
+  if printf '%s\n' "$CLEAN_OUTPUT" | grep -q -E '^[[:space:]]*<promise>COMPLETE</promise>[[:space:]]*$'; then
+    if printf '%s' "$CLEAN_OUTPUT" | grep -F '```' >/dev/null 2>&1; then
+      :
+    elif printf '%s' "$CLEAN_OUTPUT" | grep -F '`<promise>COMPLETE</promise>`' >/dev/null 2>&1; then
+      :
+    else
     echo ""
     echo "══════════════════════════════════════════════════════"
     echo "  ✅ ALL TASKS COMPLETE"
     echo "══════════════════════════════════════════════════════"
     exit 0
+    fi
   fi
 
   echo ""

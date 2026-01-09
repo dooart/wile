@@ -110,8 +110,11 @@ For UI work, tell the agent how to verify:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
+| `CODING_AGENT` | No | `CC` (Claude Code, default) or `OC` (OpenCode via OpenRouter) |
 | `CC_CLAUDE_CODE_OAUTH_TOKEN` | Yes* | OAuth token from `claude setup-token` (uses Pro/Max subscription) |
 | `CC_ANTHROPIC_API_KEY` | Yes* | API key (uses API credits - alternative to OAuth) |
+| `OC_OPENROUTER_API_KEY` | Yes (OC) | OpenRouter API key for OpenCode |
+| `OC_MODEL` | Yes (OC) | OpenRouter model id (set `glm-4.7` to target `openrouter/z-ai/glm-4.7`) |
 | `WILE_REPO_SOURCE` | No | `github` (default) or `local` |
 | `GITHUB_TOKEN` | Yes (github) | GitHub PAT with repo access |
 | `GITHUB_REPO_URL` | Yes (github) | HTTPS URL to repository |
@@ -119,7 +122,7 @@ For UI work, tell the agent how to verify:
 | `MAX_ITERATIONS` | No | Max loops (default: 25) |
 | `CC_CLAUDE_MODEL` | No | Claude model alias/name (default: sonnet) |
 
-*Either `CC_CLAUDE_CODE_OAUTH_TOKEN` or `CC_ANTHROPIC_API_KEY` is required, not both.
+*Either `CC_CLAUDE_CODE_OAUTH_TOKEN` or `CC_ANTHROPIC_API_KEY` is required when `CODING_AGENT=CC`.
 
 ## Output Files
 

@@ -217,6 +217,7 @@ export const runWile = async (options: {
     console.log(`- cwd: ${cwd}`);
     console.log(`- INIT_CWD: ${initCwd}`);
     console.log(`- WILE_AGENT_DIR: ${process.env.WILE_AGENT_DIR ?? "(unset)"}`);
+    console.log(`- codingAgent: ${config.codingAgent}`);
     console.log(`- repoSource: ${config.repoSource}`);
     console.log(`- githubRepoUrl: ${config.githubRepoUrl || "(empty)"}`);
     console.log(`- branchName: ${config.branchName || "(empty)"}`);

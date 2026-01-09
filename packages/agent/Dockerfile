@@ -48,6 +48,10 @@ ENV NODE_OPTIONS="--max-old-space-size=4096"
 # https://www.npmjs.com/package/@anthropic-ai/claude-code
 RUN npm install -g @anthropic-ai/claude-code
 
+# Install OpenCode CLI
+# https://www.npmjs.com/package/opencode-ai
+RUN npm install -g opencode-ai@latest
+
 # CC_ANTHROPIC_API_KEY is passed at runtime via environment variable (mapped to ANTHROPIC_API_KEY in entrypoint)
 # Usage: claude --dangerously-skip-permissions
 

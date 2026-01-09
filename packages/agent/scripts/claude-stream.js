@@ -47,6 +47,10 @@ const extractToolUse = (content) => {
 
 rl.on("line", (line) => {
   if (!line.trim()) return;
+  if (process.env.WILE_STREAM_JSON === "true") {
+    writeLine(line);
+    return;
+  }
   let payload;
   try {
     payload = JSON.parse(line);

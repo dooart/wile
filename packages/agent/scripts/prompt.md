@@ -87,6 +87,7 @@ After completing steps 1-8, check if ALL stories in `.wile/prd.json` have `passe
 ```
 <promise>COMPLETE</promise>
 ```
+The entire response must be exactly that single line. No other text before or after. No extra lines. No markdown. No backticks. No code blocks.
 
 **If there are still stories with `passes: false`**, end your response normally. The loop will call you again for the next story.
 

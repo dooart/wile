@@ -101,6 +101,8 @@ const tips = {
     "Tip: run 'claude setup-token' on your machine to generate an OAuth token (uses Pro/Max subscription).",
   apiKey:
     "Tip: create an Anthropic API key in the console (uses API credits).",
+  openrouter:
+    "Tip: create an OpenRouter API key for OpenCode (used for z-ai/glm-4.7).",
   github:
     "Tip: use a GitHub Personal Access Token (fine-grained recommended). Create at https://github.com/settings/tokens?type=beta with Contents (read/write) and Metadata (read)."
 };
@@ -197,65 +199,97 @@ export const runConfig = async () => {
 
   const existingEnv = await readEnvFile(envPath);
 
-  await prompt({
+  const codingAgentResponse = await prompt({
     type: "select",
     name: "codingAgent",
     message: "Select coding agent",
-    choices: [{ title: "Claude Code (CC)", value: "CC" }],
-    initial: 0
-  });
-
-  const authDefault = existingEnv.CC_CLAUDE_CODE_OAUTH_TOKEN
-    ? "oauth"
-    : existingEnv.CC_ANTHROPIC_API_KEY
-      ? "apiKey"
-      : "oauth";
-
-  const authResponse = await prompt({
-    type: "select",
-    name: "authMethod",
-    message: "Claude Code authentication",
     choices: [
-      { title: "OAuth token (Pro/Max subscription)", value: "oauth" },
-      { title: "API key (Anthropic credits)", value: "apiKey" }
+      { title: "Claude Code (CC)", value: "CC" },
+      { title: "OpenCode (OC)", value: "OC" }
     ],
-    initial: authDefault === "apiKey" ? 1 : 0
+    initial: existingEnv.CODING_AGENT === "OC" ? 1 : 0
   });
 
-  const authMethod = authResponse.authMethod as "oauth" | "apiKey";
-  console.log("");
-  console.log(authMethod === "oauth" ? tips.oauth : tips.apiKey);
-  console.log("");
+  const codingAgent = codingAgentResponse.codingAgent as "CC" | "OC";
 
-  const authValueResponse = await prompt({
-    type: "password",
-    name: "authValue",
-    message:
-      authMethod === "oauth"
-        ? "Claude Code OAuth token (press enter to keep existing)"
-        : "Anthropic API key (press enter to keep existing)",
-    initial:
-      authMethod === "oauth"
-        ? existingEnv.CC_CLAUDE_CODE_OAUTH_TOKEN ?? ""
-        : existingEnv.CC_ANTHROPIC_API_KEY ?? ""
-  });
+  let authMethod: "oauth" | "apiKey" | null = null;
+  let authValueResponse: { authValue?: string } = {};
+  let defaultModelResponse: { model?: string } = {};
+  let ocKeyResponse: { ocKey?: string } = {};
+  let ocModelResponse: { ocModel?: string } = {};
 
-  const defaultModelResponse = await prompt({
-    type: "select",
-    name: "model",
-    message: "Default Claude model",
-    choices: [
-      { title: "sonnet", value: "sonnet" },
-      { title: "opus", value: "opus" },
-      { title: "haiku", value: "haiku" }
-    ],
-    initial:
-      existingEnv.CC_CLAUDE_MODEL === "opus"
-        ? 1
-        : existingEnv.CC_CLAUDE_MODEL === "haiku"
-          ? 2
-          : 0
-  });
+  if (codingAgent === "CC") {
+    const authDefault = existingEnv.CC_CLAUDE_CODE_OAUTH_TOKEN
+      ? "oauth"
+      : existingEnv.CC_ANTHROPIC_API_KEY
+        ? "apiKey"
+        : "oauth";
+
+    const authResponse = await prompt({
+      type: "select",
+      name: "authMethod",
+      message: "Claude Code authentication",
+      choices: [
+        { title: "OAuth token (Pro/Max subscription)", value: "oauth" },
+        { title: "API key (Anthropic credits)", value: "apiKey" }
+      ],
+      initial: authDefault === "apiKey" ? 1 : 0
+    });
+
+    authMethod = authResponse.authMethod as "oauth" | "apiKey";
+    console.log("");
+    console.log(authMethod === "oauth" ? tips.oauth : tips.apiKey);
+    console.log("");
+
+    authValueResponse = await prompt({
+      type: "password",
+      name: "authValue",
+      message:
+        authMethod === "oauth"
+          ? "Claude Code OAuth token (press enter to keep existing)"
+          : "Anthropic API key (press enter to keep existing)",
+      initial:
+        authMethod === "oauth"
+          ? existingEnv.CC_CLAUDE_CODE_OAUTH_TOKEN ?? ""
+          : existingEnv.CC_ANTHROPIC_API_KEY ?? ""
+    });
+
+    defaultModelResponse = await prompt({
+      type: "select",
+      name: "model",
+      message: "Default Claude model",
+      choices: [
+        { title: "sonnet", value: "sonnet" },
+        { title: "opus", value: "opus" },
+        { title: "haiku", value: "haiku" }
+      ],
+      initial:
+        existingEnv.CC_CLAUDE_MODEL === "opus"
+          ? 1
+          : existingEnv.CC_CLAUDE_MODEL === "haiku"
+            ? 2
+            : 0
+    });
+  } else {
+    console.log("");
+    console.log(tips.openrouter);
+    console.log("");
+
+    ocKeyResponse = await prompt({
+      type: "password",
+      name: "ocKey",
+      message: "OpenRouter API key (press enter to keep existing)",
+      initial: existingEnv.OC_OPENROUTER_API_KEY ?? ""
+    });
+
+    ocModelResponse = await prompt({
+      type: "select",
+      name: "ocModel",
+      message: "OpenCode model (OpenRouter)",
+      choices: [{ title: "glm-4.7", value: "glm-4.7" }],
+      initial: existingEnv.OC_MODEL === "glm-4.7" ? 0 : 0
+    });
+  }
 
   const repoSourceResponse = await prompt({
     type: "select",
@@ -323,7 +357,18 @@ export const runConfig = async () => {
     authMethod === "oauth"
       ? existingEnv.CC_CLAUDE_CODE_OAUTH_TOKEN
       : existingEnv.CC_ANTHROPIC_API_KEY;
-  const authValue = coalesceValue(authValueResponse.authValue, authFallback);
+  const authValue =
+    codingAgent === "CC"
+      ? coalesceValue(authValueResponse.authValue, authFallback)
+      : undefined;
+  const ocKey =
+    codingAgent === "OC"
+      ? coalesceValue(ocKeyResponse.ocKey, existingEnv.OC_OPENROUTER_API_KEY)
+      : undefined;
+  const ocModel =
+    codingAgent === "OC"
+      ? coalesceValue(ocModelResponse.ocModel, existingEnv.OC_MODEL ?? "glm-4.7")
+      : undefined;
   const githubToken =
     repoSource === "github"
       ? coalesceValue(githubTokenResponse.githubToken, existingEnv.GITHUB_TOKEN)
@@ -338,19 +383,24 @@ export const runConfig = async () => {
   );
 
   const envLines = [
-    "CODING_AGENT=CC",
+    `CODING_AGENT=${codingAgent}`,
     `WILE_REPO_SOURCE=${repoSource}`,
     `GITHUB_TOKEN=${githubToken ?? ""}`,
     `GITHUB_REPO_URL=${repoUrl ?? ""}`,
     `BRANCH_NAME=${branchName ?? "main"}`,
-    `CC_CLAUDE_MODEL=${defaultModelResponse.model as string}`,
     `WILE_MAX_ITERATIONS=${maxIterations}`
   ];
 
-  if (authMethod === "oauth") {
-    envLines.push(`CC_CLAUDE_CODE_OAUTH_TOKEN=${authValue ?? ""}`);
+  if (codingAgent === "CC") {
+    envLines.push(`CC_CLAUDE_MODEL=${defaultModelResponse.model as string}`);
+    if (authMethod === "oauth") {
+      envLines.push(`CC_CLAUDE_CODE_OAUTH_TOKEN=${authValue ?? ""}`);
+    } else {
+      envLines.push(`CC_ANTHROPIC_API_KEY=${authValue ?? ""}`);
+    }
   } else {
-    envLines.push(`CC_ANTHROPIC_API_KEY=${authValue ?? ""}`);
+    envLines.push(`OC_MODEL=${ocModel ?? "glm-4.7"}`);
+    envLines.push(`OC_OPENROUTER_API_KEY=${ocKey ?? ""}`);
   }
 
   await writeFile(envPath, envLines.join("\n") + "\n");

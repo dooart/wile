@@ -12,7 +12,7 @@ export type WilePaths = {
 };
 
 export type WileConfig = {
-  codingAgent: "CC";
+  codingAgent: "CC" | "OC";
   githubToken: string;
   githubRepoUrl: string;
   branchName: string;
@@ -21,6 +21,8 @@ export type WileConfig = {
   maxIterations?: string;
   ccClaudeCodeOauthToken?: string;
   ccAnthropicApiKey?: string;
+  ocOpenrouterApiKey?: string;
+  ocModel?: string;
   envProject: Record<string, string>;
 };
 
@@ -69,8 +71,8 @@ export const readWileConfig = (options: { cwd?: string; validate?: boolean } = {
 
   if (validate) {
     ensureRequired(
-      env.CODING_AGENT === "CC",
-      "CODING_AGENT must be set to CC in .wile/secrets/.env. Run 'bunx wile config'."
+      env.CODING_AGENT === "CC" || env.CODING_AGENT === "OC",
+      "CODING_AGENT must be set to CC or OC in .wile/secrets/.env. Run 'bunx wile config'."
     );
     if (repoSource === "github") {
       ensureRequired(
@@ -86,16 +88,28 @@ export const readWileConfig = (options: { cwd?: string; validate?: boolean } = {
         "BRANCH_NAME is required in .wile/secrets/.env. Run 'bunx wile config'."
       );
     }
-    ensureRequired(
-      Boolean(env.CC_CLAUDE_CODE_OAUTH_TOKEN || env.CC_ANTHROPIC_API_KEY),
-      "Either CC_CLAUDE_CODE_OAUTH_TOKEN or CC_ANTHROPIC_API_KEY is required in .wile/secrets/.env."
-    );
+    if (env.CODING_AGENT === "CC") {
+      ensureRequired(
+        Boolean(env.CC_CLAUDE_CODE_OAUTH_TOKEN || env.CC_ANTHROPIC_API_KEY),
+        "Either CC_CLAUDE_CODE_OAUTH_TOKEN or CC_ANTHROPIC_API_KEY is required in .wile/secrets/.env."
+      );
+    }
+    if (env.CODING_AGENT === "OC") {
+      ensureRequired(
+        Boolean(env.OC_OPENROUTER_API_KEY),
+        "OC_OPENROUTER_API_KEY is required in .wile/secrets/.env for OpenCode."
+      );
+      ensureRequired(
+        Boolean(env.OC_MODEL),
+        "OC_MODEL is required in .wile/secrets/.env for OpenCode."
+      );
+    }
   }
 
   return {
     paths,
     config: {
-      codingAgent: (env.CODING_AGENT as "CC") ?? "CC",
+      codingAgent: (env.CODING_AGENT as "CC" | "OC") ?? "CC",
       githubToken: env.GITHUB_TOKEN ?? "",
       githubRepoUrl: env.GITHUB_REPO_URL ?? "",
       branchName: env.BRANCH_NAME ?? "",
@@ -104,6 +118,8 @@ export const readWileConfig = (options: { cwd?: string; validate?: boolean } = {
       maxIterations: env.WILE_MAX_ITERATIONS,
       ccClaudeCodeOauthToken: env.CC_CLAUDE_CODE_OAUTH_TOKEN,
       ccAnthropicApiKey: env.CC_ANTHROPIC_API_KEY,
+      ocOpenrouterApiKey: env.OC_OPENROUTER_API_KEY,
+      ocModel: env.OC_MODEL,
       envProject
     }
   };

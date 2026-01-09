@@ -13,12 +13,12 @@ set -a
 . "$ENV_TEST"
 set +a
 
-if [ -z "${CC_CLAUDE_CODE_OAUTH_TOKEN:-}" ] && [ -z "${CC_ANTHROPIC_API_KEY:-}" ]; then
-  echo "error: CC_CLAUDE_CODE_OAUTH_TOKEN or CC_ANTHROPIC_API_KEY must be set in .env.test" >&2
+if [ -z "${OC_OPENROUTER_API_KEY:-}" ]; then
+  echo "error: OC_OPENROUTER_API_KEY must be set in .env.test" >&2
   exit 1
 fi
 
-TMP_ROOT=$(mktemp -d /tmp/wile-claude-logs-XXXXXX)
+TMP_ROOT=$(mktemp -d /tmp/wile-opencode-logs-real-XXXXXX)
 REPO_DIR="$TMP_ROOT/repo"
 ORIGIN_DIR="$REPO_DIR/origin.git"
 
@@ -32,22 +32,23 @@ cd "$REPO_DIR"
 git checkout -b main >/dev/null
 git init --bare "$ORIGIN_DIR" >/dev/null
 git remote add origin "$ORIGIN_DIR"
+
 git config user.email "test@local"
 git config user.name "Wile Test"
 
-echo "# Wile Claude logs test" > README.md
+echo "# Wile OpenCode logs real test" > README.md
 mkdir -p .wile/secrets
 printf "secrets/\nscreenshots/\nlogs/\n" > .wile/.gitignore
-printf "# Codebase Patterns\n" > .wile/progress.txt
+printf "# Wile Progress Log\n\n## Codebase Patterns\n\n---\n" > .wile/progress.txt
 
 cat > .wile/prd.json <<'JSON'
 {
   "userStories": [
     {
-      "id": "US-LOG-001",
-      "title": "Calculate 1+1 and print the answer",
+      "id": "US-LOG-OC-001",
+      "title": "Write a small marker file",
       "acceptanceCriteria": [
-        "Output a line that reads exactly: ANSWER: 2"
+        "Create integration-log-opencode.txt containing the text REAL OPENCODE LOG TEST"
       ],
       "priority": 1,
       "passes": false
@@ -57,19 +58,33 @@ cat > .wile/prd.json <<'JSON'
 JSON
 
 cat > .wile/additional-instructions.md <<'MD'
-- For this test, include the line "ANSWER: 2" in your response so it is visible in logs.
+- Include the exact line "REAL OPENCODE LOG TEST" in your response output.
 MD
 
 git add -A
-git commit -m "chore: seed claude log test" >/dev/null
-git push origin main >/dev/null
+git commit -m "chore: seed opencode log test" >/dev/null
+git push -u origin main >/dev/null
 
 cp "$ENV_TEST" .wile/secrets/.env
-if grep -q "^WILE_MOCK_CLAUDE=" .wile/secrets/.env; then
-  sed -i '' "s/^WILE_MOCK_CLAUDE=.*/WILE_MOCK_CLAUDE=true/" .wile/secrets/.env
+
+if grep -q "^CODING_AGENT=" .wile/secrets/.env; then
+  sed -i '' "s/^CODING_AGENT=.*/CODING_AGENT=OC/" .wile/secrets/.env
 else
-  echo "WILE_MOCK_CLAUDE=true" >> .wile/secrets/.env
+  echo "CODING_AGENT=OC" >> .wile/secrets/.env
 fi
+
+if grep -q "^OC_OPENROUTER_API_KEY=" .wile/secrets/.env; then
+  sed -i '' "s/^OC_OPENROUTER_API_KEY=.*/OC_OPENROUTER_API_KEY=$OC_OPENROUTER_API_KEY/" .wile/secrets/.env
+else
+  echo "OC_OPENROUTER_API_KEY=$OC_OPENROUTER_API_KEY" >> .wile/secrets/.env
+fi
+
+if grep -q "^OC_MODEL=" .wile/secrets/.env; then
+  sed -i '' "s/^OC_MODEL=.*/OC_MODEL=glm-4.7/" .wile/secrets/.env
+else
+  echo "OC_MODEL=glm-4.7" >> .wile/secrets/.env
+fi
+
 if grep -q "^WILE_REPO_SOURCE=" .wile/secrets/.env; then
   sed -i '' "s/^WILE_REPO_SOURCE=.*/WILE_REPO_SOURCE=local/" .wile/secrets/.env
 else
@@ -91,6 +106,6 @@ if [ -z "$LOG_FILE" ]; then
   exit 1
 fi
 
-grep -q "ANSWER: 2" "$LOG_FILE"
+grep -q "REAL OPENCODE LOG TEST" "$LOG_FILE"
 
-echo "test-claude-logs: ok"
+echo "test-opencode-logs-real: ok"

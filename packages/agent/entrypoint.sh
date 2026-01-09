@@ -67,10 +67,12 @@ NODE
   exit 0
 fi
 
+CODING_AGENT="${CODING_AGENT:-CC}"
 REPO_SOURCE="${WILE_REPO_SOURCE:-github}"
 LOCAL_REPO_PATH="${WILE_LOCAL_REPO_PATH:-/home/wile/workspace/repo}"
 ADDITIONAL_INSTRUCTIONS_PATH="${WILE_ADDITIONAL_INSTRUCTIONS:-}"
 
+echo "  Agent:      $CODING_AGENT"
 if [ "$REPO_SOURCE" = "local" ]; then
   if [ ! -d "$LOCAL_REPO_PATH" ]; then
     echo "ERROR: WILE_LOCAL_REPO_PATH does not exist: $LOCAL_REPO_PATH"
@@ -83,53 +85,74 @@ else
   : "${GITHUB_TOKEN:?GITHUB_TOKEN is required}"
 fi
 
-# Authentication: Either CC_CLAUDE_CODE_OAUTH_TOKEN (Pro/Max subscription) or CC_ANTHROPIC_API_KEY (API credits)
-if [ -z "$CC_CLAUDE_CODE_OAUTH_TOKEN" ] && [ -z "$CC_ANTHROPIC_API_KEY" ]; then
-  echo "ERROR: Either CC_CLAUDE_CODE_OAUTH_TOKEN or CC_ANTHROPIC_API_KEY is required"
-  echo ""
-  echo "  CC_CLAUDE_CODE_OAUTH_TOKEN - Uses your Pro/Max subscription (recommended)"
-  echo "  CC_ANTHROPIC_API_KEY       - Uses API credits (pay per token)"
-  echo ""
-  echo "Run 'claude setup-token' on your local machine to get an OAuth token."
-  exit 1
+# Authentication for selected coding agent
+if [ "$CODING_AGENT" = "OC" ]; then
+  if [ -z "$OC_OPENROUTER_API_KEY" ]; then
+    echo "ERROR: OC_OPENROUTER_API_KEY is required for OpenCode"
+    exit 1
+  fi
+  if [ -z "$OC_MODEL" ]; then
+    echo "ERROR: OC_MODEL is required for OpenCode"
+    exit 1
+  fi
+else
+  if [ -z "$CC_CLAUDE_CODE_OAUTH_TOKEN" ] && [ -z "$CC_ANTHROPIC_API_KEY" ]; then
+    echo "ERROR: Either CC_CLAUDE_CODE_OAUTH_TOKEN or CC_ANTHROPIC_API_KEY is required"
+    echo ""
+    echo "  CC_CLAUDE_CODE_OAUTH_TOKEN - Uses your Pro/Max subscription (recommended)"
+    echo "  CC_ANTHROPIC_API_KEY       - Uses API credits (pay per token)"
+    echo ""
+    echo "Run 'claude setup-token' on your local machine to get an OAuth token."
+    exit 1
+  fi
 fi
 
 MAX_ITERATIONS=${MAX_ITERATIONS:-25}
 SCRIPT_DIR="/home/wile/scripts"
 WORKSPACE="/home/wile/workspace"
 
-if [ "${WILE_MOCK_CLAUDE:-}" = "true" ]; then
+if [ "${WILE_MOCK_CLAUDE:-}" = "true" ] && [ "$CODING_AGENT" = "CC" ]; then
   echo "  Claude:     Mocked"
   MOCK_BIN="/home/wile/mock-bin"
   mkdir -p "$MOCK_BIN"
-  cat > "$MOCK_BIN/claude" << 'MOCK'
-#!/bin/sh
-cat <<'JSON'
-{"type":"assistant","message":{"content":[{"type":"text","text":"ANSWER: 2\n<promise>COMPLETE</promise>\n"}]}}
-JSON
-MOCK
+  cp "$SCRIPT_DIR/mock-claude.sh" "$MOCK_BIN/claude"
   chmod +x "$MOCK_BIN/claude"
   export PATH="$MOCK_BIN:$PATH"
 fi
 
-# Set up Claude Code authentication
-if [ -n "$CC_CLAUDE_CODE_OAUTH_TOKEN" ]; then
-  echo "  Auth:       OAuth (Pro/Max subscription)"
+if [ "$CODING_AGENT" = "OC" ]; then
+  echo "  Auth:       OpenRouter (OpenCode)"
+  OPENCODE_DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/opencode"
+  mkdir -p "$OPENCODE_DATA_DIR"
+  cat > "$OPENCODE_DATA_DIR/auth.json" << OPENCODEAUTH
+{
+  "openrouter": {
+    "type": "api",
+    "key": "$OC_OPENROUTER_API_KEY"
+  }
+}
+OPENCODEAUTH
+  chmod 600 "$OPENCODE_DATA_DIR/auth.json"
+  export OPENROUTER_API_KEY="$OC_OPENROUTER_API_KEY"
+else
+  # Set up Claude Code authentication
+  if [ -n "$CC_CLAUDE_CODE_OAUTH_TOKEN" ]; then
+    echo "  Auth:       OAuth (Pro/Max subscription)"
 
-  # Create required directories
-  mkdir -p ~/.claude ~/.config/claude
+    # Create required directories
+    mkdir -p ~/.claude ~/.config/claude
 
-  # Create ~/.claude.json (THE CRITICAL FILE!)
-  # Without this, Claude Code thinks it's a fresh install and breaks
-  cat > ~/.claude.json << 'CLAUDEJSON'
+    # Create ~/.claude.json (THE CRITICAL FILE!)
+    # Without this, Claude Code thinks it's a fresh install and breaks
+    cat > ~/.claude.json << 'CLAUDEJSON'
 {
   "hasCompletedOnboarding": true,
   "theme": "dark"
 }
 CLAUDEJSON
 
-  # Create credentials file with the OAuth token
-  cat > ~/.claude/.credentials.json << CREDSJSON
+    # Create credentials file with the OAuth token
+    cat > ~/.claude/.credentials.json << CREDSJSON
 {
   "claudeAiOauth": {
     "accessToken": "$CC_CLAUDE_CODE_OAUTH_TOKEN",
@@ -140,14 +163,15 @@ CLAUDEJSON
 }
 CREDSJSON
 
-  # Copy to alternate location too
-  cp ~/.claude/.credentials.json ~/.config/claude/.credentials.json
+    # Copy to alternate location too
+    cp ~/.claude/.credentials.json ~/.config/claude/.credentials.json
 
-  # Ensure ANTHROPIC_API_KEY is not set (it overrides OAuth)
-  unset ANTHROPIC_API_KEY
-else
-  echo "  Auth:       API Key (credits)"
-  export ANTHROPIC_API_KEY="$CC_ANTHROPIC_API_KEY"
+    # Ensure ANTHROPIC_API_KEY is not set (it overrides OAuth)
+    unset ANTHROPIC_API_KEY
+  else
+    echo "  Auth:       API Key (credits)"
+    export ANTHROPIC_API_KEY="$CC_ANTHROPIC_API_KEY"
+  fi
 fi
 
 if [ "$REPO_SOURCE" = "local" ]; then
