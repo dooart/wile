@@ -331,18 +331,18 @@ export const runConfig = async () => {
         })
       : { repoUrl: undefined };
 
+  const branchResponse = await prompt({
+    type: "text",
+    name: "branchName",
+    message: "Default GitHub branch name",
+    initial: existingEnv.BRANCH_NAME ?? "main"
+  });
+
   const envProjectPathResponse = await prompt({
     type: "text",
     name: "envProjectPath",
     message: "Project env file path to forward into the container",
     initial: existingEnv.WILE_ENV_PROJECT_PATH ?? ".wile/.env.project"
-  });
-
-  const branchResponse = await prompt({
-    type: "text",
-    name: "branchName",
-    message: "Default branch name",
-    initial: existingEnv.BRANCH_NAME ?? "main"
   });
 
   const iterationsResponse = await prompt({

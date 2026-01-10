@@ -21,8 +21,8 @@ test("config skips GitHub prompts when repo source is local", async () => {
       "oauth-token",
       "sonnet",
       "local",
-      ".wile/.env.project",
       "main",
+      ".wile/.env.project",
       12
     ]);
 
@@ -50,8 +50,8 @@ test("config captures GitHub credentials when repo source is github", async () =
       "github",
       "gh-token",
       "https://github.com/acme/test",
-      ".wile/.env.project",
       "main",
+      ".wile/.env.project",
       12
     ]);
 

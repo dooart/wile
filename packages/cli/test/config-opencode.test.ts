@@ -22,8 +22,8 @@ test("config writes OpenCode credentials when selected", async () => {
       "github",
       "gh-token",
       "https://github.com/acme/test",
-      ".wile/.env.project",
       "main",
+      ".wile/.env.project",
       12
     ]);
 

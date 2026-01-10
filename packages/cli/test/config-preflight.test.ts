@@ -21,8 +21,8 @@ test("config creates preflight template file", async () => {
       "oauth-token",
       "sonnet",
       "local",
-      ".wile/.env.project",
       "main",
+      ".wile/.env.project",
       12
     ]);
 

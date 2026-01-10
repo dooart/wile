@@ -75,8 +75,8 @@ test("config preserves existing preflight instructions", async () => {
       "oauth-token",
       "sonnet",
       "local",
-      ".wile/.env.project",
       "main",
+      ".wile/.env.project",
       12
     ]);
 
@@ -107,8 +107,8 @@ test("config preserves existing additional instructions", async () => {
       "oauth-token",
       "sonnet",
       "local",
-      ".wile/.env.project",
       "main",
+      ".wile/.env.project",
       12
     ]);
 

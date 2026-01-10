@@ -23,8 +23,8 @@ test("config writes oauth token when oauth auth is selected", async () => {
       "github",
       "gh-token",
       "https://github.com/acme/test",
-      ".wile/.env.project",
       "main",
+      ".wile/.env.project",
       12
     ]);
 
@@ -51,8 +51,8 @@ test("config writes api key when api key auth is selected", async () => {
       "github",
       "gh-token",
       "https://github.com/acme/test",
-      ".wile/.env.project",
       "main",
+      ".wile/.env.project",
       12
     ]);
 

@@ -21,8 +21,8 @@ test("config records custom env project path", async () => {
       "oauth-token",
       "sonnet",
       "local",
-      ".env.local",
       "main",
+      ".env.local",
       12
     ]);
 
