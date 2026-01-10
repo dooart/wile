@@ -27,6 +27,7 @@ fi
 
 sh "$ROOT_DIR/packages/agent/scripts/test-additional-instructions.sh"
 sh "$ROOT_DIR/packages/agent/scripts/test-iteration-limit.sh"
+sh "$ROOT_DIR/packages/agent/scripts/test-preflight-docker.sh"
 
 TMP_DIR=$(mktemp -d /tmp/wile-local-test-XXXXXX)
 cleanup() {

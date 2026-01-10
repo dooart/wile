@@ -35,8 +35,8 @@ Pick the highest priority story where `passes: false` and implement it completel
 Run the project's tests and type checking:
 ```bash
 # Try common commands (adapt to the project)
-npm run typecheck || npm run tsc || npx tsc --noEmit || true
-npm test || npm run test || true
+npm run typecheck || npm run tsc || npx tsc --noEmit
+npm test || npm run test
 ```
 
 If tests or typecheck fail, fix the issues before proceeding.
@@ -57,6 +57,9 @@ Set `passes: true` for the completed story:
 
 **Implemented:**
 - What was done
+
+**Verification:**
+- Command(s) run and pass/fail status
 
 **Files changed:**
 - file1.ts
@@ -104,6 +107,8 @@ The entire response must be exactly that single line. No other text before or af
 9. **Integration tests must validate real system behavior, not just the harness**
 10. **If you discover reusable, module-specific guidance, add it to the nearest AGENTS.md**
     Note: Never update .wile/AGENTS.md.
+11. **Definition of done** - Do not set `passes: true` unless each acceptance criterion has a concrete verification and all verifications passed. If any verification fails or can’t run, leave `passes: false` and explain why in `.wile/progress.txt`.
+12. **No verification section means no pass** - If the progress entry lacks a **Verification** section, do not mark `passes: true`.
 
 ## Common Patterns
 

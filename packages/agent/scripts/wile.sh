@@ -15,6 +15,7 @@ if [[ "$OC_MODEL" != */* ]]; then
 fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROMPT_FILE="$SCRIPT_DIR/prompt.md"
+PREFLIGHT_PROMPT_FILE="$SCRIPT_DIR/prompt-preflight.md"
 SETUP_PROMPT_FILE="$SCRIPT_DIR/prompt-setup.md"
 ADDITIONAL_PROMPT_FILE="${WILE_ADDITIONAL_INSTRUCTIONS:-}"
 TEE_TARGET="${WILE_TEE_TARGET:-/dev/stderr}"
@@ -77,15 +78,37 @@ run_agent() {
 }
 
 # ════════════════════════════════════════════════════════════
-# ITERATION 0: Setup
+# ITERATION 0: Preflight / Setup
 # ════════════════════════════════════════════════════════════
 echo ""
 echo "══════════════════════════════════════════════════════"
-echo "  Iteration 0 - Setup"
+echo "  Iteration 0 - Preflight"
 echo "══════════════════════════════════════════════════════"
 echo ""
 
-if [ -f "$SETUP_PROMPT_FILE" ]; then
+if [ -f "$PREFLIGHT_PROMPT_FILE" ]; then
+  OUTPUT=$(run_agent "$PREFLIGHT_PROMPT_FILE" | tee "$TEE_TARGET") || true
+
+  # Check if preflight failed critically (tag must be on its own line; reject backticks/code fences)
+  CLEAN_OUTPUT=$(printf '%s' "$OUTPUT" | tr -d '\r' | sed -e 's/[[:space:]]*$//')
+  if printf '%s\n' "$CLEAN_OUTPUT" | grep -q -E '^[[:space:]]*<promise>PREFLIGHT_FAILED</promise>[[:space:]]*$'; then
+    if printf '%s' "$CLEAN_OUTPUT" | grep -F '```' >/dev/null 2>&1; then
+      :
+    elif printf '%s' "$CLEAN_OUTPUT" | grep -F '`<promise>PREFLIGHT_FAILED</promise>`' >/dev/null 2>&1; then
+      :
+    else
+    echo ""
+    echo "══════════════════════════════════════════════════════"
+    echo "  ❌ PREFLIGHT FAILED - Cannot continue"
+    echo "══════════════════════════════════════════════════════"
+    exit 2
+    fi
+  fi
+
+  echo ""
+  echo "Preflight complete. Starting main loop..."
+  sleep 2
+elif [ -f "$SETUP_PROMPT_FILE" ]; then
   OUTPUT=$(run_agent "$SETUP_PROMPT_FILE" | tee "$TEE_TARGET") || true
 
   # Check if setup failed critically

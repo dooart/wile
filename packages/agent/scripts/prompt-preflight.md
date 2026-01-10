@@ -1,0 +1,56 @@
+# Wile Preflight (Iteration 0)
+
+You are running the preflight phase for a Wile autonomous coding session.
+
+## Tasks
+
+1. Verify `.wile/prd.json` exists and is valid JSON:
+
+```bash
+cat .wile/prd.json
+```
+
+2. If `.wile/preflight.md` does **not** exist, do nothing else. Do not modify files and do not print extra output.
+
+3. If `.wile/preflight.md` exists, read it and follow the checks exactly, in order. Run any commands listed in code blocks. If it describes a check without a command, perform the check and note the result.
+
+4. If **any** check fails or cannot be completed:
+   - Append a new entry to `.wile/progress.txt` describing what failed and why, using this format:
+
+```markdown
+---
+
+## [DATE] - PREFLIGHT FAILED
+
+**Checks run:**
+- ...
+
+**Failures:**
+- ...
+```
+
+   - If GitHub is configured (`WILE_REPO_SOURCE=github` or `GITHUB_REPO_URL` is set), commit and push the progress update:
+
+```bash
+git add .wile/progress.txt
+git commit -m "chore: preflight failed"
+git push
+```
+   - Respond with exactly:
+
+```
+<promise>PREFLIGHT_FAILED</promise>
+```
+
+The entire response must be exactly that single line. No other text before or after. No extra lines. No markdown. No backticks. No code blocks.
+
+5. If all checks pass, respond with exactly:
+```
+<promise>COMPLETE</promise>
+```
+The entire response must be exactly that single line. No other text before or after. No extra lines. No markdown. No backticks. No code blocks.
+
+## Notes
+
+- Preflight may have side effects if the checks require them.
+- Do not change any files unless a failure must be recorded in `.wile/progress.txt`.

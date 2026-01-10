@@ -1,5 +1,5 @@
 import { test, expect } from "bun:test";
-import { mkdir, writeFile, access } from "node:fs/promises";
+import { mkdir, writeFile, access, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { runConfig } from "../src/commands/config";
 import { readEnvFile, withTempDir } from "./helpers";
@@ -55,5 +55,54 @@ test("config keeps existing values when inputs are empty", async () => {
     expect(env.WILE_MAX_ITERATIONS).toBe("17");
     expect(env.CC_CLAUDE_CODE_OAUTH_TOKEN).toBe("existing-oauth");
     await access(join(secretsDir, ".env.project"));
+  });
+});
+
+test("config preserves existing preflight instructions", async () => {
+  await withTempDir(async (dir) => {
+    const wileDir = join(dir, ".wile");
+    const secretsDir = join(wileDir, "secrets");
+    await mkdir(secretsDir, { recursive: true });
+    await writeFile(
+      join(wileDir, "preflight.md"),
+      "<!--\nCustom preflight\n-->\n- Keep this line\n"
+    );
+
+    setInject(["CC", "oauth", "oauth-token", "sonnet", "local", "main", 12]);
+
+    try {
+      await runConfig();
+    } finally {
+      clearInject();
+    }
+
+    const contents = await readFile(join(wileDir, "preflight.md"), "utf8");
+    expect(contents).toBe("<!--\nCustom preflight\n-->\n- Keep this line\n");
+  });
+});
+
+test("config preserves existing additional instructions", async () => {
+  await withTempDir(async (dir) => {
+    const wileDir = join(dir, ".wile");
+    const secretsDir = join(wileDir, "secrets");
+    await mkdir(secretsDir, { recursive: true });
+    await writeFile(
+      join(wileDir, "additional-instructions.md"),
+      "<!--\nCustom additional\n-->\n- Keep this line\n"
+    );
+
+    setInject(["CC", "oauth", "oauth-token", "sonnet", "local", "main", 12]);
+
+    try {
+      await runConfig();
+    } finally {
+      clearInject();
+    }
+
+    const contents = await readFile(
+      join(wileDir, "additional-instructions.md"),
+      "utf8"
+    );
+    expect(contents).toBe("<!--\nCustom additional\n-->\n- Keep this line\n");
   });
 });

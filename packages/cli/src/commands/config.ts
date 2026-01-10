@@ -193,6 +193,7 @@ export const runConfig = async () => {
   const prdPath = join(wileDir, "prd.json");
   const prdExamplePath = join(wileDir, "prd.json.example");
   const additionalInstructionsPath = join(wileDir, "additional-instructions.md");
+  const preflightPath = join(wileDir, "preflight.md");
   const agentsPath = join(wileDir, "AGENTS.md");
 
   await mkdir(secretsDir, { recursive: true });
@@ -420,9 +421,14 @@ export const runConfig = async () => {
   await writeIfMissing(prdExamplePath, JSON.stringify(prdExample, null, 2) + "\n");
 
   const hadAdditionalInstructions = existsSync(additionalInstructionsPath);
+  const hadPreflight = existsSync(preflightPath);
   await writeIfMissing(
     additionalInstructionsPath,
     "<!--\nUse bullet points for additional instructions, e.g.\n- You may run `supabase db reset --db-url \"$SUPABASE_DB_URL\"` when needed.\n- Do not ask for permission before running it.\n-->\n"
+  );
+  await writeIfMissing(
+    preflightPath,
+    "<!--\nUse bullet points for preflight checks, e.g.\n- Confirm SUPABASE_DB_URL is set.\n- Run `supabase db reset --db-url \"$SUPABASE_DB_URL\"`.\n-->\n"
   );
 
   await writeIfMissing(
@@ -465,5 +471,8 @@ export const runConfig = async () => {
     console.log(
       "Created .wile/additional-instructions.md for extra agent guidance (optional)."
     );
+  }
+  if (!hadPreflight) {
+    console.log("Created .wile/preflight.md for preflight checks (optional).");
   }
 };
