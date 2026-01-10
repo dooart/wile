@@ -29,6 +29,9 @@ rl.on("line", (line) => {
 
   if (payload.type === "text" && payload.part?.text) {
     process.stdout.write(payload.part.text);
+    if (!payload.part.text.endsWith("\n")) {
+      process.stdout.write("\n");
+    }
     return;
   }
 

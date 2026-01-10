@@ -19,9 +19,22 @@ if [ -z "${GITHUB_REPO_URL:-}" ] || [ -z "${GITHUB_TOKEN:-}" ]; then
   exit 1
 fi
 
-sh "$ROOT_DIR/scripts/test-claude-logs.sh"
-sh "$ROOT_DIR/scripts/test-claude-logs-real.sh"
-sh "$ROOT_DIR/scripts/test-opencode-logs-real.sh"
+run_test() {
+  NAME="$1"
+  SCRIPT="$2"
+  echo ""
+  echo ">>>>>>> TEST START: $NAME"
+  if ! sh "$SCRIPT"; then
+    echo "test-full: failed $NAME" >&2
+    exit 1
+  fi
+  echo "test-full: ok $NAME"
+}
+
+run_test "test-claude-logs" "$ROOT_DIR/scripts/test-claude-logs.sh"
+run_test "test-claude-logs-real" "$ROOT_DIR/scripts/test-claude-logs-real.sh"
+run_test "test-opencode-logs-real" "$ROOT_DIR/scripts/test-opencode-logs-real.sh"
+run_test "test-preflight-claude-docker" "$ROOT_DIR/packages/agent/scripts/test-preflight-claude-docker.sh"
 
 case "$GITHUB_REPO_URL" in
   https://*)

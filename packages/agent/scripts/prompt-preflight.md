@@ -28,6 +28,8 @@ cat .wile/prd.json
 **Failures:**
 - ...
 ```
+   - Under **Checks run**, include the exact command(s) you executed (verbatim).
+   - Under **Failures**, include the specific missing file names or failing commands.
 
    - If GitHub is configured (`WILE_REPO_SOURCE=github` or `GITHUB_REPO_URL` is set), commit and push the progress update:
 
@@ -46,9 +48,15 @@ The entire response must be exactly that single line. No other text before or af
 
 5. If all checks pass, respond with exactly:
 ```
-<promise>COMPLETE</promise>
+<promise>PREFLIGHT_SUCCEEDED</promise>
 ```
 The entire response must be exactly that single line. No other text before or after. No extra lines. No markdown. No backticks. No code blocks.
+
+## Strict Output Rules
+
+- Output must contain exactly one promise tag.
+- Never repeat the promise tag on the same line or across multiple lines.
+- Never include any other text before or after the promise tag.
 
 ## Notes
 

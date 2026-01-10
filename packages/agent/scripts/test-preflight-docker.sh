@@ -56,7 +56,7 @@ MD
     -e WILE_MOCK_CLAUDE=true \
     -e WILE_MOCK_MODE=preflight_fail \
     -v "$TMP_DIR:/home/wile/workspace/repo" \
-    wile-agent:local > "$OUTPUT_FILE" 2>&1
+    wile-agent:local 2>&1 | tee "$OUTPUT_FILE"
   EXIT_CODE=$?
   set -e
 
@@ -66,6 +66,10 @@ MD
   fi
 
   grep -q "PREFLIGHT FAILED - Cannot continue" "$OUTPUT_FILE"
+  if grep -q "Iteration 1 of" "$OUTPUT_FILE"; then
+    echo "error: preflight failure should stop before main loop" >&2
+    exit 1
+  fi
   grep -q "PREFLIGHT FAILED" "$TMP_DIR/.wile/progress.txt"
 
   rm -rf "$TMP_DIR"
@@ -113,7 +117,7 @@ MD
     -e MAX_ITERATIONS=1 \
     -e WILE_MOCK_CLAUDE=true \
     -v "$TMP_DIR:/home/wile/workspace/repo" \
-    wile-agent:local > "$OUTPUT_FILE" 2>&1
+    wile-agent:local 2>&1 | tee "$OUTPUT_FILE"
   EXIT_CODE=$?
   set -e
 

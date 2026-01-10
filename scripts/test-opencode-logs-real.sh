@@ -92,6 +92,9 @@ git push -u origin "$TEST_BRANCH" >/dev/null
 mkdir -p "$RUN_DIR/.wile/secrets"
 cp "$ENV_TEST" "$RUN_DIR/.wile/secrets/.env"
 printf "secrets/\nscreenshots/\nlogs/\n" > "$RUN_DIR/.wile/.gitignore"
+cat > "$RUN_DIR/.wile/additional-instructions.md" <<'MD'
+- Include the exact line "REAL OPENCODE LOG TEST" in your response output.
+MD
 cat > "$RUN_DIR/.wile/prd.json" <<'JSON'
 {
   "userStories": [

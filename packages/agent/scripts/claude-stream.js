@@ -16,6 +16,9 @@ const extractText = (content) => {
     if (!chunk || typeof chunk !== "object") continue;
     if (chunk.type === "text" && typeof chunk.text === "string") {
       process.stdout.write(chunk.text);
+      if (!chunk.text.endsWith("\n")) {
+        process.stdout.write("\n");
+      }
       continue;
     }
     if (chunk.type === "thinking" && typeof chunk.thinking === "string") {
