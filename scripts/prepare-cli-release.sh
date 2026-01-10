@@ -9,6 +9,11 @@ fail() {
   exit 1
 }
 
+# Check npm auth early before any commits
+cd "$CLI_DIR"
+npm whoami >/dev/null 2>&1 || fail "npm is not authenticated. run 'npm login' in packages/cli first."
+cd "$ROOT_DIR"
+
 if [ "$#" -ne 1 ]; then
   echo "usage: $0 <patch|minor|major>" >&2
   exit 1
