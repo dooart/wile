@@ -61,10 +61,10 @@ fs.writeFileSync(file, JSON.stringify(data, null, 2) + "\n");
 NODE
 VERSION=$(node -p "require('./package.json').version")
 
+./build.sh || fail "cli build failed"
+
 git -C "$ROOT_DIR" add packages/cli/package.json
 git -C "$ROOT_DIR" commit -m "release v$VERSION"
-
-./build.sh || fail "cli build failed"
 
 node -e "const fs=require('fs');const data=fs.readFileSync('dist/cli.js','utf8');if(!data.startsWith('#!/usr/bin/env node')){console.error('missing shebang');process.exit(1);}" \
   || fail "cli build is missing shebang"
