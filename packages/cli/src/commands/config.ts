@@ -15,11 +15,11 @@ const prdExample = {
         "src/main.tsx renders App component",
         "src/App.tsx exists with basic structure",
         "npm run dev starts dev server on port 5173",
-        "npm run build produces dist/ folder"
+        "npm run build produces dist/ folder",
       ],
       priority: 1,
       passes: false,
-      notes: "Use TypeScript. Keep it minimal."
+      notes: "Use TypeScript. Keep it minimal.",
     },
     {
       id: "US-002",
@@ -30,11 +30,11 @@ const prdExample = {
         "Grid uses CSS Grid layout",
         "Each square is 100x100 pixels",
         "Board is centered on page",
-        "Squares have visible borders"
+        "Squares have visible borders",
       ],
       priority: 2,
       passes: false,
-      notes: "Just the visual grid, no game logic yet"
+      notes: "Just the visual grid, no game logic yet",
     },
     {
       id: "US-003",
@@ -45,11 +45,11 @@ const prdExample = {
         "Pattern continues alternating",
         "X displayed in blue color",
         "O displayed in red color",
-        "Cannot click already-filled square"
+        "Cannot click already-filled square",
       ],
       priority: 3,
       passes: false,
-      notes: "Use React state for board and current player"
+      notes: "Use React state for board and current player",
     },
     {
       id: "US-004",
@@ -60,11 +60,11 @@ const prdExample = {
         "Detects diagonal wins (2 diagonals)",
         "Shows 'X Wins!' or 'O Wins!' message when won",
         "Winning message appears above the board",
-        "No more moves allowed after win"
+        "No more moves allowed after win",
       ],
       priority: 4,
       passes: false,
-      notes: "Check all 8 possible winning combinations"
+      notes: "Check all 8 possible winning combinations",
     },
     {
       id: "US-005",
@@ -74,11 +74,11 @@ const prdExample = {
         "Reset button appears below the board",
         "Clicking reset clears all squares",
         "Reset sets turn back to X",
-        "Reset clears any win/draw message"
+        "Reset clears any win/draw message",
       ],
       priority: 5,
       passes: false,
-      notes: "Complete the game loop"
+      notes: "Complete the game loop",
     },
     {
       id: "US-006",
@@ -87,24 +87,23 @@ const prdExample = {
         "Shows 'Current turn: X' or 'Current turn: O' above board",
         "Updates after each move",
         "Hidden when game is won or drawn",
-        "X indicator in blue, O indicator in red"
+        "X indicator in blue, O indicator in red",
       ],
       priority: 6,
       passes: false,
-      notes: "Polish the UX"
-    }
-  ]
+      notes: "Polish the UX",
+    },
+  ],
 };
 
 const tips = {
   oauth:
     "Tip: run 'claude setup-token' on your machine to generate an OAuth token (uses Pro/Max subscription).",
-  apiKey:
-    "Tip: create an Anthropic API key in the console (uses API credits).",
+  apiKey: "Tip: create an Anthropic API key in the console (uses API credits).",
   openrouter:
     "Tip: create an OpenRouter API key for OpenCode (used for z-ai/glm-4.7).",
   github:
-    "Tip: use a GitHub Personal Access Token (fine-grained recommended). Create at https://github.com/settings/tokens?type=beta with Contents (read/write) and Metadata (read)."
+    "Tip: use a GitHub Personal Access Token (fine-grained recommended). Create at https://github.com/settings/tokens?type=beta with Contents (read/write) and Metadata (read).",
 };
 
 const readEnvFile = async (path: string) => {
@@ -133,10 +132,7 @@ const ensureGitignore = async (path: string) => {
 
   const needsNewline = existing.length > 0 && !existing.endsWith("\n");
   const output =
-    existing +
-    (needsNewline ? "\n" : "") +
-    additions.join("\n") +
-    "\n";
+    existing + (needsNewline ? "\n" : "") + additions.join("\n") + "\n";
   await writeFile(path, output);
 };
 
@@ -163,7 +159,7 @@ const onCancel = () => {
 };
 
 const prompt = async (
-  questions: prompts.PromptObject | prompts.PromptObject[]
+  questions: prompts.PromptObject | prompts.PromptObject[],
 ) => prompts(questions, { onCancel });
 
 const maybeInject = () => {
@@ -192,7 +188,10 @@ export const runConfig = async () => {
   const gitignorePath = join(wileDir, ".gitignore");
   const prdPath = join(wileDir, "prd.json");
   const prdExamplePath = join(wileDir, "prd.json.example");
-  const additionalInstructionsPath = join(wileDir, "additional-instructions.md");
+  const additionalInstructionsPath = join(
+    wileDir,
+    "additional-instructions.md",
+  );
   const preflightPath = join(wileDir, "preflight.md");
   const agentsPath = join(wileDir, "AGENTS.md");
 
@@ -206,9 +205,9 @@ export const runConfig = async () => {
     message: "Select coding agent",
     choices: [
       { title: "Claude Code (CC)", value: "CC" },
-      { title: "OpenCode (OC)", value: "OC" }
+      { title: "OpenCode (OC)", value: "OC" },
     ],
-    initial: existingEnv.CODING_AGENT === "OC" ? 1 : 0
+    initial: existingEnv.CODING_AGENT === "OC" ? 1 : 0,
   });
 
   const codingAgent = codingAgentResponse.codingAgent as "CC" | "OC";
@@ -232,9 +231,9 @@ export const runConfig = async () => {
       message: "Claude Code authentication",
       choices: [
         { title: "OAuth token (Pro/Max subscription)", value: "oauth" },
-        { title: "API key (Anthropic credits)", value: "apiKey" }
+        { title: "API key (Anthropic credits)", value: "apiKey" },
       ],
-      initial: authDefault === "apiKey" ? 1 : 0
+      initial: authDefault === "apiKey" ? 1 : 0,
     });
 
     authMethod = authResponse.authMethod as "oauth" | "apiKey";
@@ -251,8 +250,8 @@ export const runConfig = async () => {
           : "Anthropic API key (press enter to keep existing)",
       initial:
         authMethod === "oauth"
-          ? existingEnv.CC_CLAUDE_CODE_OAUTH_TOKEN ?? ""
-          : existingEnv.CC_ANTHROPIC_API_KEY ?? ""
+          ? (existingEnv.CC_CLAUDE_CODE_OAUTH_TOKEN ?? "")
+          : (existingEnv.CC_ANTHROPIC_API_KEY ?? ""),
     });
 
     defaultModelResponse = await prompt({
@@ -262,14 +261,14 @@ export const runConfig = async () => {
       choices: [
         { title: "sonnet", value: "sonnet" },
         { title: "opus", value: "opus" },
-        { title: "haiku", value: "haiku" }
+        { title: "haiku", value: "haiku" },
       ],
       initial:
         existingEnv.CC_CLAUDE_MODEL === "opus"
           ? 1
           : existingEnv.CC_CLAUDE_MODEL === "haiku"
             ? 2
-            : 0
+            : 0,
     });
   } else {
     console.log("");
@@ -280,7 +279,7 @@ export const runConfig = async () => {
       type: "password",
       name: "ocKey",
       message: "OpenRouter API key (press enter to keep existing)",
-      initial: existingEnv.OC_OPENROUTER_API_KEY ?? ""
+      initial: existingEnv.OC_OPENROUTER_API_KEY ?? "",
     });
 
     ocModelResponse = await prompt({
@@ -288,7 +287,7 @@ export const runConfig = async () => {
       name: "ocModel",
       message: "OpenCode model (OpenRouter)",
       choices: [{ title: "glm-4.7", value: "glm-4.7" }],
-      initial: existingEnv.OC_MODEL === "glm-4.7" ? 0 : 0
+      initial: existingEnv.OC_MODEL === "glm-4.7" ? 0 : 0,
     });
   }
 
@@ -298,9 +297,9 @@ export const runConfig = async () => {
     message: "Repo source",
     choices: [
       { title: "GitHub (remote)", value: "github" },
-      { title: "Local directory (no GitHub)", value: "local" }
+      { title: "Local directory (no GitHub)", value: "local" },
     ],
-    initial: existingEnv.WILE_REPO_SOURCE === "local" ? 1 : 0
+    initial: existingEnv.WILE_REPO_SOURCE === "local" ? 1 : 0,
   });
 
   const repoSource = repoSourceResponse.repoSource as "github" | "local";
@@ -317,7 +316,7 @@ export const runConfig = async () => {
           type: "password",
           name: "githubToken",
           message: "GitHub token (press enter to keep existing)",
-          initial: existingEnv.GITHUB_TOKEN ?? ""
+          initial: existingEnv.GITHUB_TOKEN ?? "",
         })
       : { githubToken: undefined };
 
@@ -327,7 +326,7 @@ export const runConfig = async () => {
           type: "text",
           name: "repoUrl",
           message: "GitHub repo URL",
-          initial: existingEnv.GITHUB_REPO_URL ?? ""
+          initial: existingEnv.GITHUB_REPO_URL ?? "",
         })
       : { repoUrl: undefined };
 
@@ -335,14 +334,14 @@ export const runConfig = async () => {
     type: "text",
     name: "branchName",
     message: "Default GitHub branch name",
-    initial: existingEnv.BRANCH_NAME ?? "main"
+    initial: existingEnv.BRANCH_NAME ?? "main",
   });
 
   const envProjectPathResponse = await prompt({
     type: "text",
     name: "envProjectPath",
     message: "Project env file path to forward into the container",
-    initial: existingEnv.WILE_ENV_PROJECT_PATH ?? ".wile/.env.project"
+    initial: existingEnv.WILE_ENV_PROJECT_PATH ?? ".wile/.env.project",
   });
 
   const iterationsResponse = await prompt({
@@ -351,15 +350,16 @@ export const runConfig = async () => {
     message: "Default max iterations",
     initial: existingEnv.WILE_MAX_ITERATIONS
       ? Number(existingEnv.WILE_MAX_ITERATIONS)
-      : 25
+      : 25,
   });
   const fallbackIterations = existingEnv.WILE_MAX_ITERATIONS
     ? Number(existingEnv.WILE_MAX_ITERATIONS)
     : 25;
-  const maxIterations = Number.isFinite(iterationsResponse.maxIterations) &&
+  const maxIterations =
+    Number.isFinite(iterationsResponse.maxIterations) &&
     iterationsResponse.maxIterations > 0
-    ? iterationsResponse.maxIterations
-    : fallbackIterations;
+      ? iterationsResponse.maxIterations
+      : fallbackIterations;
 
   const authFallback =
     authMethod === "oauth"
@@ -375,7 +375,10 @@ export const runConfig = async () => {
       : undefined;
   const ocModel =
     codingAgent === "OC"
-      ? coalesceValue(ocModelResponse.ocModel, existingEnv.OC_MODEL ?? "glm-4.7")
+      ? coalesceValue(
+          ocModelResponse.ocModel,
+          existingEnv.OC_MODEL ?? "glm-4.7",
+        )
       : undefined;
   const githubToken =
     repoSource === "github"
@@ -388,11 +391,11 @@ export const runConfig = async () => {
   const envProjectPathValue =
     coalesceValue(
       envProjectPathResponse.envProjectPath,
-      existingEnv.WILE_ENV_PROJECT_PATH ?? ".wile/.env.project"
+      existingEnv.WILE_ENV_PROJECT_PATH ?? ".wile/.env.project",
     ) ?? ".wile/.env.project";
   const branchName = coalesceValue(
     branchResponse.branchName,
-    existingEnv.BRANCH_NAME ?? "main"
+    existingEnv.BRANCH_NAME ?? "main",
   );
 
   const envLines = [
@@ -402,7 +405,7 @@ export const runConfig = async () => {
     `GITHUB_TOKEN=${githubToken ?? ""}`,
     `GITHUB_REPO_URL=${repoUrl ?? ""}`,
     `BRANCH_NAME=${branchName ?? "main"}`,
-    `WILE_MAX_ITERATIONS=${maxIterations}`
+    `WILE_MAX_ITERATIONS=${maxIterations}`,
   ];
 
   if (codingAgent === "CC") {
@@ -431,7 +434,7 @@ export const runConfig = async () => {
   if (envProjectResolved.startsWith(wileDir)) {
     await writeIfMissing(
       envProjectResolved,
-      "# Add env vars here to forward into the container\n"
+      "# Add env vars here to forward into the container\n",
     );
   }
 
@@ -440,17 +443,20 @@ export const runConfig = async () => {
     await writeFile(prdPath, prdContents + "\n");
   }
 
-  await writeIfMissing(prdExamplePath, JSON.stringify(prdExample, null, 2) + "\n");
+  await writeIfMissing(
+    prdExamplePath,
+    JSON.stringify(prdExample, null, 2) + "\n",
+  );
 
   const hadAdditionalInstructions = existsSync(additionalInstructionsPath);
   const hadPreflight = existsSync(preflightPath);
   await writeIfMissing(
     additionalInstructionsPath,
-    "<!--\nUse bullet points for additional instructions, e.g.\n- You may run `supabase db reset --db-url \"$SUPABASE_DB_URL\"` when needed.\n- Do not ask for permission before running it.\n-->\n"
+    '<!--\nUse bullet points for additional instructions, e.g.\n- You may run `supabase db reset --db-url "$SUPABASE_DB_URL"` when needed.\n- Do not ask for permission before running it.\n-->\n',
   );
   await writeIfMissing(
     preflightPath,
-    "<!--\nUse bullet points for preflight checks, e.g.\n- Confirm SUPABASE_DB_URL is set.\n- Run `supabase db reset --db-url \"$SUPABASE_DB_URL\"`.\n-->\n"
+    '<!--\nUse bullet points for preflight checks, e.g.\n- Confirm SUPABASE_DB_URL is set.\n- Run `supabase db reset --db-url "$SUPABASE_DB_URL"`.\n-->\n',
   );
 
   await writeIfMissing(
@@ -465,15 +471,14 @@ export const runConfig = async () => {
       "",
       "Guidelines:",
       "- Use outcome-focused acceptance criteria (observable results).",
-      "- Criteria should be hard to satisfy with \"empty\" tests.",
+      '- Criteria should be hard to satisfy with "empty" tests.',
       "- For integration tests, write acceptance criteria that validate real system behavior (not just the harness).",
       "- If verification is a command, state the expected result of that command.",
       "- Use one behavior per bullet.",
       "- Keep IDs stable and unique (e.g., US-123).",
-      "- Avoid vague terms like \"should\" or \"nice\".",
+      '- Avoid vague terms like "should" or "nice".',
       "- Keep stories small enough to finish in one iteration.",
       "- Mark `passes: false` for work not done yet.",
-      "- Place the STOP HERE note only on the last story that requires human approval.",
       "- Prefer concrete files/commands only when they reflect the real outcome.",
       "",
       "Environment notes:",
@@ -481,17 +486,15 @@ export const runConfig = async () => {
       "- Project env vars can be passed via `.wile/.env.project` (or override with WILE_ENV_PROJECT_PATH).",
       "- Optional extra guidance can be added in `.wile/additional-instructions.md`.",
       "- The container has outbound internet access by default.",
-      ""
-    ].join("\n")
+      "",
+    ].join("\n"),
   );
 
   console.log("\nWile config complete.");
-  console.log(
-    "Add project env vars to .wile/.env.project when needed."
-  );
+  console.log("Add project env vars to .wile/.env.project when needed.");
   if (!hadAdditionalInstructions) {
     console.log(
-      "Created .wile/additional-instructions.md for extra agent guidance (optional)."
+      "Created .wile/additional-instructions.md for extra agent guidance (optional).",
     );
   }
   if (!hadPreflight) {

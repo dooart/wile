@@ -64,7 +64,7 @@
         "Accepts MAX_ITERATIONS as argument (default 25)",
         "Reads prompt from packages/agent/scripts/prompt.md",
         "Pipes prompt to claude --dangerously-skip-permissions",
-        "Captures output and checks for <promise>COMPLETE</promise>",
+        "Captures output and checks for stop condition marker",
         "Loops until complete or max iterations",
         "Exits with appropriate codes (0=success, 1=max iterations)"
       ],
@@ -86,7 +86,7 @@
         "Instructions to push after each commit",
         "Instructions to update .wile/prd.json passes=true",
         "Instructions to append learnings to progress.txt",
-        "Stop condition: reply <promise>COMPLETE</promise> when all pass"
+        "Stop condition: reply with stop condition marker when all pass"
       ],
       "priority": 6,
       "passes": true,

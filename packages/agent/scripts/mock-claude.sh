@@ -44,6 +44,6 @@ if [ "$COUNT" -eq 0 ]; then
 JSON
 else
   cat <<'JSON'
-{"type":"assistant","message":{"content":[{"type":"text","text":"<promise>COMPLETE</promise>\n"}]}}
+{"type":"assistant","message":{"content":[{"type":"text","text":"<promise>ALL_STORIES_COMPLETED</promise>\n"}]}}
 JSON
 fi

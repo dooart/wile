@@ -88,7 +88,7 @@ After completing steps 1-8, check if ALL stories in `.wile/prd.json` have `passe
 
 **If ALL stories pass**, respond with exactly:
 ```
-<promise>COMPLETE</promise>
+<promise>ALL_STORIES_COMPLETED</promise>
 ```
 The entire response must be exactly that single line. No other text before or after. No extra lines. No markdown. No backticks. No code blocks.
 

@@ -47,7 +47,7 @@ EOF
 cat > "$BIN_DIR/claude" <<'EOF'
 #!/bin/sh
 cat > "$CLAUDE_CAPTURE"
-printf '%s\n' '{"type":"assistant","message":{"content":[{"type":"text","text":"<promise>COMPLETE</promise>\n"}]}}'
+printf '%s\n' '{"type":"assistant","message":{"content":[{"type":"text","text":"<promise>ALL_STORIES_COMPLETED</promise>\n"}]}}'
 EOF
   chmod +x "$BIN_DIR/claude"
 
