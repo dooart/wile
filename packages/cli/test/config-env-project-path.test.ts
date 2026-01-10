@@ -12,17 +12,16 @@ const clearInject = () => {
   delete process.env.WILE_PROMPTS_INJECT;
 };
 
-test("config writes OpenCode credentials when selected", async () => {
+test("config records custom env project path", async () => {
   await withTempDir(async (dir) => {
     await mkdir(join(dir, ".wile", "secrets"), { recursive: true });
     setInject([
-      "OC",
-      "sk-or-test",
-      "glm-4.7",
-      "github",
-      "gh-token",
-      "https://github.com/acme/test",
-      ".wile/.env.project",
+      "CC",
+      "oauth",
+      "oauth-token",
+      "sonnet",
+      "local",
+      ".env.local",
       "main",
       12
     ]);
@@ -34,9 +33,6 @@ test("config writes OpenCode credentials when selected", async () => {
     }
 
     const env = await readEnvFile(join(dir, ".wile", "secrets", ".env"));
-    expect(env.CODING_AGENT).toBe("OC");
-    expect(env.OC_OPENROUTER_API_KEY).toBe("sk-or-test");
-    expect(env.OC_MODEL).toBe("glm-4.7");
-    expect(env.CC_CLAUDE_MODEL).toBeUndefined();
+    expect(env.WILE_ENV_PROJECT_PATH).toBe(".env.local");
   });
 });

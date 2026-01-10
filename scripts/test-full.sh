@@ -89,7 +89,7 @@ git push -u origin "$TEST_BRANCH"
 cd "$TMP_RUN"
 mkdir -p .wile/secrets
 cp "$ENV_TEST" .wile/secrets/.env
-printf "TEST_FORWARD=ok\n" > .wile/secrets/.env.project
+printf "TEST_FORWARD=ok\n" > .wile/.env.project
 printf "secrets/\nscreenshots/\nlogs/\n" > .wile/.gitignore
 
 cat > .wile/prd.json <<'JSON'

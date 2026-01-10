@@ -116,7 +116,7 @@ const readEnvFile = async (path: string) => {
 };
 
 const ensureGitignore = async (path: string) => {
-  const entries = ["secrets/", "screenshots/", "logs/"];
+  const entries = ["secrets/", "screenshots/", "logs/", ".env.project"];
   if (!existsSync(path)) {
     await writeFile(path, entries.join("\n") + "\n");
     return;
@@ -188,7 +188,7 @@ export const runConfig = async () => {
   const wileDir = join(cwd, ".wile");
   const secretsDir = join(wileDir, "secrets");
   const envPath = join(secretsDir, ".env");
-  const envProjectPath = join(secretsDir, ".env.project");
+  const envProjectPath = join(wileDir, ".env.project");
   const gitignorePath = join(wileDir, ".gitignore");
   const prdPath = join(wileDir, "prd.json");
   const prdExamplePath = join(wileDir, "prd.json.example");
@@ -331,6 +331,13 @@ export const runConfig = async () => {
         })
       : { repoUrl: undefined };
 
+  const envProjectPathResponse = await prompt({
+    type: "text",
+    name: "envProjectPath",
+    message: "Project env file path to forward into the container",
+    initial: existingEnv.WILE_ENV_PROJECT_PATH ?? ".wile/.env.project"
+  });
+
   const branchResponse = await prompt({
     type: "text",
     name: "branchName",
@@ -378,6 +385,11 @@ export const runConfig = async () => {
     repoSource === "github"
       ? coalesceValue(repoResponse.repoUrl, existingEnv.GITHUB_REPO_URL)
       : existingEnv.GITHUB_REPO_URL;
+  const envProjectPathValue =
+    coalesceValue(
+      envProjectPathResponse.envProjectPath,
+      existingEnv.WILE_ENV_PROJECT_PATH ?? ".wile/.env.project"
+    ) ?? ".wile/.env.project";
   const branchName = coalesceValue(
     branchResponse.branchName,
     existingEnv.BRANCH_NAME ?? "main"
@@ -386,6 +398,7 @@ export const runConfig = async () => {
   const envLines = [
     `CODING_AGENT=${codingAgent}`,
     `WILE_REPO_SOURCE=${repoSource}`,
+    `WILE_ENV_PROJECT_PATH=${envProjectPathValue}`,
     `GITHUB_TOKEN=${githubToken ?? ""}`,
     `GITHUB_REPO_URL=${repoUrl ?? ""}`,
     `BRANCH_NAME=${branchName ?? "main"}`,
@@ -408,10 +421,19 @@ export const runConfig = async () => {
 
   await ensureGitignore(gitignorePath);
 
-  await writeIfMissing(
-    envProjectPath,
-    "# Add env vars here to forward into the container\n"
-  );
+  const envProjectTarget =
+    envProjectPathValue === ".wile/.env.project"
+      ? envProjectPath
+      : envProjectPathValue;
+  const envProjectResolved = envProjectTarget.startsWith("/")
+    ? envProjectTarget
+    : join(cwd, envProjectTarget);
+  if (envProjectResolved.startsWith(wileDir)) {
+    await writeIfMissing(
+      envProjectResolved,
+      "# Add env vars here to forward into the container\n"
+    );
+  }
 
   if (!existsSync(prdPath)) {
     const prdContents = JSON.stringify({ userStories: [] }, null, 2);
@@ -456,7 +478,7 @@ export const runConfig = async () => {
       "",
       "Environment notes:",
       "- Playwright (Chromium) is available in the agent container for UI checks.",
-      "- Project env vars can be passed via `.wile/secrets/.env.project`.",
+      "- Project env vars can be passed via `.wile/.env.project` (or override with WILE_ENV_PROJECT_PATH).",
       "- Optional extra guidance can be added in `.wile/additional-instructions.md`.",
       "- The container has outbound internet access by default.",
       ""
@@ -465,7 +487,7 @@ export const runConfig = async () => {
 
   console.log("\nWile config complete.");
   console.log(
-    "Add project env vars to .wile/secrets/.env.project when needed."
+    "Add project env vars to .wile/.env.project when needed."
   );
   if (!hadAdditionalInstructions) {
     console.log(

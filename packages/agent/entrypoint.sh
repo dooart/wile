@@ -38,6 +38,10 @@ const prd = JSON.parse(fs.readFileSync(prdPath, 'utf8'));
 const stories = Array.isArray(prd.userStories) ? prd.userStories : [];
 const pending = stories.filter((story) => story.passes === false);
 
+if (process.env.TEST_FORWARD) {
+  console.log(`Forwarded env: ${process.env.TEST_FORWARD}`);
+}
+
 if (pending.length === 0) {
   console.log('No pending stories to complete in test mode.');
   process.exit(0);

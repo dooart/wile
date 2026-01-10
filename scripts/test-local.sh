@@ -28,6 +28,7 @@ fi
 sh "$ROOT_DIR/packages/agent/scripts/test-additional-instructions.sh"
 sh "$ROOT_DIR/packages/agent/scripts/test-iteration-limit.sh"
 sh "$ROOT_DIR/packages/agent/scripts/test-preflight-docker.sh"
+sh "$ROOT_DIR/packages/agent/scripts/test-env-project-docker.sh"
 
 TMP_DIR=$(mktemp -d /tmp/wile-local-test-XXXXXX)
 cleanup() {
@@ -37,7 +38,7 @@ trap cleanup EXIT INT TERM
 
 mkdir -p "$TMP_DIR/.wile/secrets"
 cp "$ENV_TEST" "$TMP_DIR/.wile/secrets/.env"
-printf "TEST_FORWARD=ok\n" > "$TMP_DIR/.wile/secrets/.env.project"
+printf "TEST_FORWARD=ok\n" > "$TMP_DIR/.wile/.env.project"
 printf "secrets/\nscreenshots/\nlogs/\n" > "$TMP_DIR/.wile/.gitignore"
 
 cat > "$TMP_DIR/.wile/prd.json" <<'JSON'

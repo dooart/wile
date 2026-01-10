@@ -39,6 +39,7 @@ test("config keeps existing values when inputs are empty", async () => {
       "",
       "",
       "",
+      "",
       ""
     ]);
 
@@ -54,7 +55,7 @@ test("config keeps existing values when inputs are empty", async () => {
     expect(env.BRANCH_NAME).toBe("existing-branch");
     expect(env.WILE_MAX_ITERATIONS).toBe("17");
     expect(env.CC_CLAUDE_CODE_OAUTH_TOKEN).toBe("existing-oauth");
-    await access(join(secretsDir, ".env.project"));
+    await access(join(dir, ".wile", ".env.project"));
   });
 });
 
@@ -68,7 +69,16 @@ test("config preserves existing preflight instructions", async () => {
       "<!--\nCustom preflight\n-->\n- Keep this line\n"
     );
 
-    setInject(["CC", "oauth", "oauth-token", "sonnet", "local", "main", 12]);
+    setInject([
+      "CC",
+      "oauth",
+      "oauth-token",
+      "sonnet",
+      "local",
+      ".wile/.env.project",
+      "main",
+      12
+    ]);
 
     try {
       await runConfig();
@@ -91,7 +101,16 @@ test("config preserves existing additional instructions", async () => {
       "<!--\nCustom additional\n-->\n- Keep this line\n"
     );
 
-    setInject(["CC", "oauth", "oauth-token", "sonnet", "local", "main", 12]);
+    setInject([
+      "CC",
+      "oauth",
+      "oauth-token",
+      "sonnet",
+      "local",
+      ".wile/.env.project",
+      "main",
+      12
+    ]);
 
     try {
       await runConfig();

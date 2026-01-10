@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve, isAbsolute } from "node:path";
 
 export type WilePaths = {
   wileDir: string;
@@ -33,10 +33,27 @@ export const getWilePaths = (cwd: string = process.cwd()): WilePaths => {
     wileDir,
     secretsDir,
     envPath: join(secretsDir, ".env"),
-    envProjectPath: join(secretsDir, ".env.project"),
+    envProjectPath: join(wileDir, ".env.project"),
     gitignorePath: join(wileDir, ".gitignore"),
     prdPath: join(wileDir, "prd.json")
   };
+};
+
+const resolveEnvProjectPath = (cwd: string, configured?: string) => {
+  const defaultPath = join(cwd, ".wile", ".env.project");
+  const legacyPath = join(cwd, ".wile", "secrets", ".env.project");
+
+  if (configured && configured.trim().length > 0) {
+    return isAbsolute(configured) ? configured : resolve(cwd, configured);
+  }
+
+  if (existsSync(defaultPath)) {
+    return defaultPath;
+  }
+  if (existsSync(legacyPath)) {
+    return legacyPath;
+  }
+  return defaultPath;
 };
 
 const parseEnvFile = (path: string) => {
@@ -65,7 +82,8 @@ export const readWileConfig = (options: { cwd?: string; validate?: boolean } = {
   }
 
   const env = parseEnvFile(paths.envPath);
-  const envProject = parseEnvFile(paths.envProjectPath);
+  const envProjectPath = resolveEnvProjectPath(options.cwd ?? process.cwd(), env.WILE_ENV_PROJECT_PATH);
+  const envProject = parseEnvFile(envProjectPath);
 
   const repoSource = (env.WILE_REPO_SOURCE as "github" | "local") || "github";
 
@@ -107,7 +125,10 @@ export const readWileConfig = (options: { cwd?: string; validate?: boolean } = {
   }
 
   return {
-    paths,
+    paths: {
+      ...paths,
+      envProjectPath
+    },
     config: {
       codingAgent: (env.CODING_AGENT as "CC" | "OC") ?? "CC",
       githubToken: env.GITHUB_TOKEN ?? "",

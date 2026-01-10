@@ -19,7 +19,7 @@ bunx wile config
 This creates:
 
 - `.wile/secrets/.env` for required credentials
-- `.wile/secrets/.env.project` for env vars forwarded into the container
+- `.wile/.env.project` for env vars forwarded into the container (or set `WILE_ENV_PROJECT_PATH`)
 - `.wile/.gitignore` to ignore `secrets/`, `screenshots/`, and `logs/`
 - `.wile/prd.json` (empty) and `.wile/prd.json.example`
 

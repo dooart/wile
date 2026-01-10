@@ -23,6 +23,7 @@ test("config writes selected Claude model", async () => {
       "github",
       "gh-token",
       "https://github.com/acme/test",
+      ".wile/.env.project",
       "main",
       12
     ]);
@@ -49,6 +50,7 @@ test("config writes sonnet model when selected", async () => {
       "github",
       "gh-token",
       "https://github.com/acme/test",
+      ".wile/.env.project",
       "main",
       12
     ]);
@@ -75,6 +77,7 @@ test("config writes haiku model when selected", async () => {
       "github",
       "gh-token",
       "https://github.com/acme/test",
+      ".wile/.env.project",
       "main",
       12
     ]);
@@ -101,6 +104,7 @@ test("config writes max iterations when provided", async () => {
       "github",
       "gh-token",
       "https://github.com/acme/test",
+      ".wile/.env.project",
       "main",
       42
     ]);

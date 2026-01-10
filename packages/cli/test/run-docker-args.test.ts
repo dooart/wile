@@ -10,14 +10,14 @@ test("run command forwards env files into docker args", async () => {
     const secretsDir = join(wileDir, "secrets");
     await mkdir(secretsDir, { recursive: true });
     await writeFile(join(secretsDir, ".env"), "CODING_AGENT=CC\n");
-    await writeFile(join(secretsDir, ".env.project"), "TEST_FORWARD=ok\n");
+    await writeFile(join(wileDir, ".env.project"), "TEST_FORWARD=ok\n");
 
     const args = buildDockerArgs(
       { maxIterations: "25" },
       { githubRepoUrl: "https://github.com/acme/test", repoSource: "github" },
       {
         envPath: join(secretsDir, ".env"),
-        envProjectPath: join(secretsDir, ".env.project"),
+        envProjectPath: join(wileDir, ".env.project"),
         wileDir
       },
       dir
@@ -25,7 +25,7 @@ test("run command forwards env files into docker args", async () => {
 
     const joined = args.join(" ");
     expect(joined).toContain(`--env-file ${join(secretsDir, ".env")}`);
-    expect(joined).toContain(`--env-file ${join(secretsDir, ".env.project")}`);
+    expect(joined).toContain(`--env-file ${join(wileDir, ".env.project")}`);
     expect(joined).not.toContain("AGENTS.md");
   });
 });
