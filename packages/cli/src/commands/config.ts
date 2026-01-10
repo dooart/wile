@@ -101,10 +101,17 @@ const tips = {
     "Tip: run 'claude setup-token' on your machine to generate an OAuth token (uses Pro/Max subscription).",
   apiKey: "Tip: create an Anthropic API key in the console (uses API credits).",
   openrouter:
-    "Tip: create an OpenRouter API key for OpenCode (used for z-ai/glm-4.7).",
+    "Tip: create an OpenRouter API key at https://openrouter.ai/keys (pay per token).",
   github:
     "Tip: use a GitHub Personal Access Token (fine-grained recommended). Create at https://github.com/settings/tokens?type=beta with Contents (read/write) and Metadata (read).",
 };
+
+const nativeOcModels = [
+  { title: "Grok Code Fast 1 (recommended)", value: "opencode/grok-code" },
+  { title: "Big Pickle", value: "opencode/big-pickle" },
+  { title: "GLM-4.7", value: "opencode/glm-4.7-free" },
+  { title: "MiniMax M2.1", value: "opencode/minimax-m2.1-free" },
+];
 
 const readEnvFile = async (path: string) => {
   if (!existsSync(path)) {
@@ -215,8 +222,10 @@ export const runConfig = async () => {
   let authMethod: "oauth" | "apiKey" | null = null;
   let authValueResponse: { authValue?: string } = {};
   let defaultModelResponse: { model?: string } = {};
+  let ocProviderResponse: { ocProvider?: string } = {};
   let ocKeyResponse: { ocKey?: string } = {};
   let ocModelResponse: { ocModel?: string } = {};
+  let ocNativeModelResponse: { ocNativeModel?: string } = {};
 
   if (codingAgent === "CC") {
     const authDefault = existingEnv.CC_CLAUDE_CODE_OAUTH_TOKEN
@@ -271,24 +280,53 @@ export const runConfig = async () => {
             : 0,
     });
   } else {
-    console.log("");
-    console.log(tips.openrouter);
-    console.log("");
+    const providerDefault = existingEnv.OC_PROVIDER === "openrouter" ? "openrouter" : "native";
 
-    ocKeyResponse = await prompt({
-      type: "password",
-      name: "ocKey",
-      message: "OpenRouter API key (press enter to keep existing)",
-      initial: existingEnv.OC_OPENROUTER_API_KEY ?? "",
-    });
-
-    ocModelResponse = await prompt({
+    ocProviderResponse = await prompt({
       type: "select",
-      name: "ocModel",
-      message: "OpenCode model (OpenRouter)",
-      choices: [{ title: "glm-4.7", value: "glm-4.7" }],
-      initial: existingEnv.OC_MODEL === "glm-4.7" ? 0 : 0,
+      name: "ocProvider",
+      message: "OpenCode provider",
+      choices: [
+        { title: "Native free models (no API key)", value: "native" },
+        { title: "OpenRouter (pay per token)", value: "openrouter" },
+      ],
+      initial: providerDefault === "openrouter" ? 1 : 0,
     });
+
+    const ocProvider = ocProviderResponse.ocProvider as "native" | "openrouter";
+
+    if (ocProvider === "openrouter") {
+      console.log("");
+      console.log(tips.openrouter);
+      console.log("");
+
+      ocKeyResponse = await prompt({
+        type: "password",
+        name: "ocKey",
+        message: "OpenRouter API key (press enter to keep existing)",
+        initial: existingEnv.OC_OPENROUTER_API_KEY ?? "",
+      });
+
+      ocModelResponse = await prompt({
+        type: "select",
+        name: "ocModel",
+        message: "OpenCode model (OpenRouter)",
+        choices: [{ title: "glm-4.7", value: "glm-4.7" }],
+        initial: 0,
+      });
+    } else {
+      const existingNativeIdx = nativeOcModels.findIndex(
+        (m) => m.value === existingEnv.OC_MODEL,
+      );
+
+      ocNativeModelResponse = await prompt({
+        type: "select",
+        name: "ocNativeModel",
+        message: "OpenCode model (free)",
+        choices: nativeOcModels,
+        initial: existingNativeIdx >= 0 ? existingNativeIdx : 0,
+      });
+    }
   }
 
   const repoSourceResponse = await prompt({
@@ -369,16 +407,19 @@ export const runConfig = async () => {
     codingAgent === "CC"
       ? coalesceValue(authValueResponse.authValue, authFallback)
       : undefined;
-  const ocKey =
+  const ocProvider =
     codingAgent === "OC"
+      ? (ocProviderResponse.ocProvider as "native" | "openrouter") ?? "native"
+      : undefined;
+  const ocKey =
+    codingAgent === "OC" && ocProvider === "openrouter"
       ? coalesceValue(ocKeyResponse.ocKey, existingEnv.OC_OPENROUTER_API_KEY)
       : undefined;
   const ocModel =
     codingAgent === "OC"
-      ? coalesceValue(
-          ocModelResponse.ocModel,
-          existingEnv.OC_MODEL ?? "glm-4.7",
-        )
+      ? ocProvider === "openrouter"
+        ? coalesceValue(ocModelResponse.ocModel, existingEnv.OC_MODEL ?? "glm-4.7")
+        : coalesceValue(ocNativeModelResponse.ocNativeModel, existingEnv.OC_MODEL ?? "opencode/grok-code")
       : undefined;
   const githubToken =
     repoSource === "github"
@@ -416,8 +457,11 @@ export const runConfig = async () => {
       envLines.push(`CC_ANTHROPIC_API_KEY=${authValue ?? ""}`);
     }
   } else {
-    envLines.push(`OC_MODEL=${ocModel ?? "glm-4.7"}`);
-    envLines.push(`OC_OPENROUTER_API_KEY=${ocKey ?? ""}`);
+    envLines.push(`OC_PROVIDER=${ocProvider ?? "native"}`);
+    envLines.push(`OC_MODEL=${ocModel ?? "opencode/grok-code"}`);
+    if (ocProvider === "openrouter") {
+      envLines.push(`OC_OPENROUTER_API_KEY=${ocKey ?? ""}`);
+    }
   }
 
   await writeFile(envPath, envLines.join("\n") + "\n");

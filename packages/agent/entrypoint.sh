@@ -96,8 +96,9 @@ fi
 
 # Authentication for selected coding agent
 if [ "$CODING_AGENT" = "OC" ]; then
-  if [ -z "$OC_OPENROUTER_API_KEY" ]; then
-    echo "ERROR: OC_OPENROUTER_API_KEY is required for OpenCode"
+  OC_PROVIDER="${OC_PROVIDER:-native}"
+  if [ "$OC_PROVIDER" = "openrouter" ] && [ -z "$OC_OPENROUTER_API_KEY" ]; then
+    echo "ERROR: OC_OPENROUTER_API_KEY is required for OpenCode with OpenRouter provider"
     exit 1
   fi
   if [ -z "$OC_MODEL" ]; then
@@ -130,10 +131,11 @@ if [ "${WILE_MOCK_CLAUDE:-}" = "true" ] && [ "$CODING_AGENT" = "CC" ]; then
 fi
 
 if [ "$CODING_AGENT" = "OC" ]; then
-  echo "  Auth:       OpenRouter (OpenCode)"
-  OPENCODE_DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/opencode"
-  mkdir -p "$OPENCODE_DATA_DIR"
-  cat > "$OPENCODE_DATA_DIR/auth.json" << OPENCODEAUTH
+  if [ "$OC_PROVIDER" = "openrouter" ]; then
+    echo "  Auth:       OpenRouter (OpenCode)"
+    OPENCODE_DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/opencode"
+    mkdir -p "$OPENCODE_DATA_DIR"
+    cat > "$OPENCODE_DATA_DIR/auth.json" << OPENCODEAUTH
 {
   "openrouter": {
     "type": "api",
@@ -141,8 +143,11 @@ if [ "$CODING_AGENT" = "OC" ]; then
   }
 }
 OPENCODEAUTH
-  chmod 600 "$OPENCODE_DATA_DIR/auth.json"
-  export OPENROUTER_API_KEY="$OC_OPENROUTER_API_KEY"
+    chmod 600 "$OPENCODE_DATA_DIR/auth.json"
+    export OPENROUTER_API_KEY="$OC_OPENROUTER_API_KEY"
+  else
+    echo "  Auth:       Native (free models)"
+  fi
 else
   # Set up Claude Code authentication
   if [ -n "$CC_CLAUDE_CODE_OAUTH_TOKEN" ]; then

@@ -9,8 +9,11 @@ set -e
 MAX_ITERATIONS=${1:-25}
 CODING_AGENT=${CODING_AGENT:-CC}
 CLAUDE_MODEL=${CC_CLAUDE_MODEL:-sonnet}
-OC_MODEL=${OC_MODEL:-glm-4.7}
-if [[ "$OC_MODEL" != */* ]]; then
+OC_PROVIDER=${OC_PROVIDER:-native}
+OC_MODEL=${OC_MODEL:-opencode/grok-code}
+
+# For openrouter provider, prepend vendor prefix if missing
+if [ "$OC_PROVIDER" = "openrouter" ] && [[ "$OC_MODEL" != */* ]]; then
   OC_MODEL="z-ai/$OC_MODEL"
 fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -28,6 +31,7 @@ echo "════════════════════════�
 echo "  Agent:          $CODING_AGENT"
 echo "  Max iterations: $MAX_ITERATIONS"
 if [ "$CODING_AGENT" = "OC" ]; then
+  echo "  Provider:       $OC_PROVIDER"
   echo "  Model:          $OC_MODEL"
 else
   echo "  Model:          $CLAUDE_MODEL"
@@ -62,8 +66,12 @@ run_claude() {
 
 run_opencode() {
   local prompt_path="$1"
+  local model_arg="$OC_MODEL"
+  if [ "$OC_PROVIDER" = "openrouter" ]; then
+    model_arg="openrouter/$OC_MODEL"
+  fi
   cat "$prompt_path" \
-    | opencode run --format json --model "openrouter/$OC_MODEL" \
+    | opencode run --format json --model "$model_arg" \
     | node "$SCRIPT_DIR/opencode-stream.js"
 }
 

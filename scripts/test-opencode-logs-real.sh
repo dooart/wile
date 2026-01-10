@@ -14,10 +14,6 @@ set -a
 . "$ENV_TEST"
 set +a
 
-if [ -z "${OC_OPENROUTER_API_KEY:-}" ]; then
-  echo "error: OC_OPENROUTER_API_KEY must be set in .env.test" >&2
-  exit 1
-fi
 if [ -z "${GITHUB_REPO_URL:-}" ] || [ -z "${GITHUB_TOKEN:-}" ]; then
   echo "error: GITHUB_REPO_URL and GITHUB_TOKEN must be set in .env.test" >&2
   exit 1
@@ -115,16 +111,16 @@ else
   echo "CODING_AGENT=OC" >> "$RUN_DIR/.wile/secrets/.env"
 fi
 
-if grep -q "^OC_OPENROUTER_API_KEY=" "$RUN_DIR/.wile/secrets/.env"; then
-  sed -i '' "s/^OC_OPENROUTER_API_KEY=.*/OC_OPENROUTER_API_KEY=$OC_OPENROUTER_API_KEY/" "$RUN_DIR/.wile/secrets/.env"
+if grep -q "^OC_PROVIDER=" "$RUN_DIR/.wile/secrets/.env"; then
+  sed -i '' "s/^OC_PROVIDER=.*/OC_PROVIDER=native/" "$RUN_DIR/.wile/secrets/.env"
 else
-  echo "OC_OPENROUTER_API_KEY=$OC_OPENROUTER_API_KEY" >> "$RUN_DIR/.wile/secrets/.env"
+  echo "OC_PROVIDER=native" >> "$RUN_DIR/.wile/secrets/.env"
 fi
 
 if grep -q "^OC_MODEL=" "$RUN_DIR/.wile/secrets/.env"; then
-  sed -i '' "s/^OC_MODEL=.*/OC_MODEL=glm-4.7/" "$RUN_DIR/.wile/secrets/.env"
+  sed -i '' "s/^OC_MODEL=.*/OC_MODEL=opencode\/grok-code/" "$RUN_DIR/.wile/secrets/.env"
 else
-  echo "OC_MODEL=glm-4.7" >> "$RUN_DIR/.wile/secrets/.env"
+  echo "OC_MODEL=opencode/grok-code" >> "$RUN_DIR/.wile/secrets/.env"
 fi
 
 if grep -q "^WILE_REPO_SOURCE=" "$RUN_DIR/.wile/secrets/.env"; then

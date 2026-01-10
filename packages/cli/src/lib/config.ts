@@ -21,6 +21,7 @@ export type WileConfig = {
   maxIterations?: string;
   ccClaudeCodeOauthToken?: string;
   ccAnthropicApiKey?: string;
+  ocProvider?: "native" | "openrouter";
   ocOpenrouterApiKey?: string;
   ocModel?: string;
   envProject: Record<string, string>;
@@ -113,10 +114,13 @@ export const readWileConfig = (options: { cwd?: string; validate?: boolean } = {
       );
     }
     if (env.CODING_AGENT === "OC") {
-      ensureRequired(
-        Boolean(env.OC_OPENROUTER_API_KEY),
-        "OC_OPENROUTER_API_KEY is required in .wile/secrets/.env for OpenCode."
-      );
+      const ocProvider = env.OC_PROVIDER || "native";
+      if (ocProvider === "openrouter") {
+        ensureRequired(
+          Boolean(env.OC_OPENROUTER_API_KEY),
+          "OC_OPENROUTER_API_KEY is required in .wile/secrets/.env for OpenCode with OpenRouter provider."
+        );
+      }
       ensureRequired(
         Boolean(env.OC_MODEL),
         "OC_MODEL is required in .wile/secrets/.env for OpenCode."
@@ -139,6 +143,7 @@ export const readWileConfig = (options: { cwd?: string; validate?: boolean } = {
       maxIterations: env.WILE_MAX_ITERATIONS,
       ccClaudeCodeOauthToken: env.CC_CLAUDE_CODE_OAUTH_TOKEN,
       ccAnthropicApiKey: env.CC_ANTHROPIC_API_KEY,
+      ocProvider: (env.OC_PROVIDER as "native" | "openrouter") ?? "native",
       ocOpenrouterApiKey: env.OC_OPENROUTER_API_KEY,
       ocModel: env.OC_MODEL,
       envProject
