@@ -2,6 +2,14 @@
 
 You are running the preflight phase for a Wile autonomous coding session.
 
+## Environment
+
+Env vars are injected at runtime (no `.env` file). To check if a var is set:
+
+```bash
+[ -n "$VAR_NAME" ] && echo "ok" || echo "missing"
+```
+
 ## Tasks
 
 1. Verify `.wile/prd.json` exists and is valid JSON:
