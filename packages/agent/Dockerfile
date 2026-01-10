@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
     unzip \
     build-essential \
     software-properties-common \
+    postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Node.js 20 LTS
