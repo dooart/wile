@@ -105,6 +105,19 @@ if [ "$CODING_AGENT" = "OC" ]; then
     echo "ERROR: OC_MODEL is required for OpenCode"
     exit 1
   fi
+elif [ "$CODING_AGENT" = "CX" ]; then
+  if [ -z "$CX_API_KEY" ]; then
+    echo "ERROR: CX_API_KEY is required for Codex"
+    echo ""
+    echo "  CX_API_KEY - OpenAI API key (pay per token)"
+    echo ""
+    echo "Create an API key at https://platform.openai.com/api-keys"
+    exit 1
+  fi
+  if [ -z "$CX_MODEL" ]; then
+    echo "ERROR: CX_MODEL is required for Codex"
+    exit 1
+  fi
 else
   if [ -z "$CC_CLAUDE_CODE_OAUTH_TOKEN" ] && [ -z "$CC_ANTHROPIC_API_KEY" ]; then
     echo "ERROR: Either CC_CLAUDE_CODE_OAUTH_TOKEN or CC_ANTHROPIC_API_KEY is required"
@@ -148,6 +161,10 @@ OPENCODEAUTH
   else
     echo "  Auth:       Native (free models)"
   fi
+elif [ "$CODING_AGENT" = "CX" ]; then
+  # Set up Codex authentication
+  echo "  Auth:       OpenAI API Key (Codex)"
+  export CODEX_API_KEY="$CX_API_KEY"
 else
   # Set up Claude Code authentication
   if [ -n "$CC_CLAUDE_CODE_OAUTH_TOKEN" ]; then

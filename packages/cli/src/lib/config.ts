@@ -12,7 +12,7 @@ export type WilePaths = {
 };
 
 export type WileConfig = {
-  codingAgent: "CC" | "OC";
+  codingAgent: "CC" | "OC" | "CX";
   githubToken: string;
   githubRepoUrl: string;
   branchName: string;
@@ -24,6 +24,8 @@ export type WileConfig = {
   ocProvider?: "native" | "openrouter";
   ocOpenrouterApiKey?: string;
   ocModel?: string;
+  cxApiKey?: string;
+  cxModel?: string;
   envProject: Record<string, string>;
 };
 
@@ -90,8 +92,8 @@ export const readWileConfig = (options: { cwd?: string; validate?: boolean } = {
 
   if (validate) {
     ensureRequired(
-      env.CODING_AGENT === "CC" || env.CODING_AGENT === "OC",
-      "CODING_AGENT must be set to CC or OC in .wile/secrets/.env. Run 'bunx wile config'."
+      env.CODING_AGENT === "CC" || env.CODING_AGENT === "OC" || env.CODING_AGENT === "CX",
+      "CODING_AGENT must be set to CC, OC, or CX in .wile/secrets/.env. Run 'bunx wile config'."
     );
     if (repoSource === "github") {
       ensureRequired(
@@ -126,6 +128,16 @@ export const readWileConfig = (options: { cwd?: string; validate?: boolean } = {
         "OC_MODEL is required in .wile/secrets/.env for OpenCode."
       );
     }
+    if (env.CODING_AGENT === "CX") {
+      ensureRequired(
+        Boolean(env.CX_API_KEY),
+        "CX_API_KEY is required in .wile/secrets/.env for Codex."
+      );
+      ensureRequired(
+        Boolean(env.CX_MODEL),
+        "CX_MODEL is required in .wile/secrets/.env for Codex."
+      );
+    }
   }
 
   return {
@@ -134,7 +146,7 @@ export const readWileConfig = (options: { cwd?: string; validate?: boolean } = {
       envProjectPath
     },
     config: {
-      codingAgent: (env.CODING_AGENT as "CC" | "OC") ?? "CC",
+      codingAgent: (env.CODING_AGENT as "CC" | "OC" | "CX") ?? "CC",
       githubToken: env.GITHUB_TOKEN ?? "",
       githubRepoUrl: env.GITHUB_REPO_URL ?? "",
       branchName: env.BRANCH_NAME ?? "",
@@ -146,6 +158,8 @@ export const readWileConfig = (options: { cwd?: string; validate?: boolean } = {
       ocProvider: (env.OC_PROVIDER as "native" | "openrouter") ?? "native",
       ocOpenrouterApiKey: env.OC_OPENROUTER_API_KEY,
       ocModel: env.OC_MODEL,
+      cxApiKey: env.CX_API_KEY,
+      cxModel: env.CX_MODEL,
       envProject
     }
   };

@@ -11,6 +11,7 @@ CODING_AGENT=${CODING_AGENT:-CC}
 CLAUDE_MODEL=${CC_CLAUDE_MODEL:-sonnet}
 OC_PROVIDER=${OC_PROVIDER:-native}
 OC_MODEL=${OC_MODEL:-opencode/grok-code}
+CX_MODEL=${CX_MODEL:-o3}
 
 # For openrouter provider, prepend vendor prefix if missing
 if [ "$OC_PROVIDER" = "openrouter" ] && [[ "$OC_MODEL" != */* ]]; then
@@ -33,6 +34,8 @@ echo "  Max iterations: $MAX_ITERATIONS"
 if [ "$CODING_AGENT" = "OC" ]; then
   echo "  Provider:       $OC_PROVIDER"
   echo "  Model:          $OC_MODEL"
+elif [ "$CODING_AGENT" = "CX" ]; then
+  echo "  Model:          $CX_MODEL"
 else
   echo "  Model:          $CLAUDE_MODEL"
 fi
@@ -75,10 +78,19 @@ run_opencode() {
     | node "$SCRIPT_DIR/opencode-stream.js"
 }
 
+run_codex() {
+  local prompt_path="$1"
+  cat "$prompt_path" \
+    | codex exec --json --dangerously-bypass-approvals-and-sandbox --skip-git-repo-check -m "$CX_MODEL" - \
+    | node "$SCRIPT_DIR/codex-stream.js"
+}
+
 run_agent() {
   local prompt_path="$1"
   if [ "$CODING_AGENT" = "OC" ]; then
     run_opencode "$prompt_path"
+  elif [ "$CODING_AGENT" = "CX" ]; then
+    run_codex "$prompt_path"
   else
     run_claude "$prompt_path"
   fi

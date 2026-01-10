@@ -53,6 +53,10 @@ RUN npm install -g @anthropic-ai/claude-code
 # https://www.npmjs.com/package/opencode-ai
 RUN npm install -g opencode-ai@latest
 
+# Install Codex CLI
+# https://www.npmjs.com/package/@openai/codex
+RUN npm install -g @openai/codex
+
 # CC_ANTHROPIC_API_KEY is passed at runtime via environment variable (mapped to ANTHROPIC_API_KEY in entrypoint)
 # Usage: claude --dangerously-skip-permissions
 
