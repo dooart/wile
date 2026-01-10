@@ -10,6 +10,11 @@ echo "════════════════════════�
 echo "  🌵  WILE - Container Startup"
 echo "══════════════════════════════════════════════════════"
 
+if command -v sysctl >/dev/null 2>&1; then
+  sysctl -w net.ipv6.conf.all.disable_ipv6=0 >/dev/null 2>&1 || true
+  sysctl -w net.ipv6.conf.default.disable_ipv6=0 >/dev/null 2>&1 || true
+fi
+
 if [ "${WILE_TEST:-}" = "true" ]; then
   TEST_REPO="${WILE_TEST_REPO_PATH:-/home/wile/workspace/repo}"
 
