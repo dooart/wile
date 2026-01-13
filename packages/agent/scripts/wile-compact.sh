@@ -90,6 +90,10 @@ OUTPUT=$(run_agent "$PROMPT_FILE" | tee "$TEE_TARGET") || true
 # Validate the resulting files instead of the response format.
 node "$SCRIPT_DIR/validate-compact.js"
 
+if [ -f ".wile/prd.json.original" ]; then
+  rm -f ".wile/prd.json.original"
+fi
+
 echo ""
 echo "══════════════════════════════════════════════════════"
 echo "  ✅ COMPACT COMPLETE"

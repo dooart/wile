@@ -17,10 +17,12 @@ Steps:
    - `notes`: `Don't repeat task ids when starting the next one.` (exact text).
 3. Update `.wile/progress.txt`:
    - Keep the header `# Wile Progress Log` and `## Codebase Patterns`.
+   - The first line must be exactly `# Wile Progress Log`.
    - Add bullet points at the top under `## Codebase Patterns` for any important learnings that would help future agents.
    - Replace the rest of the log with a short, high-level summary in a few paragraphs.
    - Do not lose important info, but avoid detailed step-by-step logs.
    - Ignore preflight failures in the history.
+4. When committing changes, only `.wile/prd.json` and `.wile/progress.txt` should be committed. Any other changes must be discarded.
 
 Response format:
 - Your response must end with a single-line JSON object and nothing after it (no trailing text).

@@ -300,7 +300,8 @@ if [ $EXIT_CODE -eq 0 ]; then
   echo "All tasks completed successfully!"
   if [ "${WILE_MODE:-}" = "compact" ]; then
     if ! git diff --quiet || ! git diff --staged --quiet; then
-      git add -A
+      git add .wile/prd.json .wile/progress.txt
+      git restore .
       git commit -m "chore: compact wile prd and progress"
       git push || true
     else
@@ -311,6 +312,11 @@ if [ $EXIT_CODE -eq 0 ]; then
     git push || true
   fi
 elif [ $EXIT_CODE -eq 1 ]; then
+  if [ "${WILE_MODE:-}" = "compact" ]; then
+    echo "Compact failed. No changes committed."
+    exit 1
+  fi
+
   echo "Max iterations reached. Committing partial work..."
 
   # Check if there are uncommitted changes
