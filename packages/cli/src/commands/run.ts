@@ -28,7 +28,7 @@ const readJson = (path: string) => {
   }
 };
 
-const validateGitignore = (path: string) => {
+export const validateGitignore = (path: string) => {
   if (!existsSync(path)) {
     throw new Error("Missing .wile/.gitignore. Run 'bunx wile config'.");
   }
@@ -51,7 +51,7 @@ const hasPendingStories = (prd: { userStories?: { passes?: boolean; priority?: n
   return prd.userStories.some((story) => story.passes === false);
 };
 
-const buildAgentImage = (agentDir: string) => {
+export const buildAgentImage = (agentDir: string) => {
   const result = spawnSync("docker", ["build", "-t", "wile-agent:local", agentDir], {
     stdio: "inherit"
   });
@@ -60,7 +60,7 @@ const buildAgentImage = (agentDir: string) => {
   }
 };
 
-const resolveAgentDir = () => {
+export const resolveAgentDir = () => {
   const override = process.env.WILE_AGENT_DIR;
   if (override && existsSync(override)) {
     return override;
@@ -89,7 +89,7 @@ const resolveAgentDir = () => {
   return agentDir;
 };
 
-const getTimestamp = () => {
+export const getTimestamp = () => {
   const now = new Date();
   const pad = (value: number) => String(value).padStart(2, "0");
   return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(
@@ -97,7 +97,7 @@ const getTimestamp = () => {
   )}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
 };
 
-const runDockerWithLogging = (args: string[], logPath: string) =>
+export const runDockerWithLogging = (args: string[], logPath: string) =>
   new Promise<void>((resolvePromise, rejectPromise) => {
     const logStream = createWriteStream(logPath, { flags: "a" });
     const child = spawn("docker", args, {
@@ -129,18 +129,24 @@ const runDockerWithLogging = (args: string[], logPath: string) =>
     });
   });
 
-export const buildDockerArgs = (options: {
-  repo?: string;
-  maxIterations: string;
-  test?: boolean;
-}, config: {
-  githubRepoUrl: string;
-  repoSource: "github" | "local";
-}, paths: {
-  envPath: string;
-  envProjectPath: string;
-  wileDir: string;
-}, cwd: string) => {
+export const buildDockerArgs = (
+  options: {
+    repo?: string;
+    maxIterations: string;
+    test?: boolean;
+  },
+  config: {
+    githubRepoUrl: string;
+    repoSource: "github" | "local";
+  },
+  paths: {
+    envPath: string;
+    envProjectPath: string;
+    wileDir: string;
+  },
+  cwd: string,
+  extraEnv: string[] = []
+) => {
   const dockerArgs = ["run", "--rm"];
 
   if (options.test) {
@@ -180,6 +186,10 @@ export const buildDockerArgs = (options: {
   const envFiles = [paths.envPath, paths.envProjectPath].filter((path) => existsSync(path));
   for (const envFile of envFiles) {
     dockerArgs.push("--env-file", envFile);
+  }
+
+  for (const envEntry of extraEnv) {
+    dockerArgs.push("-e", envEntry);
   }
 
   const additionalInstructionsPath = join(paths.wileDir, "additional-instructions.md");

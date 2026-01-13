@@ -274,13 +274,21 @@ mkdir -p .wile/screenshots
 
 echo ""
 echo "══════════════════════════════════════════════════════"
-echo "  Starting Wile Loop"
+if [ "${WILE_MODE:-}" = "compact" ]; then
+  echo "  Starting Wile Compact"
+else
+  echo "  Starting Wile Loop"
+fi
 echo "══════════════════════════════════════════════════════"
 echo ""
 
-# Run the main loop
+# Run the main loop or compact flow
 EXIT_CODE=0
-"$SCRIPT_DIR/wile.sh" "$MAX_ITERATIONS" || EXIT_CODE=$?
+if [ "${WILE_MODE:-}" = "compact" ]; then
+  "$SCRIPT_DIR/wile-compact.sh" || EXIT_CODE=$?
+else
+  "$SCRIPT_DIR/wile.sh" "$MAX_ITERATIONS" || EXIT_CODE=$?
+fi
 
 echo ""
 echo "══════════════════════════════════════════════════════"
@@ -290,8 +298,18 @@ echo "════════════════════════�
 # Handle completion/partial completion
 if [ $EXIT_CODE -eq 0 ]; then
   echo "All tasks completed successfully!"
-  # Ensure final state is pushed
-  git push || true
+  if [ "${WILE_MODE:-}" = "compact" ]; then
+    if ! git diff --quiet || ! git diff --staged --quiet; then
+      git add -A
+      git commit -m "chore: compact wile prd and progress"
+      git push || true
+    else
+      git push || true
+    fi
+  else
+    # Ensure final state is pushed
+    git push || true
+  fi
 elif [ $EXIT_CODE -eq 1 ]; then
   echo "Max iterations reached. Committing partial work..."
 

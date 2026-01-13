@@ -34,6 +34,7 @@ run_test() {
 run_test "test-claude-logs" "$ROOT_DIR/scripts/test-claude-logs.sh"
 run_test "test-claude-logs-real" "$ROOT_DIR/scripts/test-claude-logs-real.sh"
 run_test "test-opencode-logs-real" "$ROOT_DIR/scripts/test-opencode-logs-real.sh"
+run_test "test-compact" "$ROOT_DIR/scripts/test-compact.sh"
 run_test "test-preflight-claude-docker" "$ROOT_DIR/packages/agent/scripts/test-preflight-claude-docker.sh"
 
 case "$GITHUB_REPO_URL" in

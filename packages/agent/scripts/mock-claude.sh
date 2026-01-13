@@ -1,6 +1,56 @@
 #!/bin/sh
 set -e
 
+if [ "${WILE_MODE:-}" = "compact" ]; then
+  node - <<'NODE'
+const fs = require("fs");
+
+const prdPath = ".wile/prd.json";
+const progressPath = ".wile/progress.txt";
+const prd = JSON.parse(fs.readFileSync(prdPath, "utf8"));
+const stories = Array.isArray(prd.userStories) ? prd.userStories : [];
+const firstStory = stories[0] || {};
+const lastStory = stories[stories.length - 1] || {};
+const priority = typeof firstStory.priority === "number" ? firstStory.priority : 1;
+const taskIds = `From ${firstStory.id || "TASK-001"} to ${lastStory.id || "TASK-001"}`;
+
+const compactStory = {
+  id: "GROUP-001",
+  title: "summary of everything done here",
+  tasks: [
+    "High level of what was accomplished here",
+    "Should NOT have all tasks in here, should be very summarized"
+  ],
+  taskIds,
+  priority,
+  passes: true,
+  notes: "Don't repeat task ids when starting the next one."
+};
+
+fs.writeFileSync(prdPath, JSON.stringify({ userStories: [compactStory] }, null, 2) + "\n");
+
+const progressLines = [
+  "# Wile Progress Log",
+  "",
+  "## Codebase Patterns",
+  "- Summarized key learnings for future agents.",
+  "",
+  "---",
+  "",
+  "Compacted the progress log to highlight the most important work and patterns.",
+  "Kept only high-level details to preserve context without noise.",
+  ""
+];
+
+fs.writeFileSync(progressPath, progressLines.join("\n"));
+NODE
+
+  cat <<'JSON'
+{"type":"assistant","message":{"content":[{"type":"text","text":"{\"id\":\"GROUP-001\",\"title\":\"summary of everything done here\",\"tasks\":[\"High level of what was accomplished here\",\"Should NOT have all tasks in here, should be very summarized\"],\"taskIds\":\"From TASK-001 to TASK-029\",\"priority\":1,\"passes\":true,\"notes\":\"Don't repeat task ids when starting the next one.\"}\n"}]}}
+JSON
+  exit 0
+fi
+
 COUNT_FILE="/tmp/wile-claude-mock-count"
 if [ ! -f "$COUNT_FILE" ]; then
   echo "0" > "$COUNT_FILE"

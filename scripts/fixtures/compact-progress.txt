@@ -1,0 +1,139 @@
+# Wile Progress Log
+
+## Codebase Patterns
+
+- Use stable media IDs to avoid broken references in feeds.
+- Keep notification fanout async to avoid blocking post creation.
+- Normalize hashtags to lowercase for search consistency.
+
+---
+
+## 2026-01-01 - TASK-001: Bootstrap core data model
+
+**Implemented:**
+- Added user, post, and media schemas
+- Set up migration baseline
+
+**Files changed:**
+- db/schema.sql
+- db/migrations/001_init.sql
+
+---
+
+## 2026-01-02 - TASK-002: Create user profiles
+
+**Implemented:**
+- Profile editing flow
+- Avatar upload with media storage
+
+**Files changed:**
+- app/profile/page.tsx
+- app/profile/avatar.tsx
+
+---
+
+## 2026-01-03 - TASK-003: Implement post creation
+
+**Implemented:**
+- Image post creation
+- Caption validation
+
+**Files changed:**
+- app/posts/new/page.tsx
+- app/posts/api.ts
+
+---
+
+## 2026-01-04 - TASK-004: Add feed timeline
+
+**Implemented:**
+- Timeline query
+- Infinite scroll in feed
+
+---
+
+## 2026-01-05 - TASK-005: Enable likes
+
+**Implemented:**
+- Like/unlike endpoints
+- Updated UI to show counts
+
+---
+
+## 2026-01-06 - TASK-006: Enable comments
+
+**Implemented:**
+- Comment creation and deletion
+- Comment moderation hooks
+
+---
+
+## 2026-01-07 - TASK-007: Add follow system
+
+**Implemented:**
+- Follow/unfollow API
+- Follow list UI
+
+---
+
+## 2026-01-08 - TASK-008: Add notifications
+
+**Implemented:**
+- Notification pipeline
+- In-app notification feed
+
+---
+
+## 2026-01-09 - TASK-009: Search users and tags
+
+**Implemented:**
+- Search indexing for users and hashtags
+- Search results UI
+
+---
+
+## 2026-01-10 - TASK-010: Add explore page
+
+**Implemented:**
+- Explore ranking query
+- Explore page layout
+
+---
+
+## 2026-01-11 - TASK-011: Direct messaging
+
+**Implemented:**
+- Conversation list and threads
+- Message send API
+
+---
+
+## 2026-01-12 - TASK-012: Story posts
+
+**Implemented:**
+- Story upload flow
+- Story expiry cleanup
+
+---
+
+## 2026-01-13 - TASK-013: Content moderation tools
+
+**Implemented:**
+- Report review dashboard
+- Status updates for reports
+
+---
+
+## 2026-01-14 - TASK-014: Analytics dashboard
+
+**Implemented:**
+- Engagement metrics cards
+- Post reach chart
+
+---
+
+## 2026-01-15 - TASK-015: Paid promotions
+
+**Implemented:**
+- Promotion setup flow
+- Targeting options UI
