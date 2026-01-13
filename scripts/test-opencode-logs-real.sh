@@ -79,6 +79,7 @@ JSON
 
 cat > .wile/additional-instructions.md <<'MD'
 - Include the exact line "REAL OPENCODE LOG TEST" in your response output.
+- Ensure the final non-empty line of your response is exactly <promise>ALL_STORIES_COMPLETED</promise> with nothing after it.
 MD
 
 git add -A
@@ -90,6 +91,7 @@ cp "$ENV_TEST" "$RUN_DIR/.wile/secrets/.env"
 printf "secrets/\nscreenshots/\nlogs/\n" > "$RUN_DIR/.wile/.gitignore"
 cat > "$RUN_DIR/.wile/additional-instructions.md" <<'MD'
 - Include the exact line "REAL OPENCODE LOG TEST" in your response output.
+- Ensure the final non-empty line of your response is exactly <promise>ALL_STORIES_COMPLETED</promise> with nothing after it.
 MD
 cat > "$RUN_DIR/.wile/prd.json" <<'JSON'
 {

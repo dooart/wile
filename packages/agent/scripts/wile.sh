@@ -134,20 +134,15 @@ for i in $(seq 1 $MAX_ITERATIONS); do
   # Capture output while also displaying it (tee to stderr)
   OUTPUT=$(run_agent "$PROMPT_FILE" | tee "$TEE_TARGET") || true
 
-  # Check for completion signal (tag must be on its own line; reject backticks/code fences)
+  # Check for completion signal (tag must be the final non-empty line)
   CLEAN_OUTPUT=$(printf '%s' "$OUTPUT" | tr -d '\r' | sed -e 's/[[:space:]]*$//')
-  if printf '%s\n' "$CLEAN_OUTPUT" | grep -q -E '^[[:space:]]*<promise>ALL_STORIES_COMPLETED</promise>[[:space:]]*$'; then
-    if printf '%s' "$CLEAN_OUTPUT" | grep -F '```' >/dev/null 2>&1; then
-      :
-    elif printf '%s' "$CLEAN_OUTPUT" | grep -F '`<promise>ALL_STORIES_COMPLETED</promise>`' >/dev/null 2>&1; then
-      :
-    else
+  FINAL_LINE=$(printf '%s\n' "$CLEAN_OUTPUT" | awk 'NF { last=$0 } END { print last }')
+  if printf '%s\n' "$FINAL_LINE" | grep -q -E '^[[:space:]]*<promise>ALL_STORIES_COMPLETED</promise>[[:space:]]*$'; then
     echo ""
     echo "══════════════════════════════════════════════════════"
     echo "  ✅ ALL TASKS COMPLETE"
     echo "══════════════════════════════════════════════════════"
     exit 0
-    fi
   fi
 
   echo ""

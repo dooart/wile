@@ -273,11 +273,11 @@ export const runConfig = async () => {
         { title: "haiku", value: "haiku" },
       ],
       initial:
-        existingEnv.CC_CLAUDE_MODEL === "opus"
-          ? 1
+        existingEnv.CC_CLAUDE_MODEL === "sonnet"
+          ? 0
           : existingEnv.CC_CLAUDE_MODEL === "haiku"
             ? 2
-            : 0,
+            : 1,
     });
   } else {
     const providerDefault = existingEnv.OC_PROVIDER === "openrouter" ? "openrouter" : "native";
