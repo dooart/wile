@@ -34,8 +34,8 @@ test("config skips GitHub prompts when repo source is local", async () => {
 
     const env = await readEnvFile(join(dir, ".wile", "secrets", ".env"));
     expect(env.WILE_REPO_SOURCE).toBe("local");
-    expect(env.GITHUB_TOKEN).toBe("");
-    expect(env.GITHUB_REPO_URL).toBe("");
+    expect(env.GITHUB_TOKEN).toBeUndefined();
+    expect(env.GITHUB_REPO_URL).toBeUndefined();
   });
 });
 

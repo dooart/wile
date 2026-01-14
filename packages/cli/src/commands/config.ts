@@ -189,6 +189,44 @@ const maybeInject = () => {
   }
 };
 
+const setIfDefined = (
+  env: Record<string, string>,
+  key: string,
+  value: string | undefined,
+) => {
+  if (value === undefined) {
+    return;
+  }
+  env[key] = value;
+};
+
+const toEnvString = (env: Record<string, string>) => {
+  const orderedKeys = [
+    "CODING_AGENT",
+    "WILE_REPO_SOURCE",
+    "WILE_ENV_PROJECT_PATH",
+    "GITHUB_TOKEN",
+    "GITHUB_REPO_URL",
+    "BRANCH_NAME",
+    "WILE_MAX_ITERATIONS",
+    "CC_CLAUDE_MODEL",
+    "CC_CLAUDE_CODE_OAUTH_TOKEN",
+    "CC_ANTHROPIC_API_KEY",
+    "OC_PROVIDER",
+    "OC_MODEL",
+    "OC_OPENROUTER_API_KEY",
+    "GEMINI_OAUTH_CREDS_B64",
+    "GEMINI_API_KEY",
+  ];
+  const orderedSet = new Set(orderedKeys);
+  const ordered = orderedKeys.filter((key) => key in env);
+  const rest = Object.keys(env)
+    .filter((key) => !orderedSet.has(key))
+    .sort();
+  const lines = [...ordered, ...rest].map((key) => `${key}=${env[key]}`);
+  return lines.join("\n") + "\n";
+};
+
 const resolvePath = (cwd: string, input: string) => {
   const expanded =
     input.startsWith("~") ? join(homedir(), input.slice(1)) : input;
@@ -516,38 +554,41 @@ export const runConfig = async () => {
     existingEnv.BRANCH_NAME ?? "main",
   );
 
-  const envLines = [
-    `CODING_AGENT=${codingAgent}`,
-    `WILE_REPO_SOURCE=${repoSource}`,
-    `WILE_ENV_PROJECT_PATH=${envProjectPathValue}`,
-    `GITHUB_TOKEN=${githubToken ?? ""}`,
-    `GITHUB_REPO_URL=${repoUrl ?? ""}`,
-    `BRANCH_NAME=${branchName ?? "main"}`,
-    `WILE_MAX_ITERATIONS=${maxIterations}`,
-  ];
+  const envOut: Record<string, string> = { ...existingEnv };
+  envOut.CODING_AGENT = codingAgent;
+  envOut.WILE_REPO_SOURCE = repoSource;
+  envOut.WILE_ENV_PROJECT_PATH = envProjectPathValue;
+  envOut.BRANCH_NAME = branchName ?? "main";
+  envOut.WILE_MAX_ITERATIONS = String(maxIterations);
+  setIfDefined(envOut, "GITHUB_TOKEN", githubToken);
+  setIfDefined(envOut, "GITHUB_REPO_URL", repoUrl);
 
   if (codingAgent === "CC") {
-    envLines.push(`CC_CLAUDE_MODEL=${defaultModelResponse.model as string}`);
+    setIfDefined(
+      envOut,
+      "CC_CLAUDE_MODEL",
+      defaultModelResponse.model as string,
+    );
     if (authMethod === "oauth") {
-      envLines.push(`CC_CLAUDE_CODE_OAUTH_TOKEN=${authValue ?? ""}`);
+      setIfDefined(envOut, "CC_CLAUDE_CODE_OAUTH_TOKEN", authValue);
     } else {
-      envLines.push(`CC_ANTHROPIC_API_KEY=${authValue ?? ""}`);
+      setIfDefined(envOut, "CC_ANTHROPIC_API_KEY", authValue);
     }
   } else if (codingAgent === "OC") {
-    envLines.push(`OC_PROVIDER=${ocProvider ?? "native"}`);
-    envLines.push(`OC_MODEL=${ocModel ?? "opencode/grok-code"}`);
+    setIfDefined(envOut, "OC_PROVIDER", ocProvider ?? "native");
+    setIfDefined(envOut, "OC_MODEL", ocModel ?? "opencode/grok-code");
     if (ocProvider === "openrouter") {
-      envLines.push(`OC_OPENROUTER_API_KEY=${ocKey ?? ""}`);
+      setIfDefined(envOut, "OC_OPENROUTER_API_KEY", ocKey);
     }
   } else {
     if (geminiAuthMethod === "apiKey") {
-      envLines.push(`GEMINI_API_KEY=${geminiApiKey ?? ""}`);
+      setIfDefined(envOut, "GEMINI_API_KEY", geminiApiKey);
     } else {
-      envLines.push(`GEMINI_OAUTH_CREDS_B64=${geminiOauthCredsB64 ?? ""}`);
+      setIfDefined(envOut, "GEMINI_OAUTH_CREDS_B64", geminiOauthCredsB64);
     }
   }
 
-  await writeFile(envPath, envLines.join("\n") + "\n");
+  await writeFile(envPath, toEnvString(envOut));
 
   await ensureGitignore(gitignorePath);
 
