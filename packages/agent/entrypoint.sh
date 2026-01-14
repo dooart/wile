@@ -105,6 +105,16 @@ if [ "$CODING_AGENT" = "OC" ]; then
     echo "ERROR: OC_MODEL is required for OpenCode"
     exit 1
   fi
+elif [ "$CODING_AGENT" = "GC" ]; then
+  if [ -z "$GEMINI_OAUTH_CREDS_B64" ] && [ -z "$GEMINI_OAUTH_CREDS_PATH" ] && [ -z "$GEMINI_API_KEY" ]; then
+    echo "ERROR: Either GEMINI_OAUTH_CREDS_B64 (or GEMINI_OAUTH_CREDS_PATH) or GEMINI_API_KEY is required"
+    echo ""
+    echo "  GEMINI_OAUTH_CREDS_B64  - Base64 OAuth creds from ~/.gemini/oauth_creds.json (recommended)"
+    echo "  GEMINI_API_KEY          - Uses API credits (pay per token)"
+    echo ""
+    echo "Run 'gemini' locally and choose Login with Google to create ~/.gemini/oauth_creds.json."
+    exit 1
+  fi
 else
   if [ -z "$CC_CLAUDE_CODE_OAUTH_TOKEN" ] && [ -z "$CC_ANTHROPIC_API_KEY" ]; then
     echo "ERROR: Either CC_CLAUDE_CODE_OAUTH_TOKEN or CC_ANTHROPIC_API_KEY is required"
@@ -130,6 +140,15 @@ if [ "${WILE_MOCK_CLAUDE:-}" = "true" ] && [ "$CODING_AGENT" = "CC" ]; then
   export PATH="$MOCK_BIN:$PATH"
 fi
 
+if [ "${WILE_MOCK_GEMINI:-}" = "true" ] && [ "$CODING_AGENT" = "GC" ]; then
+  echo "  Gemini:     Mocked"
+  MOCK_BIN="/home/wile/mock-bin"
+  mkdir -p "$MOCK_BIN"
+  cp "$SCRIPT_DIR/mock-gemini.sh" "$MOCK_BIN/gemini"
+  chmod +x "$MOCK_BIN/gemini"
+  export PATH="$MOCK_BIN:$PATH"
+fi
+
 if [ "$CODING_AGENT" = "OC" ]; then
   if [ "$OC_PROVIDER" = "openrouter" ]; then
     echo "  Auth:       OpenRouter (OpenCode)"
@@ -147,6 +166,51 @@ OPENCODEAUTH
     export OPENROUTER_API_KEY="$OC_OPENROUTER_API_KEY"
   else
     echo "  Auth:       Native (free models)"
+  fi
+elif [ "$CODING_AGENT" = "GC" ]; then
+  if [ -n "$GEMINI_OAUTH_CREDS_B64" ] || [ -n "$GEMINI_OAUTH_CREDS_PATH" ]; then
+    echo "  Auth:       OAuth (Google account)"
+
+    mkdir -p ~/.gemini
+    if [ -n "$GEMINI_OAUTH_CREDS_B64" ]; then
+      echo "$GEMINI_OAUTH_CREDS_B64" | base64 -d > ~/.gemini/oauth_creds.json
+    else
+      cp "$GEMINI_OAUTH_CREDS_PATH" ~/.gemini/oauth_creds.json
+    fi
+    chmod 600 ~/.gemini/oauth_creds.json
+
+    export GEMINI_FORCE_FILE_STORAGE=true
+    unset GEMINI_API_KEY
+    cat > ~/.gemini/settings.json <<'JSON'
+{
+  "general": {
+    "previewFeatures": true
+  },
+  "security": {
+    "auth": {
+      "selectedType": "oauth-personal",
+      "useExternal": false
+    }
+  }
+}
+JSON
+  else
+    echo "  Auth:       API Key (Gemini API)"
+    export GEMINI_API_KEY="$GEMINI_API_KEY"
+    mkdir -p ~/.gemini
+    cat > ~/.gemini/settings.json <<'JSON'
+{
+  "general": {
+    "previewFeatures": true
+  },
+  "security": {
+    "auth": {
+      "selectedType": "gemini-api-key",
+      "useExternal": false
+    }
+  }
+}
+JSON
   fi
 else
   # Set up Claude Code authentication

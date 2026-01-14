@@ -66,6 +66,10 @@ RUN npm install -g @anthropic-ai/claude-code
 # https://www.npmjs.com/package/opencode-ai
 RUN npm install -g opencode-ai@latest
 
+# Install Gemini CLI
+# https://www.npmjs.com/package/@google/gemini-cli
+RUN npm install -g @google/gemini-cli
+
 # CC_ANTHROPIC_API_KEY is passed at runtime via environment variable (mapped to ANTHROPIC_API_KEY in entrypoint)
 # Usage: claude --dangerously-skip-permissions
 

@@ -9,6 +9,7 @@ CODING_AGENT=${CODING_AGENT:-CC}
 CLAUDE_MODEL=${CC_CLAUDE_MODEL:-sonnet}
 OC_PROVIDER=${OC_PROVIDER:-native}
 OC_MODEL=${OC_MODEL:-opencode/grok-code}
+GEMINI_MODEL=${GEMINI_MODEL:-auto-gemini-3}
 
 # For openrouter provider, prepend vendor prefix if missing
 if [ "$OC_PROVIDER" = "openrouter" ] && [[ "$OC_MODEL" != */* ]]; then
@@ -28,6 +29,8 @@ echo "  Agent:          $CODING_AGENT"
 if [ "$CODING_AGENT" = "OC" ]; then
   echo "  Provider:       $OC_PROVIDER"
   echo "  Model:          $OC_MODEL"
+elif [ "$CODING_AGENT" = "GC" ]; then
+  echo "  Model:          ${GEMINI_MODEL:-auto}"
 else
   echo "  Model:          $CLAUDE_MODEL"
 fi
@@ -58,10 +61,24 @@ run_opencode() {
     | node "$SCRIPT_DIR/opencode-stream.js"
 }
 
+run_gemini() {
+  local prompt_path="$1"
+  local prompt_text
+  prompt_text=$(cat "$prompt_path")
+  local model_args=()
+  if [ -n "$GEMINI_MODEL" ]; then
+    model_args=(--model "$GEMINI_MODEL")
+  fi
+  gemini --output-format stream-json --yolo "${model_args[@]}" "$prompt_text" \
+    | node "$SCRIPT_DIR/gemini-stream.js"
+}
+
 run_agent() {
   local prompt_path="$1"
   if [ "$CODING_AGENT" = "OC" ]; then
     run_opencode "$prompt_path"
+  elif [ "$CODING_AGENT" = "GC" ]; then
+    run_gemini "$prompt_path"
   else
     run_claude "$prompt_path"
   fi

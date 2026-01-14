@@ -12,7 +12,7 @@ export type WilePaths = {
 };
 
 export type WileConfig = {
-  codingAgent: "CC" | "OC";
+  codingAgent: "CC" | "OC" | "GC";
   githubToken: string;
   githubRepoUrl: string;
   branchName: string;
@@ -24,6 +24,8 @@ export type WileConfig = {
   ocProvider?: "native" | "openrouter";
   ocOpenrouterApiKey?: string;
   ocModel?: string;
+  geminiOauthCredsB64?: string;
+  geminiApiKey?: string;
   envProject: Record<string, string>;
 };
 
@@ -90,8 +92,8 @@ export const readWileConfig = (options: { cwd?: string; validate?: boolean } = {
 
   if (validate) {
     ensureRequired(
-      env.CODING_AGENT === "CC" || env.CODING_AGENT === "OC",
-      "CODING_AGENT must be set to CC or OC in .wile/secrets/.env. Run 'bunx wile config'."
+      env.CODING_AGENT === "CC" || env.CODING_AGENT === "OC" || env.CODING_AGENT === "GC",
+      "CODING_AGENT must be set to CC, OC, or GC in .wile/secrets/.env. Run 'bunx wile config'."
     );
     if (repoSource === "github") {
       ensureRequired(
@@ -126,6 +128,12 @@ export const readWileConfig = (options: { cwd?: string; validate?: boolean } = {
         "OC_MODEL is required in .wile/secrets/.env for OpenCode."
       );
     }
+    if (env.CODING_AGENT === "GC") {
+      ensureRequired(
+        Boolean(env.GEMINI_OAUTH_CREDS_B64 || env.GEMINI_API_KEY),
+        "Either GEMINI_OAUTH_CREDS_B64 or GEMINI_API_KEY is required in .wile/secrets/.env for Gemini CLI."
+      );
+    }
   }
 
   return {
@@ -134,7 +142,7 @@ export const readWileConfig = (options: { cwd?: string; validate?: boolean } = {
       envProjectPath
     },
     config: {
-      codingAgent: (env.CODING_AGENT as "CC" | "OC") ?? "CC",
+      codingAgent: (env.CODING_AGENT as "CC" | "OC" | "GC") ?? "CC",
       githubToken: env.GITHUB_TOKEN ?? "",
       githubRepoUrl: env.GITHUB_REPO_URL ?? "",
       branchName: env.BRANCH_NAME ?? "",
@@ -146,6 +154,8 @@ export const readWileConfig = (options: { cwd?: string; validate?: boolean } = {
       ocProvider: (env.OC_PROVIDER as "native" | "openrouter") ?? "native",
       ocOpenrouterApiKey: env.OC_OPENROUTER_API_KEY,
       ocModel: env.OC_MODEL,
+      geminiOauthCredsB64: env.GEMINI_OAUTH_CREDS_B64,
+      geminiApiKey: env.GEMINI_API_KEY,
       envProject
     }
   };

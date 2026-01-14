@@ -2,7 +2,8 @@ import prompts from "prompts";
 import dotenv from "dotenv";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve, isAbsolute } from "node:path";
+import { homedir } from "node:os";
 
 const prdExample = {
   userStories: [
@@ -104,6 +105,10 @@ const tips = {
     "Tip: create an OpenRouter API key at https://openrouter.ai/keys (pay per token).",
   github:
     "Tip: use a GitHub Personal Access Token (fine-grained recommended). Create at https://github.com/settings/tokens?type=beta with Contents (read/write) and Metadata (read).",
+  geminiOauth:
+    "Tip: run 'gemini' locally and choose Login with Google to create ~/.gemini/oauth_creds.json.",
+  geminiApiKey:
+    "Tip: create a Gemini API key at https://aistudio.google.com/app/apikey (pay per token).",
 };
 
 const nativeOcModels = [
@@ -184,6 +189,17 @@ const maybeInject = () => {
   }
 };
 
+const resolvePath = (cwd: string, input: string) => {
+  const expanded =
+    input.startsWith("~") ? join(homedir(), input.slice(1)) : input;
+  return isAbsolute(expanded) ? expanded : resolve(cwd, expanded);
+};
+
+const readBase64File = async (path: string) => {
+  const contents = await readFile(path);
+  return Buffer.from(contents).toString("base64");
+};
+
 export const runConfig = async () => {
   maybeInject();
 
@@ -212,20 +228,24 @@ export const runConfig = async () => {
     message: "Select coding agent",
     choices: [
       { title: "Claude Code (CC)", value: "CC" },
+      { title: "Gemini CLI (GC)", value: "GC" },
       { title: "OpenCode (OC)", value: "OC" },
     ],
-    initial: existingEnv.CODING_AGENT === "OC" ? 1 : 0,
+    initial: existingEnv.CODING_AGENT === "OC" ? 2 : existingEnv.CODING_AGENT === "GC" ? 1 : 0,
   });
 
-  const codingAgent = codingAgentResponse.codingAgent as "CC" | "OC";
+  const codingAgent = codingAgentResponse.codingAgent as "CC" | "OC" | "GC";
 
   let authMethod: "oauth" | "apiKey" | null = null;
+  let geminiAuthMethod: "oauth" | "apiKey" | null = null;
   let authValueResponse: { authValue?: string } = {};
   let defaultModelResponse: { model?: string } = {};
   let ocProviderResponse: { ocProvider?: string } = {};
   let ocKeyResponse: { ocKey?: string } = {};
   let ocModelResponse: { ocModel?: string } = {};
   let ocNativeModelResponse: { ocNativeModel?: string } = {};
+  let geminiOauthPathResponse: { geminiOauthPath?: string } = {};
+  let geminiApiKeyResponse: { geminiApiKey?: string } = {};
 
   if (codingAgent === "CC") {
     const authDefault = existingEnv.CC_CLAUDE_CODE_OAUTH_TOKEN
@@ -279,7 +299,7 @@ export const runConfig = async () => {
             ? 2
             : 1,
     });
-  } else {
+  } else if (codingAgent === "OC") {
     const providerDefault = existingEnv.OC_PROVIDER === "openrouter" ? "openrouter" : "native";
 
     ocProviderResponse = await prompt({
@@ -325,6 +345,45 @@ export const runConfig = async () => {
         message: "OpenCode model (free)",
         choices: nativeOcModels,
         initial: existingNativeIdx >= 0 ? existingNativeIdx : 0,
+      });
+    }
+  } else {
+    const geminiAuthDefault = existingEnv.GEMINI_OAUTH_CREDS_B64
+      ? "oauth"
+      : existingEnv.GEMINI_API_KEY
+        ? "apiKey"
+        : "oauth";
+
+    const geminiAuthResponse = await prompt({
+      type: "select",
+      name: "geminiAuthMethod",
+      message: "Gemini CLI authentication",
+      choices: [
+        { title: "OAuth (Google account)", value: "oauth" },
+        { title: "API key (Gemini API)", value: "apiKey" },
+      ],
+      initial: geminiAuthDefault === "apiKey" ? 1 : 0,
+    });
+
+    geminiAuthMethod = geminiAuthResponse.geminiAuthMethod as "oauth" | "apiKey";
+    console.log("");
+    console.log(geminiAuthMethod === "oauth" ? tips.geminiOauth : tips.geminiApiKey);
+    console.log("");
+
+    if (geminiAuthMethod === "oauth") {
+      const defaultOauthPath = "~/.gemini/oauth_creds.json";
+      geminiOauthPathResponse = await prompt({
+        type: "text",
+        name: "geminiOauthPath",
+        message: "Gemini OAuth creds file path (press enter to keep existing)",
+        initial: defaultOauthPath,
+      });
+    } else {
+      geminiApiKeyResponse = await prompt({
+        type: "password",
+        name: "geminiApiKey",
+        message: "Gemini API key (press enter to keep existing)",
+        initial: existingEnv.GEMINI_API_KEY ?? "",
       });
     }
   }
@@ -421,6 +480,24 @@ export const runConfig = async () => {
         ? coalesceValue(ocModelResponse.ocModel, existingEnv.OC_MODEL ?? "glm-4.7")
         : coalesceValue(ocNativeModelResponse.ocNativeModel, existingEnv.OC_MODEL ?? "opencode/grok-code")
       : undefined;
+  const geminiApiKey =
+    codingAgent === "GC"
+      ? coalesceValue(geminiApiKeyResponse.geminiApiKey, existingEnv.GEMINI_API_KEY)
+      : undefined;
+  let geminiOauthCredsB64: string | undefined;
+  if (codingAgent === "GC" && geminiAuthMethod === "oauth") {
+    const configuredPath = coalesceValue(geminiOauthPathResponse.geminiOauthPath);
+    if (configuredPath) {
+      const resolvedPath = resolvePath(cwd, configuredPath);
+      try {
+        geminiOauthCredsB64 = await readBase64File(resolvedPath);
+      } catch {
+        throw new Error(`Failed to read Gemini OAuth creds file: ${resolvedPath}`);
+      }
+    } else {
+      geminiOauthCredsB64 = existingEnv.GEMINI_OAUTH_CREDS_B64;
+    }
+  }
   const githubToken =
     repoSource === "github"
       ? coalesceValue(githubTokenResponse.githubToken, existingEnv.GITHUB_TOKEN)
@@ -456,11 +533,17 @@ export const runConfig = async () => {
     } else {
       envLines.push(`CC_ANTHROPIC_API_KEY=${authValue ?? ""}`);
     }
-  } else {
+  } else if (codingAgent === "OC") {
     envLines.push(`OC_PROVIDER=${ocProvider ?? "native"}`);
     envLines.push(`OC_MODEL=${ocModel ?? "opencode/grok-code"}`);
     if (ocProvider === "openrouter") {
       envLines.push(`OC_OPENROUTER_API_KEY=${ocKey ?? ""}`);
+    }
+  } else {
+    if (geminiAuthMethod === "apiKey") {
+      envLines.push(`GEMINI_API_KEY=${geminiApiKey ?? ""}`);
+    } else {
+      envLines.push(`GEMINI_OAUTH_CREDS_B64=${geminiOauthCredsB64 ?? ""}`);
     }
   }
 
