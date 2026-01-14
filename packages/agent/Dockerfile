@@ -23,6 +23,19 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 # Install Bun to /usr/local (globally accessible)
 RUN curl -fsSL https://bun.sh/install | BUN_INSTALL=/usr/local bash
 
+# Install agent-browser via bun (postinstall handled manually)
+RUN mkdir -p /opt/agent-browser \
+    && cat > /opt/agent-browser/package.json <<'JSON'
+{
+  "name": "agent-browser-install",
+  "private": true
+}
+JSON
+RUN cd /opt/agent-browser \
+    && bun add agent-browser \
+    && node /opt/agent-browser/node_modules/agent-browser/scripts/postinstall.js \
+    && ln -s /opt/agent-browser/node_modules/agent-browser/bin/agent-browser /usr/local/bin/agent-browser
+
 # Install Python 3.11
 RUN add-apt-repository ppa:deadsnakes/ppa -y \
     && apt-get update \
