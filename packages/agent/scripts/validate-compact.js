@@ -107,6 +107,20 @@ if (fs.existsSync(prdOriginalPath)) {
     console.error("Compaction removed passes:false stories.");
     process.exit(1);
   }
+
+  const originalGroups = original.userStories.filter((story) =>
+    typeof story?.id === "string" && story.id.startsWith("GROUP-"),
+  );
+  const currentGroups = payload.userStories.filter((story) =>
+    typeof story?.id === "string" && story.id.startsWith("GROUP-"),
+  );
+  const missingGroups = originalGroups.filter(
+    (story) => !currentGroups.some((current) => current?.id === story?.id),
+  );
+  if (missingGroups.length > 0) {
+    console.error("Compaction removed existing grouped stories.");
+    process.exit(1);
+  }
 }
 
 const progressText = fs.readFileSync(progressPath, "utf8");

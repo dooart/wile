@@ -6,8 +6,9 @@ Steps:
 1. Read `.wile/prd.json` and `.wile/progress.txt`.
 2. Update `.wile/prd.json` to:
    - Keep every story where `passes` is `false` exactly as-is.
-   - Replace all stories where `passes` is `true` with a single grouped story.
-   - The final structure must be: `{ "userStories": [ { ...GROUP-001... }, ...all-passes-false-stories ] }`.
+   - Preserve any existing grouped stories (ids starting with `GROUP-`) exactly as-is.
+   - Replace all remaining stories where `passes` is `true` with a single grouped story.
+   - The final structure must be: `{ "userStories": [ ...existing-group-stories, { ...GROUP-001... }, ...all-passes-false-stories ] }`.
    - The grouped story must use `id: "GROUP-001"`.
    - `title`: a concise summary of everything done.
    - `tasks`: 2-4 short bullet items derived from the summary tasks.
