@@ -36,13 +36,6 @@ RUN cd /opt/agent-browser \
     && node /opt/agent-browser/node_modules/agent-browser/scripts/postinstall.js \
     && ln -s /opt/agent-browser/node_modules/agent-browser/bin/agent-browser /usr/local/bin/agent-browser
 
-# Install Python 3.11
-RUN add-apt-repository ppa:deadsnakes/ppa -y \
-    && apt-get update \
-    && apt-get install -y python3.11 python3.11-venv python3-pip \
-    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1 \
-    && rm -rf /var/lib/apt/lists/*
-
 # Create non-root user
 RUN useradd -m -s /bin/bash wile \
     && mkdir -p /home/wile/workspace \
