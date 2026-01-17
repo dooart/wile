@@ -17,6 +17,7 @@ if [ "$OC_PROVIDER" = "openrouter" ] && [[ "$OC_MODEL" != */* ]]; then
 fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PREFLIGHT_PROMPT_FILE="$SCRIPT_DIR/prompt-preflight.md"
+PROGRESS_PATH="${WILE_PROGRESS_PATH:-.wile/progress.txt}"
 TEE_TARGET="${WILE_TEE_TARGET:-/dev/stderr}"
 if ! ( : > "$TEE_TARGET" ) 2>/dev/null; then
   TEE_TARGET="/dev/null"
@@ -84,14 +85,35 @@ run_agent() {
   fi
 }
 
+has_terminal_promise() {
+  local output="$1"
+  local marker="$2"
+  local clean_output trimmed_output normalized_output marker_re
+
+  clean_output=$(printf '%s' "$output" | tr -d '\r')
+  trimmed_output=$(printf '%s' "$clean_output" | sed -e :a -e '$!{N;ba}' -e 's/[[:space:]]*$//')
+  normalized_output=$(printf '%s' "$trimmed_output" | tr '\n' ' ')
+  marker_re=${marker//_/[[:space:]]*_[[:space:]]*}
+
+  printf '%s' "$normalized_output" | grep -q -E "<[[:space:]]*promise>[[:space:]]*${marker_re}[[:space:]]*</[[:space:]]*promise>[[:space:]]*$"
+}
+
 OUTPUT=$(run_agent "$PREFLIGHT_PROMPT_FILE" | tee "$TEE_TARGET") || true
-CLEAN_OUTPUT=$(printf '%s' "$OUTPUT" | tr -d '\r' | sed -e 's/[[:space:]]*$//')
-if printf '%s\n' "$CLEAN_OUTPUT" | grep -q -E '^[[:space:]]*<promise>PREFLIGHT_FAILED</promise>[[:space:]]*$'; then
+CLEAN_OUTPUT=$(printf '%s' "$OUTPUT" | tr -d '\r')
+if has_terminal_promise "$OUTPUT" "PREFLIGHT_FAILED"; then
   if printf '%s' "$CLEAN_OUTPUT" | grep -F '```' >/dev/null 2>&1; then
     :
   elif printf '%s' "$CLEAN_OUTPUT" | grep -F '`<promise>PREFLIGHT_FAILED</promise>`' >/dev/null 2>&1; then
     :
   else
+  if [ -f "$PROGRESS_PATH" ]; then
+    TAIL_LINES="${PREFLIGHT_LOG_TAIL:-80}"
+    echo ""
+    echo "══════════════════════════════════════════════════════"
+    echo "  Preflight log tail (${TAIL_LINES} lines)"
+    echo "══════════════════════════════════════════════════════"
+    tail -n "$TAIL_LINES" "$PROGRESS_PATH" || true
+  fi
   echo ""
   echo "══════════════════════════════════════════════════════"
   echo "  ❌ PREFLIGHT FAILED"

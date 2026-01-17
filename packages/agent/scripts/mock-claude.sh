@@ -60,7 +60,11 @@ COUNT=$(cat "$COUNT_FILE")
 NEXT_COUNT=$((COUNT + 1))
 echo "$NEXT_COUNT" > "$COUNT_FILE"
 
-if [ "${WILE_MOCK_MODE:-}" = "preflight_fail" ]; then
+MODE=${WILE_MOCK_MODE:-}
+if [ -n "$MODE" ] && { [ "$MODE" = "preflight_fail" ] || [ "$MODE" = "preflight_fail_split" ] || [ "$MODE" = "preflight_fail_trailing" ]; }; then
+  if [ "$MODE" = "preflight_fail_trailing" ] && [ "$COUNT" -ne 0 ]; then
+    :
+  else
   PROGRESS_PATH=".wile/progress.txt"
   if [ -f "$PROGRESS_PATH" ]; then
     :
@@ -82,10 +86,21 @@ if [ "${WILE_MOCK_MODE:-}" = "preflight_fail" ]; then
 - Mocked preflight failure (WILE_MOCK_MODE=preflight_fail)
 EOF
 
-  cat <<'JSON'
+    if [ "$MODE" = "preflight_fail_split" ]; then
+      cat <<'JSON'
+{"type":"assistant","message":{"content":[{"type":"text","text":"<\npromise>PREFLIGHT_FAILED</promise>\n"}]}}
+JSON
+    elif [ "$MODE" = "preflight_fail_trailing" ]; then
+      cat <<'JSON'
+{"type":"assistant","message":{"content":[{"type":"text","text":"<promise>PREFLIGHT_FAILED</promise> trailing\n"}]}}
+JSON
+    else
+      cat <<'JSON'
 {"type":"assistant","message":{"content":[{"type":"text","text":"<promise>PREFLIGHT_FAILED</promise>\n"}]}}
 JSON
-  exit 0
+    fi
+    exit 0
+  fi
 fi
 
 if [ "$COUNT" -eq 0 ]; then
