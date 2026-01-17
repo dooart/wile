@@ -88,11 +88,10 @@ run_agent() {
 has_terminal_promise() {
   local output="$1"
   local marker="$2"
-  local clean_output trimmed_output normalized_output marker_re
+  local clean_output normalized_output marker_re
 
   clean_output=$(printf '%s' "$output" | tr -d '\r')
-  trimmed_output=$(printf '%s' "$clean_output" | sed -e :a -e '$!{N;ba}' -e 's/[[:space:]]*$//')
-  normalized_output=$(printf '%s' "$trimmed_output" | tr '\n' ' ')
+  normalized_output=$(printf '%s' "$clean_output" | tr '\n' ' ' | sed -e 's/[[:space:]]*$//')
   marker_re=${marker//_/[[:space:]]*_[[:space:]]*}
 
   printf '%s' "$normalized_output" | grep -q -E "<[[:space:]]*promise>[[:space:]]*${marker_re}[[:space:]]*</[[:space:]]*promise>[[:space:]]*$"
