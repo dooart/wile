@@ -12,7 +12,7 @@ export type WilePaths = {
 };
 
 export type WileConfig = {
-  codingAgent: "CC" | "OC" | "GC";
+  codingAgent: "CC" | "OC" | "GC" | "CX";
   githubToken: string;
   githubRepoUrl: string;
   branchName: string;
@@ -26,6 +26,10 @@ export type WileConfig = {
   ocModel?: string;
   geminiOauthCredsB64?: string;
   geminiApiKey?: string;
+  codexAuthJsonB64?: string;
+  codexAuthJsonPath?: string;
+  codexApiKey?: string;
+  codexModel?: string;
   envProject: Record<string, string>;
 };
 
@@ -92,8 +96,11 @@ export const readWileConfig = (options: { cwd?: string; validate?: boolean } = {
 
   if (validate) {
     ensureRequired(
-      env.CODING_AGENT === "CC" || env.CODING_AGENT === "OC" || env.CODING_AGENT === "GC",
-      "CODING_AGENT must be set to CC, OC, or GC in .wile/secrets/.env. Run 'bunx wile config'."
+      env.CODING_AGENT === "CC" ||
+        env.CODING_AGENT === "OC" ||
+        env.CODING_AGENT === "GC" ||
+        env.CODING_AGENT === "CX",
+      "CODING_AGENT must be set to CC, OC, GC, or CX in .wile/secrets/.env. Run 'bunx wile config'."
     );
     if (repoSource === "github") {
       ensureRequired(
@@ -134,6 +141,17 @@ export const readWileConfig = (options: { cwd?: string; validate?: boolean } = {
         "Either GEMINI_OAUTH_CREDS_B64 or GEMINI_API_KEY is required in .wile/secrets/.env for Gemini CLI."
       );
     }
+    if (env.CODING_AGENT === "CX") {
+      ensureRequired(
+        Boolean(
+          env.CODEX_AUTH_JSON_B64 ||
+            env.CODEX_AUTH_JSON_PATH ||
+            env.CODEX_API_KEY ||
+            env.OPENAI_API_KEY
+        ),
+        "Either CODEX_AUTH_JSON_B64 (or CODEX_AUTH_JSON_PATH) or CODEX_API_KEY is required in .wile/secrets/.env for Codex CLI."
+      );
+    }
   }
 
   return {
@@ -142,7 +160,7 @@ export const readWileConfig = (options: { cwd?: string; validate?: boolean } = {
       envProjectPath
     },
     config: {
-      codingAgent: (env.CODING_AGENT as "CC" | "OC" | "GC") ?? "CC",
+      codingAgent: (env.CODING_AGENT as "CC" | "OC" | "GC" | "CX") ?? "CC",
       githubToken: env.GITHUB_TOKEN ?? "",
       githubRepoUrl: env.GITHUB_REPO_URL ?? "",
       branchName: env.BRANCH_NAME ?? "",
@@ -156,6 +174,10 @@ export const readWileConfig = (options: { cwd?: string; validate?: boolean } = {
       ocModel: env.OC_MODEL,
       geminiOauthCredsB64: env.GEMINI_OAUTH_CREDS_B64,
       geminiApiKey: env.GEMINI_API_KEY,
+      codexAuthJsonB64: env.CODEX_AUTH_JSON_B64,
+      codexAuthJsonPath: env.CODEX_AUTH_JSON_PATH,
+      codexApiKey: env.CODEX_API_KEY ?? env.OPENAI_API_KEY,
+      codexModel: env.CODEX_MODEL,
       envProject
     }
   };

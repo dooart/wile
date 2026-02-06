@@ -109,6 +109,10 @@ const tips = {
     "Tip: run 'gemini' locally and choose Login with Google to create ~/.gemini/oauth_creds.json.",
   geminiApiKey:
     "Tip: create a Gemini API key at https://aistudio.google.com/app/apikey (pay per token).",
+  codexOauth:
+    "Tip: run 'codex login' (or 'codex login --device-auth') locally to create ~/.codex/auth.json.",
+  codexApiKey:
+    "Tip: create an OpenAI API key at https://platform.openai.com/api-keys (pay per token).",
 };
 
 const nativeOcModels = [
@@ -217,6 +221,10 @@ const toEnvString = (env: Record<string, string>) => {
     "OC_OPENROUTER_API_KEY",
     "GEMINI_OAUTH_CREDS_B64",
     "GEMINI_API_KEY",
+    "CODEX_AUTH_JSON_B64",
+    "CODEX_AUTH_JSON_PATH",
+    "CODEX_API_KEY",
+    "CODEX_MODEL",
   ];
   const orderedSet = new Set(orderedKeys);
   const ordered = orderedKeys.filter((key) => key in env);
@@ -268,14 +276,23 @@ export const runConfig = async () => {
       { title: "Claude Code (CC)", value: "CC" },
       { title: "Gemini CLI (GC)", value: "GC" },
       { title: "OpenCode (OC)", value: "OC" },
+      { title: "Codex CLI (CX)", value: "CX" },
     ],
-    initial: existingEnv.CODING_AGENT === "OC" ? 2 : existingEnv.CODING_AGENT === "GC" ? 1 : 0,
+    initial:
+      existingEnv.CODING_AGENT === "OC"
+        ? 2
+        : existingEnv.CODING_AGENT === "GC"
+          ? 1
+          : existingEnv.CODING_AGENT === "CX"
+            ? 3
+            : 0,
   });
 
-  const codingAgent = codingAgentResponse.codingAgent as "CC" | "OC" | "GC";
+  const codingAgent = codingAgentResponse.codingAgent as "CC" | "OC" | "GC" | "CX";
 
   let authMethod: "oauth" | "apiKey" | null = null;
   let geminiAuthMethod: "oauth" | "apiKey" | null = null;
+  let codexAuthMethod: "oauth" | "apiKey" | null = null;
   let authValueResponse: { authValue?: string } = {};
   let defaultModelResponse: { model?: string } = {};
   let ocProviderResponse: { ocProvider?: string } = {};
@@ -284,6 +301,9 @@ export const runConfig = async () => {
   let ocNativeModelResponse: { ocNativeModel?: string } = {};
   let geminiOauthPathResponse: { geminiOauthPath?: string } = {};
   let geminiApiKeyResponse: { geminiApiKey?: string } = {};
+  let codexAuthJsonPathResponse: { codexAuthJsonPath?: string } = {};
+  let codexApiKeyResponse: { codexApiKey?: string } = {};
+  let codexModelResponse: { codexModel?: string } = {};
 
   if (codingAgent === "CC") {
     const authDefault = existingEnv.CC_CLAUDE_CODE_OAUTH_TOKEN
@@ -385,7 +405,7 @@ export const runConfig = async () => {
         initial: existingNativeIdx >= 0 ? existingNativeIdx : 0,
       });
     }
-  } else {
+  } else if (codingAgent === "GC") {
     const geminiAuthDefault = existingEnv.GEMINI_OAUTH_CREDS_B64
       ? "oauth"
       : existingEnv.GEMINI_API_KEY
@@ -424,6 +444,52 @@ export const runConfig = async () => {
         initial: existingEnv.GEMINI_API_KEY ?? "",
       });
     }
+  } else {
+    const codexAuthDefault = existingEnv.CODEX_AUTH_JSON_B64
+      ? "oauth"
+      : existingEnv.CODEX_API_KEY || existingEnv.OPENAI_API_KEY
+        ? "apiKey"
+        : "oauth";
+
+    const codexAuthResponse = await prompt({
+      type: "select",
+      name: "codexAuthMethod",
+      message: "Codex CLI authentication",
+      choices: [
+        { title: "ChatGPT login (subscription)", value: "oauth" },
+        { title: "API key (OpenAI API)", value: "apiKey" },
+      ],
+      initial: codexAuthDefault === "apiKey" ? 1 : 0,
+    });
+
+    codexAuthMethod = codexAuthResponse.codexAuthMethod as "oauth" | "apiKey";
+    console.log("");
+    console.log(codexAuthMethod === "oauth" ? tips.codexOauth : tips.codexApiKey);
+    console.log("");
+
+    if (codexAuthMethod === "oauth") {
+      const defaultAuthPath = "~/.codex/auth.json";
+      codexAuthJsonPathResponse = await prompt({
+        type: "text",
+        name: "codexAuthJsonPath",
+        message: "Codex auth.json path (press enter to keep existing)",
+        initial: defaultAuthPath,
+      });
+    } else {
+      codexApiKeyResponse = await prompt({
+        type: "password",
+        name: "codexApiKey",
+        message: "OpenAI API key (press enter to keep existing)",
+        initial: existingEnv.CODEX_API_KEY ?? existingEnv.OPENAI_API_KEY ?? "",
+      });
+    }
+
+    codexModelResponse = await prompt({
+      type: "text",
+      name: "codexModel",
+      message: "Codex model (press enter to keep existing)",
+      initial: existingEnv.CODEX_MODEL ?? "",
+    });
   }
 
   const repoSourceResponse = await prompt({
@@ -536,6 +602,31 @@ export const runConfig = async () => {
       geminiOauthCredsB64 = existingEnv.GEMINI_OAUTH_CREDS_B64;
     }
   }
+  const codexApiKey =
+    codingAgent === "CX"
+      ? coalesceValue(
+          codexApiKeyResponse.codexApiKey,
+          existingEnv.CODEX_API_KEY ?? existingEnv.OPENAI_API_KEY
+        )
+      : undefined;
+  let codexAuthJsonB64: string | undefined;
+  if (codingAgent === "CX" && codexAuthMethod === "oauth") {
+    const configuredPath = coalesceValue(codexAuthJsonPathResponse.codexAuthJsonPath);
+    if (configuredPath) {
+      const resolvedPath = resolvePath(cwd, configuredPath);
+      try {
+        codexAuthJsonB64 = await readBase64File(resolvedPath);
+      } catch {
+        throw new Error(`Failed to read Codex auth.json file: ${resolvedPath}`);
+      }
+    } else {
+      codexAuthJsonB64 = existingEnv.CODEX_AUTH_JSON_B64;
+    }
+  }
+  const codexModel =
+    codingAgent === "CX"
+      ? coalesceValue(codexModelResponse.codexModel, existingEnv.CODEX_MODEL)
+      : undefined;
   const githubToken =
     repoSource === "github"
       ? coalesceValue(githubTokenResponse.githubToken, existingEnv.GITHUB_TOKEN)
@@ -580,12 +671,19 @@ export const runConfig = async () => {
     if (ocProvider === "openrouter") {
       setIfDefined(envOut, "OC_OPENROUTER_API_KEY", ocKey);
     }
-  } else {
+  } else if (codingAgent === "GC") {
     if (geminiAuthMethod === "apiKey") {
       setIfDefined(envOut, "GEMINI_API_KEY", geminiApiKey);
     } else {
       setIfDefined(envOut, "GEMINI_OAUTH_CREDS_B64", geminiOauthCredsB64);
     }
+  } else if (codingAgent === "CX") {
+    if (codexAuthMethod === "apiKey") {
+      setIfDefined(envOut, "CODEX_API_KEY", codexApiKey);
+    } else {
+      setIfDefined(envOut, "CODEX_AUTH_JSON_B64", codexAuthJsonB64);
+    }
+    setIfDefined(envOut, "CODEX_MODEL", codexModel);
   }
 
   await writeFile(envPath, toEnvString(envOut));

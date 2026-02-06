@@ -115,6 +115,16 @@ elif [ "$CODING_AGENT" = "GC" ]; then
     echo "Run 'gemini' locally and choose Login with Google to create ~/.gemini/oauth_creds.json."
     exit 1
   fi
+elif [ "$CODING_AGENT" = "CX" ]; then
+  if [ -z "$CODEX_AUTH_JSON_B64" ] && [ -z "$CODEX_AUTH_JSON_PATH" ] && [ -z "$CODEX_API_KEY" ] && [ -z "$OPENAI_API_KEY" ]; then
+    echo "ERROR: Either CODEX_AUTH_JSON_B64 (or CODEX_AUTH_JSON_PATH) or CODEX_API_KEY is required"
+    echo ""
+    echo "  CODEX_AUTH_JSON_B64   - Base64 of ~/.codex/auth.json from 'codex login' (recommended)"
+    echo "  CODEX_API_KEY         - OpenAI API key (pay per token)"
+    echo ""
+    echo "Run 'codex login' (or 'codex login --device-auth') locally, then base64 ~/.codex/auth.json."
+    exit 1
+  fi
 else
   if [ -z "$CC_CLAUDE_CODE_OAUTH_TOKEN" ] && [ -z "$CC_ANTHROPIC_API_KEY" ]; then
     echo "ERROR: Either CC_CLAUDE_CODE_OAUTH_TOKEN or CC_ANTHROPIC_API_KEY is required"
@@ -146,6 +156,15 @@ if [ "${WILE_MOCK_GEMINI:-}" = "true" ] && [ "$CODING_AGENT" = "GC" ]; then
   mkdir -p "$MOCK_BIN"
   cp "$SCRIPT_DIR/mock-gemini.sh" "$MOCK_BIN/gemini"
   chmod +x "$MOCK_BIN/gemini"
+  export PATH="$MOCK_BIN:$PATH"
+fi
+
+if [ "${WILE_MOCK_CODEX:-}" = "true" ] && [ "$CODING_AGENT" = "CX" ]; then
+  echo "  Codex:      Mocked"
+  MOCK_BIN="/home/wile/mock-bin"
+  mkdir -p "$MOCK_BIN"
+  cp "$SCRIPT_DIR/mock-codex.sh" "$MOCK_BIN/codex"
+  chmod +x "$MOCK_BIN/codex"
   export PATH="$MOCK_BIN:$PATH"
 fi
 
@@ -212,6 +231,30 @@ JSON
 }
 JSON
   fi
+elif [ "$CODING_AGENT" = "CX" ]; then
+  CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
+  export CODEX_HOME
+
+  if [ -n "$CODEX_AUTH_JSON_B64" ] || [ -n "$CODEX_AUTH_JSON_PATH" ]; then
+    echo "  Auth:       ChatGPT (subscription)"
+    mkdir -p "$CODEX_HOME"
+    if [ -n "$CODEX_AUTH_JSON_B64" ]; then
+      echo "$CODEX_AUTH_JSON_B64" | base64 -d > "$CODEX_HOME/auth.json"
+    else
+      cp "$CODEX_AUTH_JSON_PATH" "$CODEX_HOME/auth.json"
+    fi
+  else
+    echo "  Auth:       API Key (OpenAI)"
+    CODEX_API_KEY_VALUE="${CODEX_API_KEY:-$OPENAI_API_KEY}"
+    mkdir -p "$CODEX_HOME"
+    cat > "$CODEX_HOME/auth.json" << EOF
+{
+  "auth_mode": "apikey",
+  "OPENAI_API_KEY": "$CODEX_API_KEY_VALUE"
+}
+EOF
+  fi
+  chmod 600 "$CODEX_HOME/auth.json"
 else
   # Set up Claude Code authentication
   if [ -n "$CC_CLAUDE_CODE_OAUTH_TOKEN" ]; then

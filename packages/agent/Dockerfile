@@ -63,11 +63,14 @@ RUN npm install -g opencode-ai@latest
 # https://www.npmjs.com/package/@google/gemini-cli
 RUN npm install -g @google/gemini-cli
 
+# Install Codex CLI
+# https://www.npmjs.com/package/@openai/codex
+RUN npm install -g @openai/codex
+
 # CC_ANTHROPIC_API_KEY is passed at runtime via environment variable (mapped to ANTHROPIC_API_KEY in entrypoint)
 # Usage: claude --dangerously-skip-permissions
 
-# Install Playwright with Chromium for browser testing
-# Dependencies for headless Chromium
+# Install Chromium dependencies for Playwright
 RUN apt-get update && apt-get install -y \
     libnss3 \
     libnspr4 \
@@ -87,11 +90,10 @@ RUN apt-get update && apt-get install -y \
     libatspi2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Playwright globally and download Chromium to shared location
+# Download Chromium using the Playwright core version bundled with agent-browser
 ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
-RUN npm install -g playwright \
-    && mkdir -p /opt/playwright-browsers \
-    && npx playwright install chromium \
+RUN mkdir -p /opt/playwright-browsers \
+    && node /opt/agent-browser/node_modules/playwright-core/cli.js install chromium \
     && chmod -R 755 /opt/playwright-browsers
 
 # Copy scripts

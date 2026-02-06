@@ -10,6 +10,7 @@ CLAUDE_MODEL=${CC_CLAUDE_MODEL:-sonnet}
 OC_PROVIDER=${OC_PROVIDER:-native}
 OC_MODEL=${OC_MODEL:-opencode/grok-code}
 GEMINI_MODEL=${GEMINI_MODEL:-auto-gemini-3}
+CODEX_MODEL=${CODEX_MODEL:-}
 
 # For openrouter provider, prepend vendor prefix if missing
 if [ "$OC_PROVIDER" = "openrouter" ] && [[ "$OC_MODEL" != */* ]]; then
@@ -33,6 +34,8 @@ if [ "$CODING_AGENT" = "OC" ]; then
   echo "  Model:          $OC_MODEL"
 elif [ "$CODING_AGENT" = "GC" ]; then
   echo "  Model:          ${GEMINI_MODEL:-auto}"
+elif [ "$CODING_AGENT" = "CX" ]; then
+  echo "  Model:          ${CODEX_MODEL:-default}"
 else
   echo "  Model:          $CLAUDE_MODEL"
 fi
@@ -85,12 +88,25 @@ run_gemini() {
     | node "$SCRIPT_DIR/gemini-stream.js"
 }
 
+run_codex() {
+  local prompt_path="$1"
+  local model_args=()
+  if [ -n "$CODEX_MODEL" ]; then
+    model_args=(--model "$CODEX_MODEL")
+  fi
+  cat "$prompt_path" \
+    | codex exec --json --dangerously-bypass-approvals-and-sandbox "${model_args[@]}" - \
+    | node "$SCRIPT_DIR/codex-stream.js"
+}
+
 run_agent() {
   local prompt_path="$1"
   if [ "$CODING_AGENT" = "OC" ]; then
     run_opencode "$prompt_path"
   elif [ "$CODING_AGENT" = "GC" ]; then
     run_gemini "$prompt_path"
+  elif [ "$CODING_AGENT" = "CX" ]; then
+    run_codex "$prompt_path"
   else
     run_claude "$prompt_path"
   fi
