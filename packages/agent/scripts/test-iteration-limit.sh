@@ -11,8 +11,9 @@ SCRIPT_DIR="$TMP_DIR/agent"
 BIN_DIR="$TMP_DIR/bin"
 mkdir -p "$SCRIPT_DIR" "$BIN_DIR"
 
-cp /Users/thiagoduarte/Projects/personal/wile/packages/agent/scripts/wile.sh "$SCRIPT_DIR/wile.sh"
-cp /Users/thiagoduarte/Projects/personal/wile/packages/agent/scripts/claude-stream.js "$SCRIPT_DIR/claude-stream.js"
+REPO_SCRIPTS="$(cd "$(dirname "$0")" && pwd)"
+cp "$REPO_SCRIPTS/wile.sh" "$SCRIPT_DIR/wile.sh"
+cp "$REPO_SCRIPTS/claude-stream.js" "$SCRIPT_DIR/claude-stream.js"
 chmod +x "$SCRIPT_DIR/wile.sh"
 
 echo "BASE PROMPT" > "$SCRIPT_DIR/prompt.md"
