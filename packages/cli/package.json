@@ -31,6 +31,15 @@
     "agent",
     "claude"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dooart/wile.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/dooart/wile/tree/main/packages/cli#readme",
+  "bugs": {
+    "url": "https://github.com/dooart/wile/issues"
+  },
   "license": "MIT",
   "devDependencies": {
     "@types/prompts": "^2.4.9",
