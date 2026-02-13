@@ -73,21 +73,21 @@ cp "$ROOT_DIR/scripts/fixtures/compact-prd.json" "$RUN_DIR/.wile/prd.json"
 cp "$ROOT_DIR/scripts/fixtures/compact-progress.txt" "$RUN_DIR/.wile/progress.txt"
 
 if grep -q "^CODING_AGENT=" "$RUN_DIR/.wile/secrets/.env"; then
-  sed -i '' "s/^CODING_AGENT=.*/CODING_AGENT=OC/" "$RUN_DIR/.wile/secrets/.env"
+  sed -i '' "s/^CODING_AGENT=.*/CODING_AGENT=CC/" "$RUN_DIR/.wile/secrets/.env"
 else
-  echo "CODING_AGENT=OC" >> "$RUN_DIR/.wile/secrets/.env"
+  echo "CODING_AGENT=CC" >> "$RUN_DIR/.wile/secrets/.env"
 fi
 
-if grep -q "^OC_PROVIDER=" "$RUN_DIR/.wile/secrets/.env"; then
-  sed -i '' "s/^OC_PROVIDER=.*/OC_PROVIDER=native/" "$RUN_DIR/.wile/secrets/.env"
+if grep -q "^CC_CLAUDE_MODEL=" "$RUN_DIR/.wile/secrets/.env"; then
+  sed -i '' "s/^CC_CLAUDE_MODEL=.*/CC_CLAUDE_MODEL=sonnet/" "$RUN_DIR/.wile/secrets/.env"
 else
-  echo "OC_PROVIDER=native" >> "$RUN_DIR/.wile/secrets/.env"
+  echo "CC_CLAUDE_MODEL=sonnet" >> "$RUN_DIR/.wile/secrets/.env"
 fi
 
-if grep -q "^OC_MODEL=" "$RUN_DIR/.wile/secrets/.env"; then
-  sed -i '' "s/^OC_MODEL=.*/OC_MODEL=opencode\\/grok-code/" "$RUN_DIR/.wile/secrets/.env"
+if grep -q "^WILE_MOCK_CLAUDE=" "$RUN_DIR/.wile/secrets/.env"; then
+  sed -i '' "s/^WILE_MOCK_CLAUDE=.*/WILE_MOCK_CLAUDE=true/" "$RUN_DIR/.wile/secrets/.env"
 else
-  echo "OC_MODEL=opencode/grok-code" >> "$RUN_DIR/.wile/secrets/.env"
+  echo "WILE_MOCK_CLAUDE=true" >> "$RUN_DIR/.wile/secrets/.env"
 fi
 
 if grep -q "^WILE_REPO_SOURCE=" "$RUN_DIR/.wile/secrets/.env"; then
@@ -134,8 +134,24 @@ echo "---- AFTER: .wile/progress.txt (repo) ----"
 cat .wile/progress.txt
 
 bun "$ROOT_DIR/packages/agent/scripts/validate-prd.ts" --path .wile/prd.json >/dev/null
-grep -q '"id": 4' .wile/prd.json
-grep -q '"id": 5' .wile/prd.json
-grep -q '"status": "pending"' .wile/prd.json
+node - <<'NODE'
+const fs = require("fs");
+
+const prd = JSON.parse(fs.readFileSync(".wile/prd.json", "utf8"));
+const stories = Array.isArray(prd.stories) ? prd.stories : [];
+const pendingStory = stories.find((story) => story?.id === 4);
+if (!pendingStory || pendingStory.status !== "pending") {
+  console.error("error: expected story 4 to remain pending");
+  process.exit(1);
+}
+
+const summaryStory = stories.find(
+  (story) => story?.status === "done" && story?.compactedFrom === "1..3,5"
+);
+if (!summaryStory) {
+  console.error('error: expected compact summary to use compactedFrom \"1..3,5\"');
+  process.exit(1);
+}
+NODE
 
 echo "test-compact: ok"

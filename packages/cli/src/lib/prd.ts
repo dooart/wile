@@ -8,7 +8,7 @@ export type PrdStory = {
   description: string;
   acceptanceCriteria: string[];
   dependsOn: number[];
-  compactedFrom?: number[];
+  compactedFrom?: string;
   status: StoryStatus;
 };
 
@@ -21,6 +21,19 @@ export type PrdValidationResult = {
   pendingStories: PrdStory[];
   runnableStory: PrdStory | null;
   allDone: boolean;
+};
+
+type IdRange = {
+  start: number;
+  end: number;
+};
+
+type ParsedPrdStory = PrdStory & {
+  compactedFromRanges?: IdRange[];
+};
+
+type ReservedRange = IdRange & {
+  ownerStoryId: number;
 };
 
 const toObject = (value: unknown, message: string) => {
@@ -64,7 +77,70 @@ const toIntegerArray = (value: unknown, message: string) => {
   return value as number[];
 };
 
-const parsePrdStory = (storyRaw: unknown, index: number): PrdStory => {
+const compactedFromFormatError =
+  'must use canonical range syntax like "1..3,5" (sorted, non-overlapping).';
+
+const parseCompactedFrom = (value: unknown, label: string): { value: string; ranges: IdRange[] } => {
+  const raw = toNonEmptyString(
+    value,
+    `${label}.compactedFrom ${compactedFromFormatError}`
+  ).trim();
+  const tokens = raw.split(",").map((token) => token.trim());
+  if (tokens.length === 0 || tokens.some((token) => token.length === 0)) {
+    throw new Error(`${label}.compactedFrom ${compactedFromFormatError}`);
+  }
+
+  const parsed: IdRange[] = [];
+  for (const token of tokens) {
+    const match = token.match(/^(-?\d+)(?:\.\.(-?\d+))?$/);
+    if (!match) {
+      throw new Error(`${label}.compactedFrom ${compactedFromFormatError}`);
+    }
+
+    const start = Number(match[1]);
+    const end = match[2] === undefined ? start : Number(match[2]);
+    if (!Number.isInteger(start) || !Number.isInteger(end) || start > end) {
+      throw new Error(`${label}.compactedFrom ${compactedFromFormatError}`);
+    }
+
+    parsed.push({ start, end });
+  }
+
+  parsed.sort((a, b) => (a.start === b.start ? a.end - b.end : a.start - b.start));
+
+  for (let i = 1; i < parsed.length; i += 1) {
+    if (parsed[i].start <= parsed[i - 1].end) {
+      throw new Error(`${label}.compactedFrom ${compactedFromFormatError}`);
+    }
+  }
+
+  const merged: IdRange[] = [];
+  for (const range of parsed) {
+    const last = merged[merged.length - 1];
+    if (!last || range.start > last.end + 1) {
+      merged.push({ ...range });
+      continue;
+    }
+    if (range.end > last.end) {
+      last.end = range.end;
+    }
+  }
+
+  const canonical = merged
+    .map((range) => (range.start === range.end ? `${range.start}` : `${range.start}..${range.end}`))
+    .join(",");
+  const normalizedInput = tokens.join(",");
+  if (normalizedInput !== canonical) {
+    throw new Error(`${label}.compactedFrom ${compactedFromFormatError}`);
+  }
+
+  return {
+    value: canonical,
+    ranges: merged
+  };
+};
+
+const parsePrdStory = (storyRaw: unknown, index: number): ParsedPrdStory => {
   const label = `stories[${index}]`;
   const story = toObject(storyRaw, `${label} must be an object.`);
   const id = toInteger(story.id, `${label}.id must be an integer number.`);
@@ -86,18 +162,16 @@ const parsePrdStory = (storyRaw: unknown, index: number): PrdStory => {
     throw new Error(`${label}.status must be "pending" or "done".`);
   }
 
-  let compactedFrom: number[] | undefined;
+  let compactedFrom: string | undefined;
+  let compactedFromRanges: IdRange[] | undefined;
   if (story.compactedFrom !== undefined) {
-    compactedFrom = toIntegerArray(
-      story.compactedFrom,
-      `${label}.compactedFrom must be an array of integer story IDs.`
-    );
-    if (new Set(compactedFrom).size !== compactedFrom.length) {
-      throw new Error(`${label}.compactedFrom must not contain duplicate IDs.`);
-    }
     if (status !== "done") {
       throw new Error(`${label}.compactedFrom is only allowed when status is "done".`);
     }
+
+    const parsedCompactedFrom = parseCompactedFrom(story.compactedFrom, label);
+    compactedFrom = parsedCompactedFrom.value;
+    compactedFromRanges = parsedCompactedFrom.ranges;
   }
 
   return {
@@ -107,11 +181,12 @@ const parsePrdStory = (storyRaw: unknown, index: number): PrdStory => {
     acceptanceCriteria,
     dependsOn,
     compactedFrom,
+    compactedFromRanges,
     status
   };
 };
 
-const findDependencyCycle = (stories: PrdStory[]) => {
+const findDependencyCycle = (stories: ParsedPrdStory[]) => {
   const edges = new Map<number, number[]>();
   for (const story of stories) {
     edges.set(story.id, story.dependsOn);
@@ -154,6 +229,21 @@ const findDependencyCycle = (stories: PrdStory[]) => {
   return null;
 };
 
+const findReservedOwner = (id: number, reservedRanges: ReservedRange[]) => {
+  for (const range of reservedRanges) {
+    if (id >= range.start && id <= range.end) {
+      return range.ownerStoryId;
+    }
+  }
+  return undefined;
+};
+
+const toPublicStory = (story: ParsedPrdStory): PrdStory => {
+  const publicStory = { ...story };
+  delete publicStory.compactedFromRanges;
+  return publicStory;
+};
+
 export const validatePrd = (raw: unknown): PrdValidationResult => {
   const payload = toObject(raw, "prd.json must be a JSON object.");
   if (!Array.isArray(payload.stories)) {
@@ -161,7 +251,7 @@ export const validatePrd = (raw: unknown): PrdValidationResult => {
   }
 
   const stories = payload.stories.map((item, idx) => parsePrdStory(item, idx));
-  const storyById = new Map<number, PrdStory>();
+  const storyById = new Map<number, ParsedPrdStory>();
   for (const story of stories) {
     if (storyById.has(story.id)) {
       throw new Error(`Duplicate story id detected: ${story.id}.`);
@@ -169,27 +259,36 @@ export const validatePrd = (raw: unknown): PrdValidationResult => {
     storyById.set(story.id, story);
   }
 
-  const compactedById = new Map<number, number>();
+  const reservedRanges: ReservedRange[] = [];
   for (const story of stories) {
-    for (const compactedId of story.compactedFrom ?? []) {
-      if (compactedById.has(compactedId)) {
-        throw new Error(
-          `Compacted story id ${compactedId} is listed multiple times (stories ${compactedById.get(compactedId)} and ${story.id}).`
-        );
+    for (const range of story.compactedFromRanges ?? []) {
+      for (const existingRange of reservedRanges) {
+        if (range.start <= existingRange.end && existingRange.start <= range.end) {
+          const overlapId = Math.max(range.start, existingRange.start);
+          throw new Error(
+            `Compacted story id ${overlapId} is listed multiple times (stories ${existingRange.ownerStoryId} and ${story.id}).`
+          );
+        }
       }
-      compactedById.set(compactedId, story.id);
+
+      reservedRanges.push({
+        start: range.start,
+        end: range.end,
+        ownerStoryId: story.id
+      });
     }
   }
 
-  for (const [compactedId, ownerStoryId] of compactedById) {
-    if (storyById.has(compactedId)) {
-      throw new Error(`Story id ${compactedId} is reserved by compactedFrom in story ${ownerStoryId}.`);
+  for (const story of stories) {
+    const ownerStoryId = findReservedOwner(story.id, reservedRanges);
+    if (ownerStoryId !== undefined) {
+      throw new Error(`Story id ${story.id} is reserved by compactedFrom in story ${ownerStoryId}.`);
     }
   }
 
   for (const story of stories) {
     for (const depId of story.dependsOn) {
-      const compactedOwner = compactedById.get(depId);
+      const compactedOwner = findReservedOwner(depId, reservedRanges);
       if (compactedOwner !== undefined) {
         throw new Error(
           `Story ${story.id} depends on compacted story id ${depId} (compacted in story ${compactedOwner}).`
@@ -222,9 +321,9 @@ export const validatePrd = (raw: unknown): PrdValidationResult => {
   }
 
   return {
-    prd: { stories },
-    pendingStories,
-    runnableStory,
+    prd: { stories: stories.map(toPublicStory) },
+    pendingStories: pendingStories.map(toPublicStory),
+    runnableStory: runnableStory ? toPublicStory(runnableStory) : null,
     allDone: pendingStories.length === 0
   };
 };

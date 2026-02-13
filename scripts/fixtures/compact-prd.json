@@ -29,7 +29,7 @@
       "title": "Add reels support",
       "description": "Allow uploading short videos to feed.",
       "acceptanceCriteria": ["Users can upload short video reels"],
-      "dependsOn": [2],
+      "dependsOn": [],
       "status": "pending"
     },
     {
@@ -38,7 +38,7 @@
       "description": "Enable paid subscriber-only posts.",
       "acceptanceCriteria": ["Subscription purchase flow works"],
       "dependsOn": [],
-      "status": "pending"
+      "status": "done"
     }
   ]
 }

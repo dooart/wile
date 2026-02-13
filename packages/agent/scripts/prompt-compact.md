@@ -5,6 +5,7 @@ Goal: compact both `.wile/prd.json` and `.wile/progress.txt` while preserving co
 Rules:
 - Final `.wile/prd.json` must stay valid under the current schema (`stories`, numeric `id`, `dependsOn`, `status`).
 - Never reuse a compacted story ID. Any ID listed in any `compactedFrom` is permanently reserved.
+- `compactedFrom` must use canonical range-string syntax like `1..3,5` (sorted, non-overlapping, merged).
 - Keep every pending story exactly as-is.
 - Do not create missing dependencies.
 
@@ -18,12 +19,12 @@ Steps:
    - Keep all `pendingStories` exactly as-is.
    - Keep all done stories whose id is in `requiredDoneIds` exactly as-is.
    - For remaining done stories, replace them with one summary done story:
-     - `id`: next available integer id greater than every story `id` and every value in every `compactedFrom` array
+     - `id`: next available integer id greater than every story `id` and every id covered by any `compactedFrom` ranges
      - `title`: `[COMPACT] Completed stories summary`
      - `description`: concise summary of shipped work
      - `acceptanceCriteria`: a short list (1-3 bullets) describing what was completed
      - `dependsOn`: []
-     - `compactedFrom`: sorted unique list of all compacted story IDs
+     - `compactedFrom`: canonical range-string of all compacted story IDs (example: `1..3,5`)
        - Include each replaced done story `id`
        - If a replaced story already has `compactedFrom`, include those IDs too (preserve tombstones transitively)
      - `status`: `"done"`

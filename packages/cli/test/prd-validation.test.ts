@@ -137,7 +137,7 @@ test("validatePrd accepts compactedFrom on done summary stories", () => {
         description: "Historical summary",
         acceptanceCriteria: ["Summary exists"],
         dependsOn: [],
-        compactedFrom: [2, 3, 4, 8],
+        compactedFrom: "2..4,8",
         status: "done"
       },
       {
@@ -154,6 +154,24 @@ test("validatePrd accepts compactedFrom on done summary stories", () => {
   expect(result.runnableStory?.id).toBe(11);
 });
 
+test("validatePrd enforces canonical compactedFrom range syntax", () => {
+  expect(() =>
+    validatePrd({
+      stories: [
+        {
+          id: 10,
+          title: "Compacted summary",
+          description: "Historical summary",
+          acceptanceCriteria: ["Summary exists"],
+          dependsOn: [],
+          compactedFrom: "3,1..2,5",
+          status: "done"
+        }
+      ]
+    })
+  ).toThrow('stories[0].compactedFrom must use canonical range syntax like "1..3,5" (sorted, non-overlapping).');
+});
+
 test("validatePrd rejects active story ids that are reserved by compactedFrom", () => {
   expect(() =>
     validatePrd({
@@ -164,7 +182,7 @@ test("validatePrd rejects active story ids that are reserved by compactedFrom", 
           description: "Historical summary",
           acceptanceCriteria: ["Summary exists"],
           dependsOn: [],
-          compactedFrom: [2, 3, 4, 8],
+          compactedFrom: "2..4,8",
           status: "done"
         },
         {
@@ -190,7 +208,7 @@ test("validatePrd rejects dependsOn references to compacted ids", () => {
           description: "Historical summary",
           acceptanceCriteria: ["Summary exists"],
           dependsOn: [],
-          compactedFrom: [2, 3, 4, 8],
+          compactedFrom: "2..4,8",
           status: "done"
         },
         {
@@ -216,7 +234,7 @@ test("validatePrd rejects duplicate compactedFrom ids across summary stories", (
           description: "A",
           acceptanceCriteria: ["A"],
           dependsOn: [],
-          compactedFrom: [2, 3],
+          compactedFrom: "2..3",
           status: "done"
         },
         {
@@ -225,7 +243,7 @@ test("validatePrd rejects duplicate compactedFrom ids across summary stories", (
           description: "B",
           acceptanceCriteria: ["B"],
           dependsOn: [],
-          compactedFrom: [3, 4],
+          compactedFrom: "3..4",
           status: "done"
         }
       ]

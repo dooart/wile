@@ -11,6 +11,79 @@ const prd = JSON.parse(fs.readFileSync(prdPath, "utf8"));
 const stories = Array.isArray(prd.stories) ? prd.stories : [];
 const pendingStories = stories.filter((story) => story.status === "pending");
 const doneStories = stories.filter((story) => story.status === "done");
+const parseCompactedFromRanges = (value) => {
+  if (typeof value !== "string" || value.trim() === "") {
+    return [];
+  }
+
+  const ranges = [];
+  const tokens = value.split(",").map((token) => token.trim()).filter(Boolean);
+  for (const token of tokens) {
+    const match = token.match(/^(-?\d+)(?:\.\.(-?\d+))?$/);
+    if (!match) {
+      continue;
+    }
+
+    const start = Number(match[1]);
+    const end = match[2] === undefined ? start : Number(match[2]);
+    if (!Number.isInteger(start) || !Number.isInteger(end) || start > end) {
+      continue;
+    }
+
+    ranges.push({ start, end });
+  }
+
+  ranges.sort((a, b) => (a.start === b.start ? a.end - b.end : a.start - b.start));
+  const merged = [];
+  for (const range of ranges) {
+    const last = merged[merged.length - 1];
+    if (!last || range.start > last.end + 1) {
+      merged.push({ ...range });
+    } else if (range.end > last.end) {
+      last.end = range.end;
+    }
+  }
+
+  return merged;
+};
+
+const compactedIdsFromStory = (story) => {
+  const ids = [];
+  for (const range of parseCompactedFromRanges(story.compactedFrom)) {
+    for (let id = range.start; id <= range.end; id += 1) {
+      ids.push(id);
+    }
+  }
+  return ids;
+};
+
+const compactedFromStringFromIds = (ids) => {
+  const sorted = [...new Set(ids)].sort((a, b) => a - b);
+  if (sorted.length === 0) {
+    return "";
+  }
+
+  const ranges = [];
+  let start = sorted[0];
+  let end = sorted[0];
+  for (let i = 1; i < sorted.length; i += 1) {
+    const id = sorted[i];
+    if (id === end + 1) {
+      end = id;
+      continue;
+    }
+
+    ranges.push({ start, end });
+    start = id;
+    end = id;
+  }
+  ranges.push({ start, end });
+
+  return ranges
+    .map((range) => (range.start === range.end ? `${range.start}` : `${range.start}..${range.end}`))
+    .join(",");
+};
+
 const requiredDoneIds = new Set();
 for (const story of pendingStories) {
   const deps = Array.isArray(story.dependsOn) ? story.dependsOn : [];
@@ -20,25 +93,27 @@ for (const story of pendingStories) {
 }
 const retainedDoneStories = doneStories.filter((story) => requiredDoneIds.has(story.id));
 const compactableDoneStories = doneStories.filter((story) => !requiredDoneIds.has(story.id));
-const reservedIds = new Set(stories.map((story) => story.id));
+
+let maxReservedId = Math.max(0, ...stories.map((story) => (Number.isInteger(story.id) ? story.id : 0)));
 for (const story of stories) {
-  const priorCompacted = Array.isArray(story.compactedFrom) ? story.compactedFrom : [];
-  for (const compactedId of priorCompacted) {
-    reservedIds.add(compactedId);
+  const ranges = parseCompactedFromRanges(story.compactedFrom);
+  for (const range of ranges) {
+    if (range.end > maxReservedId) {
+      maxReservedId = range.end;
+    }
   }
 }
-const summaryId = Math.max(0, ...reservedIds) + 1;
+const summaryId = maxReservedId + 1;
 
 const nextStories = [...pendingStories, ...retainedDoneStories];
 if (compactableDoneStories.length > 0) {
-  const compactedFrom = [
+  const compactedIds = [
     ...new Set(
       compactableDoneStories.flatMap((story) => {
-        const priorCompacted = Array.isArray(story.compactedFrom) ? story.compactedFrom : [];
-        return [story.id, ...priorCompacted];
+        return [story.id, ...compactedIdsFromStory(story)];
       })
     )
-  ].sort((a, b) => a - b);
+  ];
 
   nextStories.push({
     id: summaryId,
@@ -49,7 +124,7 @@ if (compactableDoneStories.length > 0) {
       "Pending stories were preserved unchanged."
     ],
     dependsOn: [],
-    compactedFrom,
+    compactedFrom: compactedFromStringFromIds(compactedIds),
     status: "done"
   });
 }
