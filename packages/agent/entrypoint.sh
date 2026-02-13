@@ -15,6 +15,8 @@ if command -v sysctl >/dev/null 2>&1; then
   sysctl -w net.ipv6.conf.default.disable_ipv6=0 >/dev/null 2>&1 || true
 fi
 
+SCRIPT_DIR="/home/wile/scripts"
+
 if [ "${WILE_TEST:-}" = "true" ]; then
   TEST_REPO="${WILE_TEST_REPO_PATH:-/home/wile/workspace/repo}"
 
@@ -30,18 +32,19 @@ if [ "${WILE_TEST:-}" = "true" ]; then
     exit 1
   fi
 
+  node "$SCRIPT_DIR/validate-prd.js" --path .wile/prd.json >/dev/null
+
   echo "TEST MODE: running mocked agent (no GitHub, no Claude)"
 
   node - << 'NODE'
 const fs = require('fs');
-const path = require('path');
-
-const prdPath = path.join('.wile', 'prd.json');
-const progressPath = path.join('.wile', 'progress.txt');
+const prdPath = '.wile/prd.json';
+const progressPath = '.wile/progress.txt';
 
 const prd = JSON.parse(fs.readFileSync(prdPath, 'utf8'));
-const stories = Array.isArray(prd.userStories) ? prd.userStories : [];
-const pending = stories.filter((story) => story.passes === false);
+const stories = Array.isArray(prd.stories) ? prd.stories : [];
+const storyById = new Map(stories.map((story) => [story.id, story]));
+const pending = stories.filter((story) => story.status === 'pending');
 
 if (process.env.TEST_FORWARD) {
   console.log(`Forwarded env: ${process.env.TEST_FORWARD}`);
@@ -52,14 +55,20 @@ if (pending.length === 0) {
   process.exit(0);
 }
 
-pending.sort((a, b) => {
-  const aPriority = typeof a.priority === 'number' ? a.priority : Number.MAX_SAFE_INTEGER;
-  const bPriority = typeof b.priority === 'number' ? b.priority : Number.MAX_SAFE_INTEGER;
-  return aPriority - bPriority;
-});
+const story =
+  stories.find(
+    (candidate) =>
+      candidate.status === 'pending' &&
+      Array.isArray(candidate.dependsOn) &&
+      candidate.dependsOn.every((depId) => storyById.get(depId)?.status === 'done')
+  ) || null;
 
-const story = pending[0];
-story.passes = true;
+if (!story) {
+  console.error('No runnable pending stories in test mode.');
+  process.exit(1);
+}
+
+story.status = 'done';
 fs.writeFileSync(prdPath, JSON.stringify(prd, null, 2) + '\n');
 
 if (!fs.existsSync(progressPath)) {
@@ -138,7 +147,6 @@ else
 fi
 
 MAX_ITERATIONS=${MAX_ITERATIONS:-25}
-SCRIPT_DIR="/home/wile/scripts"
 WORKSPACE="/home/wile/workspace"
 
 if [ "${WILE_MOCK_CLAUDE:-}" = "true" ] && [ "$CODING_AGENT" = "CC" ]; then
@@ -357,23 +365,27 @@ echo "Checking for .wile/prd.json..."
 if [ ! -f ".wile/prd.json" ]; then
   echo "ERROR: .wile/prd.json not found!"
   echo ""
-  echo "Your repository must have a .wile/prd.json file at the root."
-  echo "This file contains the user stories for Wile to implement."
+  echo "Your repository must have a .wile/prd.json file."
+  echo "This file contains the stories for Wile to implement."
   echo ""
   echo "Example structure:"
   echo '  {'
-  echo '    "userStories": ['
+  echo '    "stories": ['
   echo '      {'
-  echo '        "id": "US-001",'
+  echo '        "id": 1,'
   echo '        "title": "My feature",'
+  echo '        "description": "What this story delivers",'
   echo '        "acceptanceCriteria": ["..."],'
-  echo '        "priority": 1,'
-  echo '        "passes": false'
+  echo '        "dependsOn": [],'
+  echo '        "status": "pending"'
   echo '      }'
   echo '    ]'
   echo '  }'
   exit 1
 fi
+
+echo "Validating .wile/prd.json..."
+node "$SCRIPT_DIR/validate-prd.js" --path .wile/prd.json
 
 # Set up .wile/screenshots directory
 echo "Setting up .wile directory..."
@@ -433,7 +445,7 @@ elif [ $EXIT_CODE -eq 1 ]; then
     git commit -m "WIP: wile stopped at max iterations ($TIMESTAMP)
 
 Partial work committed. Check .wile/progress.txt for details.
-Some stories may still have passes=false in .wile/prd.json."
+Some stories may still have status=\"pending\" in .wile/prd.json."
     git push
   fi
 elif [ $EXIT_CODE -eq 2 ]; then

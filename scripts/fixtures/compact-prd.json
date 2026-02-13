@@ -1,156 +1,44 @@
 {
-  "userStories": [
+  "stories": [
     {
-      "id": "GROUP-001",
-      "title": "Summarized early foundation work",
-      "tasks": [
-        "Defined initial data models and migrations",
-        "Established baseline user profile flows"
-      ],
-      "taskIds": "From TASK-001 to TASK-004",
-      "priority": 1,
-      "passes": true,
-      "notes": "Don't repeat task ids when starting the next one."
+      "id": 1,
+      "title": "Bootstrap auth",
+      "description": "Set up login and session flow.",
+      "acceptanceCriteria": ["Auth middleware exists"],
+      "dependsOn": [],
+      "status": "done"
     },
     {
-      "id": "TASK-005",
-      "title": "Bootstrap core data model",
-      "acceptanceCriteria": ["Define user, post, and media schemas"],
-      "priority": 1,
-      "passes": true
+      "id": 2,
+      "title": "Create profile schema",
+      "description": "Add profile table and API endpoints.",
+      "acceptanceCriteria": ["Profile schema migration exists"],
+      "dependsOn": [1],
+      "status": "done"
     },
     {
-      "id": "TASK-006",
-      "title": "Create user profiles",
-      "acceptanceCriteria": ["Add profile editing and avatar upload"],
-      "priority": 2,
-      "passes": true
+      "id": 3,
+      "title": "Ship notifications",
+      "description": "Enable notification center and unread counters.",
+      "acceptanceCriteria": ["Notifications page renders"],
+      "dependsOn": [2],
+      "status": "done"
     },
     {
-      "id": "TASK-007",
-      "title": "Implement post creation",
-      "acceptanceCriteria": ["Users can publish image posts with captions"],
-      "priority": 3,
-      "passes": true
+      "id": 4,
+      "title": "Add reels support",
+      "description": "Allow uploading short videos to feed.",
+      "acceptanceCriteria": ["Users can upload short video reels"],
+      "dependsOn": [2],
+      "status": "pending"
     },
     {
-      "id": "TASK-008",
-      "title": "Add feed timeline",
-      "acceptanceCriteria": ["Show latest posts from followed accounts"],
-      "priority": 4,
-      "passes": true
-    },
-    {
-      "id": "TASK-009",
-      "title": "Enable likes",
-      "acceptanceCriteria": ["Users can like and unlike posts"],
-      "priority": 5,
-      "passes": true
-    },
-    {
-      "id": "TASK-010",
-      "title": "Enable comments",
-      "acceptanceCriteria": ["Users can comment on posts"],
-      "priority": 6,
-      "passes": true
-    },
-    {
-      "id": "TASK-011",
-      "title": "Add follow system",
-      "acceptanceCriteria": ["Users can follow and unfollow accounts"],
-      "priority": 7,
-      "passes": true
-    },
-    {
-      "id": "TASK-012",
-      "title": "Add notifications",
-      "acceptanceCriteria": ["Notify on likes, comments, follows"],
-      "priority": 8,
-      "passes": true
-    },
-    {
-      "id": "TASK-013",
-      "title": "Search users and tags",
-      "acceptanceCriteria": ["Search bar for users and hashtags"],
-      "priority": 9,
-      "passes": true
-    },
-    {
-      "id": "TASK-014",
-      "title": "Add explore page",
-      "acceptanceCriteria": ["Show trending posts and tags"],
-      "priority": 10,
-      "passes": true
-    },
-    {
-      "id": "TASK-015",
-      "title": "Direct messaging",
-      "acceptanceCriteria": ["Send and receive direct messages"],
-      "priority": 11,
-      "passes": true
-    },
-    {
-      "id": "TASK-016",
-      "title": "Story posts",
-      "acceptanceCriteria": ["Users can post ephemeral stories"],
-      "priority": 12,
-      "passes": true
-    },
-    {
-      "id": "TASK-017",
-      "title": "Content moderation tools",
-      "acceptanceCriteria": ["Flag and review reported content"],
-      "priority": 13,
-      "passes": true
-    },
-    {
-      "id": "TASK-018",
-      "title": "Analytics dashboard",
-      "acceptanceCriteria": ["Show post reach and engagement"],
-      "priority": 14,
-      "passes": true
-    },
-    {
-      "id": "TASK-019",
-      "title": "Paid promotions",
-      "acceptanceCriteria": ["Promote posts to targeted audiences"],
-      "priority": 15,
-      "passes": true
-    },
-    {
-      "id": "TASK-020",
-      "title": "Reels support",
-      "acceptanceCriteria": ["Short-form video uploads"],
-      "priority": 16,
-      "passes": false
-    },
-    {
-      "id": "TASK-021",
-      "title": "Multi-account switcher",
-      "acceptanceCriteria": ["Switch between accounts without logout"],
-      "priority": 17,
-      "passes": false
-    },
-    {
-      "id": "TASK-022",
-      "title": "Creator subscriptions",
-      "acceptanceCriteria": ["Subscribe to creator-exclusive content"],
-      "priority": 18,
-      "passes": false
-    },
-    {
-      "id": "TASK-023",
-      "title": "Live streaming",
-      "acceptanceCriteria": ["Stream live video to followers"],
-      "priority": 19,
-      "passes": false
-    },
-    {
-      "id": "TASK-024",
-      "title": "In-app marketplace",
-      "acceptanceCriteria": ["Buy and sell items in-app"],
-      "priority": 20,
-      "passes": false
+      "id": 5,
+      "title": "Add creator subscriptions",
+      "description": "Enable paid subscriber-only posts.",
+      "acceptanceCriteria": ["Subscription purchase flow works"],
+      "dependsOn": [],
+      "status": "pending"
     }
   ]
 }

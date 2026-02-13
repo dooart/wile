@@ -28,6 +28,7 @@ chmod +x "$BIN_DIR/claude"
 
 set +e
 PATH="$BIN_DIR:$PATH" \
+CODING_AGENT="CC" \
 CC_CLAUDE_MODEL="sonnet" \
 "$SCRIPT_DIR/wile.sh" 3 > "$OUTPUT_FILE" 2>&1
 EXIT_CODE=$?

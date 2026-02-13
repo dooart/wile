@@ -20,13 +20,14 @@ trap cleanup EXIT INT TERM
 mkdir -p "$TMP_DIR/.wile"
 cat > "$TMP_DIR/.wile/prd.json" <<'JSON'
 {
-  "userStories": [
+  "stories": [
     {
-      "id": "US-TEST-CLAUDE-001",
+      "id": 1,
       "title": "Preflight fail test (claude)",
+      "description": "Preflight failure harness",
       "acceptanceCriteria": ["n/a"],
-      "priority": 1,
-      "passes": false
+      "dependsOn": [],
+      "status": "pending"
     }
   ]
 }

@@ -34,7 +34,7 @@ JSON
 RUN cd /opt/agent-browser \
     && bun add agent-browser \
     && node /opt/agent-browser/node_modules/agent-browser/scripts/postinstall.js \
-    && ln -s /opt/agent-browser/node_modules/agent-browser/bin/agent-browser /usr/local/bin/agent-browser
+    && ln -s /opt/agent-browser/node_modules/agent-browser/bin/agent-browser.js /usr/local/bin/agent-browser
 
 # Create non-root user
 RUN useradd -m -s /bin/bash wile \

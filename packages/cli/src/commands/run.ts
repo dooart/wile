@@ -3,6 +3,7 @@ import { spawn, spawnSync } from "node:child_process";
 import { resolve, join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readWileConfig } from "../lib/config";
+import { readAndValidatePrd } from "../lib/prd";
 
 const findAgentDir = (startDir: string) => {
   let current = startDir;
@@ -16,15 +17,6 @@ const findAgentDir = (startDir: string) => {
       return null;
     }
     current = parent;
-  }
-};
-
-const readJson = (path: string) => {
-  try {
-    const contents = readFileSync(path, "utf8");
-    return JSON.parse(contents) as { userStories?: { passes?: boolean; priority?: number }[] };
-  } catch {
-    throw new Error(`Failed to read ${path}. Ensure it is valid JSON.`);
   }
 };
 
@@ -44,11 +36,10 @@ export const validateGitignore = (path: string) => {
   }
 };
 
-const hasPendingStories = (prd: { userStories?: { passes?: boolean; priority?: number }[] }) => {
-  if (!Array.isArray(prd.userStories)) {
-    return false;
+export const validatePrdLocation = (paths: { prdPath: string }) => {
+  if (!existsSync(paths.prdPath)) {
+    throw new Error("Missing .wile/prd.json. Run 'bunx wile config'.");
   }
-  return prd.userStories.some((story) => story.passes === false);
 };
 
 export const buildAgentImage = (agentDir: string) => {
@@ -240,15 +231,21 @@ export const runWile = async (options: {
     process.exit(1);
   }
 
-  if (!existsSync(paths.prdPath)) {
-    console.error("Missing .wile/prd.json. Run 'bunx wile config'.");
-    process.exit(1);
-  }
-
-  const prd = readJson(paths.prdPath);
-  if (!hasPendingStories(prd)) {
-    console.log("No pending stories in .wile/prd.json. Add a story to run Wile.");
-    return;
+  const repoSource =
+    options.test || options.repo ? "github" : config.repoSource ?? "github";
+  const shouldValidateLocalPrd = options.test || repoSource === "local";
+  if (shouldValidateLocalPrd) {
+    try {
+      validatePrdLocation(paths);
+      const validation = readAndValidatePrd(paths.prdPath);
+      if (validation.allDone) {
+        console.log("No pending stories in .wile/prd.json. Add a pending story to run Wile.");
+        return;
+      }
+    } catch (error) {
+      console.error((error as Error).message);
+      process.exit(1);
+    }
   }
 
   const agentDir = resolveAgentDir();

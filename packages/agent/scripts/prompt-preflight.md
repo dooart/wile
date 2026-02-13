@@ -39,13 +39,6 @@ cat .wile/prd.json
    - Under **Checks run**, include the exact command(s) you executed (verbatim).
    - Under **Failures**, include the specific missing file names or failing commands.
 
-   - If GitHub is configured (`WILE_REPO_SOURCE=github` or `GITHUB_REPO_URL` is set), commit and push the progress update:
-
-```bash
-git add .wile/progress.txt
-git commit -m "chore: preflight failed"
-git push
-```
    - Respond with exactly:
 
 ```

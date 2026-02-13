@@ -1,13 +1,15 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { readWileConfig } from "../lib/config";
+import { readAndValidatePrd } from "../lib/prd";
 import {
   buildAgentImage,
   buildDockerArgs,
   getTimestamp,
   resolveAgentDir,
   runDockerWithLogging,
-  validateGitignore
+  validateGitignore,
+  validatePrdLocation
 } from "./run";
 
 export const runCompact = async (options: {
@@ -48,8 +50,11 @@ export const runCompact = async (options: {
     process.exit(1);
   }
 
-  if (!existsSync(paths.prdPath)) {
-    console.error("Missing .wile/prd.json. Run 'bunx wile config'.");
+  try {
+    validatePrdLocation(paths);
+    readAndValidatePrd(paths.prdPath);
+  } catch (error) {
+    console.error((error as Error).message);
     process.exit(1);
   }
 

@@ -63,15 +63,16 @@ printf "# Wile Progress Log\n\n## Codebase Patterns\n\n---\n" > .wile/progress.t
 
 cat > .wile/prd.json <<'JSON'
 {
-  "userStories": [
+  "stories": [
     {
-      "id": "US-LOG-OC-001",
+      "id": 1,
       "title": "Write a small marker file",
+      "description": "Create a marker file and emit marker output.",
       "acceptanceCriteria": [
         "Create integration-log-opencode.txt containing the text REAL OPENCODE LOG TEST"
       ],
-      "priority": 1,
-      "passes": false
+      "dependsOn": [],
+      "status": "pending"
     }
   ]
 }
@@ -95,13 +96,14 @@ cat > "$RUN_DIR/.wile/additional-instructions.md" <<'MD'
 MD
 cat > "$RUN_DIR/.wile/prd.json" <<'JSON'
 {
-  "userStories": [
+  "stories": [
     {
-      "id": "US-LOG-OC-RUN",
+      "id": 1,
       "title": "Allow integration run",
+      "description": "Gate test run",
       "acceptanceCriteria": ["Run integration"],
-      "priority": 1,
-      "passes": false
+      "dependsOn": [],
+      "status": "pending"
     }
   ]
 }

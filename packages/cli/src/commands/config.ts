@@ -6,95 +6,95 @@ import { join, resolve, isAbsolute } from "node:path";
 import { homedir } from "node:os";
 
 const prdExample = {
-  userStories: [
+  stories: [
     {
-      id: "US-001",
+      id: 1,
       title: "Initialize project with Vite and React",
+      description: "Set up a minimal React + Vite + TypeScript project.",
       acceptanceCriteria: [
         "package.json exists with vite, react, react-dom dependencies",
         "vite.config.ts configured for React",
         "src/main.tsx renders App component",
         "src/App.tsx exists with basic structure",
         "npm run dev starts dev server on port 5173",
-        "npm run build produces dist/ folder",
+        "npm run build produces dist/ folder"
       ],
-      priority: 1,
-      passes: false,
-      notes: "Use TypeScript. Keep it minimal.",
+      dependsOn: [],
+      status: "pending"
     },
     {
-      id: "US-002",
+      id: 2,
       title: "Create 3x3 game board component",
+      description: "Render a centered 3x3 visual board with clickable cells.",
       acceptanceCriteria: [
         "src/components/Board.tsx exists",
         "Renders 3x3 grid of clickable squares",
         "Grid uses CSS Grid layout",
         "Each square is 100x100 pixels",
         "Board is centered on page",
-        "Squares have visible borders",
+        "Squares have visible borders"
       ],
-      priority: 2,
-      passes: false,
-      notes: "Just the visual grid, no game logic yet",
+      dependsOn: [1],
+      status: "pending"
     },
     {
-      id: "US-003",
+      id: 3,
       title: "Implement alternating X and O turns",
+      description: "Track turns and prevent overwriting existing moves.",
       acceptanceCriteria: [
         "First click places X",
         "Second click places O",
         "Pattern continues alternating",
         "X displayed in blue color",
         "O displayed in red color",
-        "Cannot click already-filled square",
+        "Cannot click already-filled square"
       ],
-      priority: 3,
-      passes: false,
-      notes: "Use React state for board and current player",
+      dependsOn: [2],
+      status: "pending"
     },
     {
-      id: "US-004",
+      id: 4,
       title: "Detect win condition",
+      description: "Determine winner across rows, columns, and diagonals.",
       acceptanceCriteria: [
         "Detects horizontal wins (3 rows)",
         "Detects vertical wins (3 columns)",
         "Detects diagonal wins (2 diagonals)",
         "Shows 'X Wins!' or 'O Wins!' message when won",
         "Winning message appears above the board",
-        "No more moves allowed after win",
+        "No more moves allowed after win"
       ],
-      priority: 4,
-      passes: false,
-      notes: "Check all 8 possible winning combinations",
+      dependsOn: [3],
+      status: "pending"
     },
     {
-      id: "US-005",
+      id: 5,
       title: "Detect draw and add reset button",
+      description: "Handle full-board draw and allow restarting the game.",
       acceptanceCriteria: [
         "Shows 'Draw!' when all 9 squares filled with no winner",
         "Reset button appears below the board",
         "Clicking reset clears all squares",
         "Reset sets turn back to X",
-        "Reset clears any win/draw message",
+        "Reset clears any win/draw message"
       ],
-      priority: 5,
-      passes: false,
-      notes: "Complete the game loop",
+      dependsOn: [4],
+      status: "pending"
     },
     {
-      id: "US-006",
+      id: 6,
       title: "Add current turn indicator",
+      description: "Show whose turn it is while the game is still active.",
       acceptanceCriteria: [
         "Shows 'Current turn: X' or 'Current turn: O' above board",
         "Updates after each move",
         "Hidden when game is won or drawn",
-        "X indicator in blue, O indicator in red",
+        "X indicator in blue, O indicator in red"
       ],
-      priority: 6,
-      passes: false,
-      notes: "Polish the UX",
-    },
-  ],
+      dependsOn: [3],
+      status: "pending"
+    }
+  ]
 };
 
 const tips = {
@@ -247,8 +247,6 @@ const readBase64File = async (path: string) => {
 };
 
 export const runConfig = async () => {
-  maybeInject();
-
   const cwd = process.cwd();
   const wileDir = join(cwd, ".wile");
   const secretsDir = join(wileDir, "secrets");
@@ -265,6 +263,8 @@ export const runConfig = async () => {
   const agentsPath = join(wileDir, "AGENTS.md");
 
   await mkdir(secretsDir, { recursive: true });
+
+  maybeInject();
 
   const existingEnv = await readEnvFile(envPath);
 
@@ -705,7 +705,7 @@ export const runConfig = async () => {
   }
 
   if (!existsSync(prdPath)) {
-    const prdContents = JSON.stringify({ userStories: [] }, null, 2);
+    const prdContents = JSON.stringify({ stories: [] }, null, 2);
     await writeFile(prdPath, prdContents + "\n");
   }
 
@@ -730,9 +730,9 @@ export const runConfig = async () => {
     [
       "# PRD authoring guidance for Wile",
       "",
-      "Wile reads `.wile/prd.json` each iteration, picks the highest-priority story",
-      "with `passes: false`, implements exactly one story, marks it complete, logs",
-      "progress, and repeats until all stories pass. The PRD should be written so",
+      "Wile reads `.wile/prd.json` each iteration, picks the first runnable story in `stories`",
+      "where `status: \"pending\"`, implements exactly one story, marks it `done`, logs",
+      "progress, and repeats until all stories are done. The PRD should be written so",
       "each story is independently actionable and verifiable.",
       "",
       "Guidelines:",
@@ -741,10 +741,14 @@ export const runConfig = async () => {
       "- For integration tests, write acceptance criteria that validate real system behavior (not just the harness).",
       "- If verification is a command, state the expected result of that command.",
       "- Use one behavior per bullet.",
-      "- Keep IDs stable and unique (e.g., US-123).",
+      "- Keep IDs stable, unique, and numeric (e.g., 1, 2, 3).",
+      "- Never reuse IDs listed in any story's `compactedFrom`.",
       '- Avoid vague terms like "should" or "nice".',
       "- Keep stories small enough to finish in one iteration.",
-      "- Mark `passes: false` for work not done yet.",
+      "- Use `status: \"pending\"` for work not done yet and `status: \"done\"` only after all acceptance criteria are verified.",
+      "- Use `dependsOn` to model prerequisites by story ID.",
+      "- `dependsOn` must reference active story IDs only; never reference compacted IDs.",
+      "- When compacting completed stories, add `compactedFrom: [oldId1, oldId2, ...]` to the summary done story.",
       "- Prefer concrete files/commands only when they reflect the real outcome.",
       "",
       "Environment notes:",
@@ -757,6 +761,7 @@ export const runConfig = async () => {
   );
 
   console.log("\nWile config complete.");
+  console.log("Created PRD files in .wile/: prd.json and prd.json.example.");
   console.log("Add project env vars to .wile/.env.project when needed.");
   if (!hadAdditionalInstructions) {
     console.log(

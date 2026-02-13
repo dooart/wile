@@ -67,15 +67,16 @@ printf "# Wile Progress Log\n\n## Codebase Patterns\n\n---\n" > .wile/progress.t
 
 cat > .wile/prd.json <<'JSON'
 {
-  "userStories": [
+  "stories": [
     {
-      "id": "US-LOG-REAL-001",
+      "id": 1,
       "title": "Write a small marker file",
+      "description": "Create a marker file and emit marker output.",
       "acceptanceCriteria": [
         "Create integration-log.txt containing the text REAL CODEX LOG TEST"
       ],
-      "priority": 1,
-      "passes": false
+      "dependsOn": [],
+      "status": "pending"
     }
   ]
 }
@@ -94,13 +95,14 @@ cp "$ENV_TEST" "$RUN_DIR/.wile/secrets/.env"
 printf "secrets/\nscreenshots/\nlogs/\n" > "$RUN_DIR/.wile/.gitignore"
 cat > "$RUN_DIR/.wile/prd.json" <<'JSON'
 {
-  "userStories": [
+  "stories": [
     {
-      "id": "US-LOG-REAL-RUN",
+      "id": 1,
       "title": "Allow integration run",
+      "description": "Gate test run",
       "acceptanceCriteria": ["Run integration"],
-      "priority": 1,
-      "passes": false
+      "dependsOn": [],
+      "status": "pending"
     }
   ]
 }

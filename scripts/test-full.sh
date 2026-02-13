@@ -14,6 +14,11 @@ set -a
 . "$ENV_TEST"
 set +a
 
+if [ -z "${CC_CLAUDE_CODE_OAUTH_TOKEN:-}" ] && [ -z "${CC_ANTHROPIC_API_KEY:-}" ]; then
+  echo "error: CC_CLAUDE_CODE_OAUTH_TOKEN or CC_ANTHROPIC_API_KEY must be set in .env.test" >&2
+  exit 1
+fi
+
 if [ -z "${GITHUB_REPO_URL:-}" ] || [ -z "${GITHUB_TOKEN:-}" ]; then
   echo "error: GITHUB_REPO_URL and GITHUB_TOKEN must be set in .env.test" >&2
   exit 1
@@ -31,11 +36,8 @@ run_test() {
   echo "test-full: ok $NAME"
 }
 
-run_test "test-claude-logs" "$ROOT_DIR/scripts/test-claude-logs.sh"
+run_test "test-local" "$ROOT_DIR/scripts/test-local.sh"
 run_test "test-claude-logs-real" "$ROOT_DIR/scripts/test-claude-logs-real.sh"
-run_test "test-opencode-logs-real" "$ROOT_DIR/scripts/test-opencode-logs-real.sh"
-run_test "test-compact" "$ROOT_DIR/scripts/test-compact.sh"
-run_test "test-preflight-claude-docker" "$ROOT_DIR/packages/agent/scripts/test-preflight-claude-docker.sh"
 
 case "$GITHUB_REPO_URL" in
   https://*)
@@ -73,24 +75,26 @@ git checkout -b "$TEST_BRANCH" "origin/$DEFAULT_BRANCH"
 mkdir -p .wile
 cat > .wile/prd.json <<'JSON'
 {
-  "userStories": [
+  "stories": [
     {
-      "id": "US-INT-001",
+      "id": 1,
       "title": "Create haiku fixture file",
+      "description": "Create a fixture file with a haiku.",
       "acceptanceCriteria": [
         "Create integration-test/haiku.txt with a three-line haiku"
       ],
-      "priority": 1,
-      "passes": false
+      "dependsOn": [],
+      "status": "pending"
     },
     {
-      "id": "US-INT-002",
+      "id": 2,
       "title": "Append signature to haiku fixture",
+      "description": "Append the required signature line.",
       "acceptanceCriteria": [
         "Append a blank line and a Signature: Wile line after the haiku"
       ],
-      "priority": 2,
-      "passes": false
+      "dependsOn": [1],
+      "status": "pending"
     }
   ]
 }
@@ -108,13 +112,14 @@ printf "secrets/\nscreenshots/\nlogs/\n" > .wile/.gitignore
 
 cat > .wile/prd.json <<'JSON'
 {
-  "userStories": [
+  "stories": [
     {
-      "id": "US-INT-LOCAL",
+      "id": 1,
       "title": "Allow integration run",
+      "description": "Gate test run",
       "acceptanceCriteria": ["Run integration"],
-      "priority": 1,
-      "passes": false
+      "dependsOn": [],
+      "status": "pending"
     }
   ]
 }
@@ -132,8 +137,15 @@ else
   echo "WILE_REPO_SOURCE=github" >> .wile/secrets/.env
 fi
 
-cd "$ROOT_DIR"
-./scripts/test-local.sh
+if grep -q "^CODING_AGENT=" .wile/secrets/.env; then
+  sed -i '' "s/^CODING_AGENT=.*/CODING_AGENT=CC/" .wile/secrets/.env
+else
+  echo "CODING_AGENT=CC" >> .wile/secrets/.env
+fi
+
+if grep -q "^WILE_MOCK_CLAUDE=" .wile/secrets/.env; then
+  sed -i '' "s/^WILE_MOCK_CLAUDE=.*/WILE_MOCK_CLAUDE=false/" .wile/secrets/.env
+fi
 
 cd "$TMP_RUN"
 export WILE_AGENT_DIR="$ROOT_DIR/packages/agent"
@@ -150,8 +162,8 @@ if [ ! -f integration-test/haiku.txt ]; then
 fi
 
 grep -q "Signature: Wile" integration-test/haiku.txt
-PASSED_COUNT=$(grep -c "\"passes\": true" .wile/prd.json || true)
-if [ "$PASSED_COUNT" -lt 2 ]; then
+DONE_COUNT=$(grep -c "\"status\": \"done\"" .wile/prd.json || true)
+if [ "$DONE_COUNT" -lt 2 ]; then
   echo "error: expected both stories to be marked complete" >&2
   exit 1
 fi

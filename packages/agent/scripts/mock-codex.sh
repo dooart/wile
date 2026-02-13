@@ -8,26 +8,53 @@ const fs = require("fs");
 const prdPath = ".wile/prd.json";
 const progressPath = ".wile/progress.txt";
 const prd = JSON.parse(fs.readFileSync(prdPath, "utf8"));
-const stories = Array.isArray(prd.userStories) ? prd.userStories : [];
-const firstStory = stories[0] || {};
-const lastStory = stories[stories.length - 1] || {};
-const priority = typeof firstStory.priority === "number" ? firstStory.priority : 1;
-const taskIds = `From ${firstStory.id || "TASK-001"} to ${lastStory.id || "TASK-001"}`;
+const stories = Array.isArray(prd.stories) ? prd.stories : [];
+const pendingStories = stories.filter((story) => story.status === "pending");
+const doneStories = stories.filter((story) => story.status === "done");
+const requiredDoneIds = new Set();
+for (const story of pendingStories) {
+  const deps = Array.isArray(story.dependsOn) ? story.dependsOn : [];
+  for (const depId of deps) {
+    requiredDoneIds.add(depId);
+  }
+}
+const retainedDoneStories = doneStories.filter((story) => requiredDoneIds.has(story.id));
+const compactableDoneStories = doneStories.filter((story) => !requiredDoneIds.has(story.id));
+const reservedIds = new Set(stories.map((story) => story.id));
+for (const story of stories) {
+  const priorCompacted = Array.isArray(story.compactedFrom) ? story.compactedFrom : [];
+  for (const compactedId of priorCompacted) {
+    reservedIds.add(compactedId);
+  }
+}
+const summaryId = Math.max(0, ...reservedIds) + 1;
 
-const compactStory = {
-  id: "GROUP-001",
-  title: "summary of everything done here",
-  tasks: [
-    "High level of what was accomplished here",
-    "Should NOT have all tasks in here, should be very summarized"
-  ],
-  taskIds,
-  priority,
-  passes: true,
-  notes: "Don't repeat task ids when starting the next one."
-};
+const nextStories = [...pendingStories, ...retainedDoneStories];
+if (compactableDoneStories.length > 0) {
+  const compactedFrom = [
+    ...new Set(
+      compactableDoneStories.flatMap((story) => {
+        const priorCompacted = Array.isArray(story.compactedFrom) ? story.compactedFrom : [];
+        return [story.id, ...priorCompacted];
+      })
+    )
+  ].sort((a, b) => a - b);
 
-fs.writeFileSync(prdPath, JSON.stringify({ userStories: [compactStory] }, null, 2) + "\n");
+  nextStories.push({
+    id: summaryId,
+    title: "[COMPACT] Completed stories summary",
+    description: "Compacted completed stories into a high-level summary entry.",
+    acceptanceCriteria: [
+      "Historical summary for compacted completed work.",
+      "Pending stories were preserved unchanged."
+    ],
+    dependsOn: [],
+    compactedFrom,
+    status: "done"
+  });
+}
+
+fs.writeFileSync(prdPath, JSON.stringify({ stories: nextStories }, null, 2) + "\n");
 
 const progressLines = [
   "# Wile Progress Log",
@@ -46,7 +73,7 @@ fs.writeFileSync(progressPath, progressLines.join("\n"));
 NODE
 
   cat <<'JSON'
-{"type":"item.completed","item":{"id":"item_1","type":"agent_message","text":"{\"id\":\"GROUP-001\",\"title\":\"summary of everything done here\",\"tasks\":[\"High level of what was accomplished here\",\"Should NOT have all tasks in here, should be very summarized\"],\"taskIds\":\"From TASK-001 to TASK-029\",\"priority\":1,\"passes\":true,\"notes\":\"Don't repeat task ids when starting the next one.\"}\n"}}
+{"type":"item.completed","item":{"id":"item_1","type":"agent_message","text":"{\"summaryStoryId\":999,\"summaryTitle\":\"[COMPACT] Completed stories summary\"}\n"}}
 JSON
   exit 0
 fi

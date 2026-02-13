@@ -112,7 +112,7 @@ run_agent() {
   fi
 }
 
-# Snapshot original PRD for validation of passes:false preservation.
+# Snapshot original PRD for validation of pending-story preservation.
 if [ -f ".wile/prd.json" ]; then
   cp ".wile/prd.json" ".wile/prd.json.original"
 fi

@@ -22,24 +22,24 @@ docker compose up --build
 1. Container clones your repository
 2. Checks out the specified branch
 3. **Iteration 0 (Setup)**: Sets up .gitignore, initializes progress.txt
-4. Reads `.wile/prd.json` from repo
-5. Loops through user stories, implementing one per iteration:
-   - Picks highest priority story where `passes: false`
+4. Reads `.wile/prd.json`
+5. Loops through stories, implementing one per iteration:
+   - Picks first runnable story in array order where `status: "pending"` and dependencies are done
    - Implements the feature/fix
    - Runs tests and typecheck
-   - Commits and pushes
-   - Marks story as complete
+   - Marks story as done
    - Logs learnings
-6. Repeats until all stories pass or max iterations reached
+   - Commits changes
+6. Repeats until all stories are done or max iterations reached
 
 ## Project Structure
 
-Your repository must have a `.wile/` folder:
+Your repository must have a `.wile/prd.json` file:
 
 ```
 your-repo/
 ├── .wile/
-│   ├── prd.json          # User stories (required)
+│   ├── prd.json          # Stories backlog (required)
 │   ├── progress.txt      # Learnings log (created by agent)
 │   └── screenshots/      # Visual verification (created by agent)
 └── ... your code ...
@@ -49,18 +49,18 @@ your-repo/
 
 ```json
 {
-  "userStories": [
+  "stories": [
     {
-      "id": "US-001",
+      "id": 1,
       "title": "Add login form",
+      "description": "Email/password form with validation",
       "acceptanceCriteria": [
         "Email/password fields exist",
         "Form validates email format",
         "typecheck passes"
       ],
-      "priority": 1,
-      "passes": false,
-      "notes": "Optional notes"
+      "dependsOn": [],
+      "status": "pending"
     }
   ]
 }
@@ -68,12 +68,12 @@ your-repo/
 
 ### Fields
 
-- `id`: Unique identifier (used in commit messages)
+- `id`: Unique numeric identifier
 - `title`: Short description
+- `description`: Additional context for implementation
 - `acceptanceCriteria`: List of requirements (be specific!)
-- `priority`: Lower number = done first
-- `passes`: Set to `true` by the agent when complete
-- `notes`: Optional context for the agent
+- `dependsOn`: Array of prerequisite story IDs
+- `status`: `pending` or `done`
 
 ## Tips for Success
 
@@ -134,9 +134,9 @@ For UI work, tell the agent how to verify:
 
 ## Output Files
 
-The `.wile/` folder is **tracked in git** (except screenshots):
+Tracked artifacts:
 
-- `prd.json` - User stories / Product Requirements Document
+- `.wile/prd.json` - Product requirements stories backlog
 - `progress.txt` - Log of completed work and learnings
 - `screenshots/` - Visual verification screenshots (gitignored)
 
@@ -157,5 +157,5 @@ git show origin/your-branch:.wile/progress.txt
 Check story status:
 
 ```bash
-git show origin/your-branch:.wile/prd.json | jq '.userStories[] | {id, title, passes}'
+git show origin/your-branch:.wile/prd.json | jq '.stories[] | {id, title, status}'
 ```

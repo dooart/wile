@@ -15,15 +15,16 @@ run_failure_case() {
   trap cleanup EXIT INT TERM
 
   mkdir -p "$TMP_DIR/.wile"
-  cat > "$TMP_DIR/.wile/prd.json" <<'JSON'
+cat > "$TMP_DIR/.wile/prd.json" <<'JSON'
 {
-  "userStories": [
+  "stories": [
     {
-      "id": "US-TEST-001",
+      "id": 1,
       "title": "Preflight fail test",
+      "description": "Preflight failure harness",
       "acceptanceCriteria": ["n/a"],
-      "priority": 1,
-      "passes": false
+      "dependsOn": [],
+      "status": "pending"
     }
   ]
 }
@@ -87,13 +88,14 @@ run_trailing_case() {
   mkdir -p "$TMP_DIR/.wile"
   cat > "$TMP_DIR/.wile/prd.json" <<'JSON'
 {
-  "userStories": [
+  "stories": [
     {
-      "id": "US-TEST-003",
+      "id": 1,
       "title": "Preflight trailing marker test",
+      "description": "Preflight trailing marker harness",
       "acceptanceCriteria": ["n/a"],
-      "priority": 1,
-      "passes": false
+      "dependsOn": [],
+      "status": "pending"
     }
   ]
 }
@@ -145,13 +147,14 @@ run_success_case() {
   mkdir -p "$TMP_DIR/.wile"
   cat > "$TMP_DIR/.wile/prd.json" <<'JSON'
 {
-  "userStories": [
+  "stories": [
     {
-      "id": "US-TEST-002",
+      "id": 1,
       "title": "Preflight success test",
+      "description": "Preflight success harness",
       "acceptanceCriteria": ["n/a"],
-      "priority": 1,
-      "passes": false
+      "dependsOn": [],
+      "status": "pending"
     }
   ]
 }

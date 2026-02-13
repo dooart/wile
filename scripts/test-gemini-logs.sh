@@ -42,15 +42,16 @@ printf "# Codebase Patterns\n" > .wile/progress.txt
 
 cat > .wile/prd.json <<'JSON'
 {
-  "userStories": [
+  "stories": [
     {
-      "id": "US-LOG-001",
+      "id": 1,
       "title": "Calculate 1+1 and print the answer",
+      "description": "Emit the required answer marker in output.",
       "acceptanceCriteria": [
         "Output a line that reads exactly: ANSWER: 2"
       ],
-      "priority": 1,
-      "passes": false
+      "dependsOn": [],
+      "status": "pending"
     }
   ]
 }

@@ -28,6 +28,7 @@ fi
 sh "$ROOT_DIR/packages/agent/scripts/test-additional-instructions.sh"
 sh "$ROOT_DIR/packages/agent/scripts/test-iteration-limit.sh"
 sh "$ROOT_DIR/packages/agent/scripts/test-preflight-docker.sh"
+sh "$ROOT_DIR/packages/agent/scripts/test-prd-validation-docker.sh"
 sh "$ROOT_DIR/packages/agent/scripts/test-env-project-docker.sh"
 sh "$ROOT_DIR/packages/agent/scripts/test-agent-browser-docker.sh"
 sh "$ROOT_DIR/scripts/test-gemini-logs.sh"
@@ -45,13 +46,14 @@ printf "secrets/\nscreenshots/\nlogs/\n" > "$TMP_DIR/.wile/.gitignore"
 
 cat > "$TMP_DIR/.wile/prd.json" <<'JSON'
 {
-  "userStories": [
+  "stories": [
     {
-      "id": "US-TEST-001",
+      "id": 1,
       "title": "Test mode run",
+      "description": "Test-mode PRD execution",
       "acceptanceCriteria": ["Run test mode"],
-      "priority": 1,
-      "passes": false
+      "dependsOn": [],
+      "status": "pending"
     }
   ]
 }
@@ -68,8 +70,8 @@ if [ -z "$LOG_FILE" ]; then
 fi
 
 grep -q "TEST MODE" "$LOG_FILE"
-grep -q "Marked US-TEST-001 complete" "$LOG_FILE"
-grep -q "\"passes\": true" "$TMP_DIR/.wile/prd.json"
+grep -q "Marked 1 complete" "$LOG_FILE"
+grep -q "\"status\": \"done\"" "$TMP_DIR/.wile/prd.json"
 grep -q "Mocked test mode completion" "$TMP_DIR/.wile/progress.txt"
 
 echo "test-local: ok"

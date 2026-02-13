@@ -15,13 +15,14 @@ trap cleanup EXIT INT TERM
 mkdir -p "$TMP_DIR/.wile/secrets"
 cat > "$TMP_DIR/.wile/prd.json" <<'JSON'
 {
-  "userStories": [
+  "stories": [
     {
-      "id": "US-TEST-ENV-001",
+      "id": 1,
       "title": "Env project forward test",
+      "description": "Forward custom env file into container",
       "acceptanceCriteria": ["n/a"],
-      "priority": 1,
-      "passes": false
+      "dependsOn": [],
+      "status": "pending"
     }
   ]
 }
