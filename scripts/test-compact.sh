@@ -133,7 +133,7 @@ cat .wile/prd.json
 echo "---- AFTER: .wile/progress.txt (repo) ----"
 cat .wile/progress.txt
 
-node "$ROOT_DIR/packages/agent/scripts/validate-prd.js" --path .wile/prd.json >/dev/null
+bun "$ROOT_DIR/packages/agent/scripts/validate-prd.ts" --path .wile/prd.json >/dev/null
 grep -q '"id": 4' .wile/prd.json
 grep -q '"id": 5' .wile/prd.json
 grep -q '"status": "pending"' .wile/prd.json

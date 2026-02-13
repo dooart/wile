@@ -32,7 +32,7 @@ if [ "${WILE_TEST:-}" = "true" ]; then
     exit 1
   fi
 
-  node "$SCRIPT_DIR/validate-prd.js" --path .wile/prd.json >/dev/null
+  bun "$SCRIPT_DIR/validate-prd.ts" --path .wile/prd.json >/dev/null
 
   echo "TEST MODE: running mocked agent (no GitHub, no Claude)"
 
@@ -385,7 +385,7 @@ if [ ! -f ".wile/prd.json" ]; then
 fi
 
 echo "Validating .wile/prd.json..."
-node "$SCRIPT_DIR/validate-prd.js" --path .wile/prd.json
+bun "$SCRIPT_DIR/validate-prd.ts" --path .wile/prd.json
 
 # Set up .wile/screenshots directory
 echo "Setting up .wile directory..."

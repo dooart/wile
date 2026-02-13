@@ -18,7 +18,7 @@ run_case() {
 
   REPO_SCRIPTS="$(cd "$(dirname "$0")" && pwd)"
   cp "$REPO_SCRIPTS/wile.sh" "$SCRIPT_DIR/wile.sh"
-  cp "$REPO_SCRIPTS/claude-stream.js" "$SCRIPT_DIR/claude-stream.js"
+  cp "$REPO_SCRIPTS/claude-stream.ts" "$SCRIPT_DIR/claude-stream.ts"
   chmod +x "$SCRIPT_DIR/wile.sh"
 
   echo "BASE PROMPT" > "$SCRIPT_DIR/prompt.md"

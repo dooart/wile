@@ -62,7 +62,7 @@ run_claude() {
   local prompt_path="$1"
   cat "$prompt_path" \
     | claude --model "$CLAUDE_MODEL" --print --output-format stream-json --verbose --dangerously-skip-permissions \
-    | node "$SCRIPT_DIR/claude-stream.js"
+    | bun "$SCRIPT_DIR/claude-stream.ts"
 }
 
 run_opencode() {
@@ -73,7 +73,7 @@ run_opencode() {
   fi
   cat "$prompt_path" \
     | opencode run --format json --model "$model_arg" \
-    | node "$SCRIPT_DIR/opencode-stream.js"
+    | bun "$SCRIPT_DIR/opencode-stream.ts"
 }
 
 run_gemini() {
@@ -85,7 +85,7 @@ run_gemini() {
     model_args=(--model "$GEMINI_MODEL")
   fi
   gemini --output-format stream-json --yolo "${model_args[@]}" "$prompt_text" \
-    | node "$SCRIPT_DIR/gemini-stream.js"
+    | bun "$SCRIPT_DIR/gemini-stream.ts"
 }
 
 run_codex() {
@@ -96,7 +96,7 @@ run_codex() {
   fi
   cat "$prompt_path" \
     | codex exec --json --dangerously-bypass-approvals-and-sandbox "${model_args[@]}" - \
-    | node "$SCRIPT_DIR/codex-stream.js"
+    | bun "$SCRIPT_DIR/codex-stream.ts"
 }
 
 run_agent() {
@@ -121,7 +121,7 @@ echo "Running compact agent..."
 OUTPUT=$(run_agent "$PROMPT_FILE" | tee "$TEE_TARGET") || true
 
 # Validate the resulting files instead of the response format.
-node "$SCRIPT_DIR/validate-compact.js"
+bun "$SCRIPT_DIR/validate-compact.ts"
 
 if [ -f ".wile/prd.json.original" ]; then
   rm -f ".wile/prd.json.original"
