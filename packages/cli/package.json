@@ -1,6 +1,6 @@
 {
   "name": "wile",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Autonomous AI coding agent that ships features while you sleep",
   "type": "module",
   "bin": {
