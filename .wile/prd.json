@@ -8,7 +8,7 @@
         "Create integration-log.txt containing the text REAL CODEX LOG TEST"
       ],
       "dependsOn": [],
-      "status": "pending"
+      "status": "done"
     }
   ]
 }

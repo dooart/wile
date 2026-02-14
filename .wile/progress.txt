@@ -1,5 +1,25 @@
 # Wile Progress Log
 
 ## Codebase Patterns
+- In a fresh workspace, run `bun install` before `npm run tsc` so workspace TypeScript binaries are available.
 
 ---
+
+## [2026-02-14] - [1]: Write a small marker file
+
+**Implemented:**
+- Created `integration-log.txt` with the exact text `REAL CODEX LOG TEST`.
+- Marked story `id: 1` as `done` in `.wile/prd.json`.
+
+**Verification:**
+- `npm run tsc` - pass
+- `bun run --cwd packages/cli test` - pass
+
+**Files changed:**
+- integration-log.txt
+- .wile/prd.json
+- .wile/progress.txt
+
+**Learnings:**
+- Root-level test script is not defined; CLI tests run via `bun run --cwd packages/cli test`.
+- Installing dependencies first avoids missing compiler/tooling errors.
