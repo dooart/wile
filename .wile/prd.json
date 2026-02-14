@@ -1,0 +1,14 @@
+{
+  "stories": [
+    {
+      "id": 1,
+      "title": "Write a small marker file",
+      "description": "Create a marker file and emit marker output.",
+      "acceptanceCriteria": [
+        "Create integration-log.txt containing the text REAL LOG TEST"
+      ],
+      "dependsOn": [],
+      "status": "pending"
+    }
+  ]
+}

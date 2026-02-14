@@ -1,0 +1,1 @@
+- Include the exact line "REAL LOG TEST" in your response output.
