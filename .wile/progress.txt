@@ -1,0 +1,5 @@
+# Wile Progress Log
+
+## Codebase Patterns
+
+---
