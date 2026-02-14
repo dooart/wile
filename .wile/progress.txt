@@ -3,3 +3,19 @@
 ## Codebase Patterns
 
 ---
+
+
+## 2026-02-14 - 1: Write a small marker file
+
+**Implemented:**
+- Created integration-log.txt with the content "REAL LOG TEST"
+
+**Verification:**
+- Ran 'cat integration-log.txt' and confirmed output is "REAL LOG TEST"
+
+**Files changed:**
+- integration-log.txt
+- .wile/prd.json
+
+**Learnings:**
+- N/A - simple file creation task
