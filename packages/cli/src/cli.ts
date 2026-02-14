@@ -20,8 +20,15 @@ program
 program
   .command("config")
   .description("Configure the current project for Wile")
-  .action(async () => {
-    await runConfig();
+  .option(
+    "--non-interactive [config]",
+    "No value: print agent config docs. With JSON value: validate and apply non-interactive config.",
+  )
+  .action(async (options: { nonInteractive?: string | boolean }) => {
+    const ok = await runConfig({ nonInteractive: options.nonInteractive });
+    if (!ok) {
+      process.exitCode = 1;
+    }
   });
 
 program

@@ -8,16 +8,10 @@ set -e
 
 MAX_ITERATIONS=${1:-25}
 CODING_AGENT=${CODING_AGENT:-CC}
-CLAUDE_MODEL=${CC_CLAUDE_MODEL:-sonnet}
-OC_PROVIDER=${OC_PROVIDER:-native}
-OC_MODEL=${OC_MODEL:-opencode/grok-code}
-GEMINI_MODEL=${GEMINI_MODEL:-auto-gemini-3}
-CODEX_MODEL=${CODEX_MODEL:-}
-
-# For openrouter provider, prepend vendor prefix if missing
-if [ "$OC_PROVIDER" = "openrouter" ] && [[ "$OC_MODEL" != */* ]]; then
-  OC_MODEL="z-ai/$OC_MODEL"
-fi
+CLAUDE_MODEL=${CC_CLAUDE_MODEL:-opus}
+OC_MODEL=${OC_MODEL:-opencode/kimi-k2.5-free}
+GEMINI_MODEL=${GEMINI_MODEL:-gemini-3-pro-preview}
+CODEX_MODEL=${CODEX_MODEL:-gpt-5.3-codex}
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROMPT_FILE="$SCRIPT_DIR/prompt.md"
 PREFLIGHT_PROMPT_FILE="$SCRIPT_DIR/prompt-preflight.md"
@@ -34,7 +28,6 @@ echo "════════════════════════�
 echo "  Agent:          $CODING_AGENT"
 echo "  Max iterations: $MAX_ITERATIONS"
 if [ "$CODING_AGENT" = "OC" ]; then
-  echo "  Provider:       $OC_PROVIDER"
   echo "  Model:          $OC_MODEL"
 elif [ "$CODING_AGENT" = "GC" ]; then
   echo "  Model:          ${GEMINI_MODEL:-auto}"
@@ -73,12 +66,8 @@ run_claude() {
 
 run_opencode() {
   local prompt_path="$1"
-  local model_arg="$OC_MODEL"
-  if [ "$OC_PROVIDER" = "openrouter" ]; then
-    model_arg="openrouter/$OC_MODEL"
-  fi
   cat "$prompt_path" \
-    | opencode run --format json --model "$model_arg" \
+    | opencode run --format json --model "$OC_MODEL" \
     | bun "$SCRIPT_DIR/opencode-stream.ts"
 }
 

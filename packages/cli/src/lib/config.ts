@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve, isAbsolute } from "node:path";
+import { splitEnv } from "./env-schema";
 
 export type WilePaths = {
   wileDir: string;
@@ -21,11 +22,10 @@ export type WileConfig = {
   maxIterations?: string;
   ccClaudeCodeOauthToken?: string;
   ccAnthropicApiKey?: string;
-  ocProvider?: "native" | "openrouter";
-  ocOpenrouterApiKey?: string;
   ocModel?: string;
   geminiOauthCredsB64?: string;
   geminiApiKey?: string;
+  geminiModel?: string;
   codexAuthJsonB64?: string;
   codexAuthJsonPath?: string;
   codexApiKey?: string;
@@ -88,7 +88,7 @@ export const readWileConfig = (options: { cwd?: string; validate?: boolean } = {
     );
   }
 
-  const env = parseEnvFile(paths.envPath);
+  const { known: env } = splitEnv(parseEnvFile(paths.envPath));
   const envProjectPath = resolveEnvProjectPath(options.cwd ?? process.cwd(), env.WILE_ENV_PROJECT_PATH);
   const envProject = parseEnvFile(envProjectPath);
 
@@ -123,13 +123,6 @@ export const readWileConfig = (options: { cwd?: string; validate?: boolean } = {
       );
     }
     if (env.CODING_AGENT === "OC") {
-      const ocProvider = env.OC_PROVIDER || "native";
-      if (ocProvider === "openrouter") {
-        ensureRequired(
-          Boolean(env.OC_OPENROUTER_API_KEY),
-          "OC_OPENROUTER_API_KEY is required in .wile/secrets/.env for OpenCode with OpenRouter provider."
-        );
-      }
       ensureRequired(
         Boolean(env.OC_MODEL),
         "OC_MODEL is required in .wile/secrets/.env for OpenCode."
@@ -169,11 +162,10 @@ export const readWileConfig = (options: { cwd?: string; validate?: boolean } = {
       maxIterations: env.WILE_MAX_ITERATIONS,
       ccClaudeCodeOauthToken: env.CC_CLAUDE_CODE_OAUTH_TOKEN,
       ccAnthropicApiKey: env.CC_ANTHROPIC_API_KEY,
-      ocProvider: (env.OC_PROVIDER as "native" | "openrouter") ?? "native",
-      ocOpenrouterApiKey: env.OC_OPENROUTER_API_KEY,
       ocModel: env.OC_MODEL,
       geminiOauthCredsB64: env.GEMINI_OAUTH_CREDS_B64,
       geminiApiKey: env.GEMINI_API_KEY,
+      geminiModel: env.GEMINI_MODEL,
       codexAuthJsonB64: env.CODEX_AUTH_JSON_B64,
       codexAuthJsonPath: env.CODEX_AUTH_JSON_PATH,
       codexApiKey: env.CODEX_API_KEY ?? env.OPENAI_API_KEY,

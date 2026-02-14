@@ -105,11 +105,6 @@ fi
 
 # Authentication for selected coding agent
 if [ "$CODING_AGENT" = "OC" ]; then
-  OC_PROVIDER="${OC_PROVIDER:-native}"
-  if [ "$OC_PROVIDER" = "openrouter" ] && [ -z "$OC_OPENROUTER_API_KEY" ]; then
-    echo "ERROR: OC_OPENROUTER_API_KEY is required for OpenCode with OpenRouter provider"
-    exit 1
-  fi
   if [ -z "$OC_MODEL" ]; then
     echo "ERROR: OC_MODEL is required for OpenCode"
     exit 1
@@ -177,23 +172,7 @@ if [ "${WILE_MOCK_CODEX:-}" = "true" ] && [ "$CODING_AGENT" = "CX" ]; then
 fi
 
 if [ "$CODING_AGENT" = "OC" ]; then
-  if [ "$OC_PROVIDER" = "openrouter" ]; then
-    echo "  Auth:       OpenRouter (OpenCode)"
-    OPENCODE_DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/opencode"
-    mkdir -p "$OPENCODE_DATA_DIR"
-    cat > "$OPENCODE_DATA_DIR/auth.json" << OPENCODEAUTH
-{
-  "openrouter": {
-    "type": "api",
-    "key": "$OC_OPENROUTER_API_KEY"
-  }
-}
-OPENCODEAUTH
-    chmod 600 "$OPENCODE_DATA_DIR/auth.json"
-    export OPENROUTER_API_KEY="$OC_OPENROUTER_API_KEY"
-  else
-    echo "  Auth:       Native (free models)"
-  fi
+  echo "  Auth:       Native (free models)"
 elif [ "$CODING_AGENT" = "GC" ]; then
   if [ -n "$GEMINI_OAUTH_CREDS_B64" ] || [ -n "$GEMINI_OAUTH_CREDS_PATH" ]; then
     echo "  Auth:       OAuth (Google account)"

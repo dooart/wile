@@ -115,16 +115,10 @@ else
   echo "CODING_AGENT=OC" >> "$RUN_DIR/.wile/secrets/.env"
 fi
 
-if grep -q "^OC_PROVIDER=" "$RUN_DIR/.wile/secrets/.env"; then
-  sed -i '' "s/^OC_PROVIDER=.*/OC_PROVIDER=native/" "$RUN_DIR/.wile/secrets/.env"
-else
-  echo "OC_PROVIDER=native" >> "$RUN_DIR/.wile/secrets/.env"
-fi
-
 if grep -q "^OC_MODEL=" "$RUN_DIR/.wile/secrets/.env"; then
-  sed -i '' "s/^OC_MODEL=.*/OC_MODEL=opencode\/grok-code/" "$RUN_DIR/.wile/secrets/.env"
+  sed -i '' "s/^OC_MODEL=.*/OC_MODEL=opencode\/kimi-k2.5-free/" "$RUN_DIR/.wile/secrets/.env"
 else
-  echo "OC_MODEL=opencode/grok-code" >> "$RUN_DIR/.wile/secrets/.env"
+  echo "OC_MODEL=opencode/kimi-k2.5-free" >> "$RUN_DIR/.wile/secrets/.env"
 fi
 
 if grep -q "^WILE_REPO_SOURCE=" "$RUN_DIR/.wile/secrets/.env"; then

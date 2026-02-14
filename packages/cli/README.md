@@ -16,6 +16,19 @@ From your project repo:
 bunx wile config
 ```
 
+For non-interactive setup docs (useful for agents creating `.wile/secrets/.env` directly):
+
+```bash
+bunx wile config --non-interactive
+```
+
+Apply non-interactive config (agent mode):
+
+```bash
+export WILE_PROMPTS_INJECT='{"codingAgent":"OC","repoSource":"local","ocModel":"opencode/kimi-k2.5-free","branchName":"main","envProjectPath":".wile/.env.project","maxIterations":25}'
+bunx wile config --non-interactive "$WILE_PROMPTS_INJECT"
+```
+
 This creates:
 
 - `.wile/secrets/.env` for required credentials
@@ -26,7 +39,7 @@ This creates:
 Set `WILE_REPO_SOURCE=local` in `.wile/secrets/.env` to run against the current directory without GitHub.
 When `WILE_REPO_SOURCE=local`, GitHub credentials are optional.
 Set `WILE_MAX_ITERATIONS` in `.wile/secrets/.env` to change the default loop limit (default: 25).
-Set `CODING_AGENT=CX` to use Codex CLI, `CODING_AGENT=OC` to use OpenCode (OpenRouter), `CODING_AGENT=GC` to use Gemini CLI, otherwise `CODING_AGENT=CC` uses Claude Code.
+Set `CODING_AGENT=CX` to use Codex CLI, `CODING_AGENT=OC` to use OpenCode (free native models), `CODING_AGENT=GC` to use Gemini CLI, otherwise `CODING_AGENT=CC` uses Claude Code.
 
 ## Run Wile
 

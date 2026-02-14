@@ -12,17 +12,16 @@ const clearInject = () => {
   delete process.env.WILE_PROMPTS_INJECT;
 };
 
-test("config writes OpenCode with native provider (default)", async () => {
+test("config writes OpenCode with default free model", async () => {
   await withTempDir(async (dir) => {
     await mkdir(join(dir, ".wile", "secrets"), { recursive: true });
     setInject([
-      "OC",           // coding agent
-      "native",       // provider
-      "opencode/grok-code",  // model
-      "local",        // repo source
-      "main",         // branch
+      "OC", // coding agent
+      "opencode/kimi-k2.5-free", // model
+      "local", // repo source
+      "main", // branch
       ".wile/.env.project",
-      12
+      12,
     ]);
 
     try {
@@ -33,23 +32,20 @@ test("config writes OpenCode with native provider (default)", async () => {
 
     const env = await readEnvFile(join(dir, ".wile", "secrets", ".env"));
     expect(env.CODING_AGENT).toBe("OC");
-    expect(env.OC_PROVIDER).toBe("native");
-    expect(env.OC_MODEL).toBe("opencode/grok-code");
-    expect(env.OC_OPENROUTER_API_KEY).toBeUndefined();
+    expect(env.OC_MODEL).toBe("opencode/kimi-k2.5-free");
   });
 });
 
-test("config writes OpenCode with native provider and GLM model", async () => {
+test("config writes OpenCode with selected free model", async () => {
   await withTempDir(async (dir) => {
     await mkdir(join(dir, ".wile", "secrets"), { recursive: true });
     setInject([
-      "OC",           // coding agent
-      "native",       // provider
-      "opencode/glm-4.7-free",  // model (index 2)
-      "local",        // repo source
-      "main",         // branch
+      "OC", // coding agent
+      "opencode/glm-4.7-free", // model (index 2)
+      "local", // repo source
+      "main", // branch
       ".wile/.env.project",
-      12
+      12,
     ]);
 
     try {
@@ -60,67 +56,6 @@ test("config writes OpenCode with native provider and GLM model", async () => {
 
     const env = await readEnvFile(join(dir, ".wile", "secrets", ".env"));
     expect(env.CODING_AGENT).toBe("OC");
-    expect(env.OC_PROVIDER).toBe("native");
     expect(env.OC_MODEL).toBe("opencode/glm-4.7-free");
-    expect(env.OC_OPENROUTER_API_KEY).toBeUndefined();
-  });
-});
-
-test("config writes OpenCode with openrouter provider", async () => {
-  await withTempDir(async (dir) => {
-    await mkdir(join(dir, ".wile", "secrets"), { recursive: true });
-    setInject([
-      "OC",           // coding agent
-      "openrouter",   // provider
-      "sk-or-test",   // api key
-      "glm-4.7",      // model
-      "github",       // repo source
-      "gh-token",     // github token
-      "https://github.com/acme/test",
-      "main",
-      ".wile/.env.project",
-      12
-    ]);
-
-    try {
-      await runConfig();
-    } finally {
-      clearInject();
-    }
-
-    const env = await readEnvFile(join(dir, ".wile", "secrets", ".env"));
-    expect(env.CODING_AGENT).toBe("OC");
-    expect(env.OC_PROVIDER).toBe("openrouter");
-    expect(env.OC_MODEL).toBe("glm-4.7");
-    expect(env.OC_OPENROUTER_API_KEY).toBe("sk-or-test");
-  });
-});
-
-test("config writes OpenCode with openrouter and local repo", async () => {
-  await withTempDir(async (dir) => {
-    await mkdir(join(dir, ".wile", "secrets"), { recursive: true });
-    setInject([
-      "OC",           // coding agent
-      "openrouter",   // provider
-      "sk-or-key",    // api key
-      "glm-4.7",      // model
-      "local",        // repo source
-      "main",         // branch
-      ".wile/.env.project",
-      25
-    ]);
-
-    try {
-      await runConfig();
-    } finally {
-      clearInject();
-    }
-
-    const env = await readEnvFile(join(dir, ".wile", "secrets", ".env"));
-    expect(env.CODING_AGENT).toBe("OC");
-    expect(env.OC_PROVIDER).toBe("openrouter");
-    expect(env.OC_MODEL).toBe("glm-4.7");
-    expect(env.OC_OPENROUTER_API_KEY).toBe("sk-or-key");
-    expect(env.WILE_REPO_SOURCE).toBe("local");
   });
 });

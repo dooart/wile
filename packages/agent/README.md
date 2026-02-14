@@ -110,23 +110,22 @@ For UI work, tell the agent how to verify:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `CODING_AGENT` | No | `CC` (Claude Code, default), `GC` (Gemini CLI), `OC` (OpenCode via OpenRouter), or `CX` (Codex CLI) |
+| `CODING_AGENT` | No | `CC` (Claude Code, default), `GC` (Gemini CLI), `OC` (OpenCode native/free models), or `CX` (Codex CLI) |
 | `CC_CLAUDE_CODE_OAUTH_TOKEN` | Yes* | OAuth token from `claude setup-token` (uses Pro/Max subscription) |
 | `CC_ANTHROPIC_API_KEY` | Yes* | API key (uses API credits - alternative to OAuth) |
 | `GEMINI_OAUTH_CREDS_B64` | Yes (GC)* | Base64 OAuth creds from `~/.gemini/oauth_creds.json` (uses Google account) |
 | `GEMINI_API_KEY` | Yes (GC)* | Gemini API key (uses API credits - alternative to OAuth) |
-| `OC_OPENROUTER_API_KEY` | Yes (OC) | OpenRouter API key for OpenCode |
-| `OC_MODEL` | Yes (OC) | OpenRouter model id (set `glm-4.7` to target `openrouter/z-ai/glm-4.7`) |
+| `OC_MODEL` | Yes (OC) | OpenCode native model id (default: `opencode/kimi-k2.5-free`) |
 | `CODEX_AUTH_JSON_B64` | Yes (CX)* | Base64 of `~/.codex/auth.json` from `codex login` (uses ChatGPT subscription) |
 | `CODEX_API_KEY` | Yes (CX)* | OpenAI API key (uses API credits - alternative to auth.json) |
-| `GEMINI_MODEL` | No (GC) | Gemini model name (default: `auto-gemini-3`) |
+| `GEMINI_MODEL` | No (GC) | Gemini model name (default: `gemini-3-pro-preview`) |
 | `WILE_REPO_SOURCE` | No | `github` (default) or `local` |
 | `GITHUB_TOKEN` | Yes (github) | GitHub PAT with repo access |
 | `GITHUB_REPO_URL` | Yes (github) | HTTPS URL to repository |
 | `BRANCH_NAME` | Yes (github) | Branch to work on |
 | `MAX_ITERATIONS` | No | Max loops (default: 25) |
-| `CC_CLAUDE_MODEL` | No | Claude model alias/name (default: sonnet) |
-| `CODEX_MODEL` | No (CX) | Codex model name (defaults to Codex CLI default) |
+| `CC_CLAUDE_MODEL` | No | Claude model alias/name (default: `opus`) |
+| `CODEX_MODEL` | No (CX) | Codex model name (default: `gpt-5.3-codex`) |
 
 *Either `CC_CLAUDE_CODE_OAUTH_TOKEN` or `CC_ANTHROPIC_API_KEY` is required when `CODING_AGENT=CC`.  
 *Either `GEMINI_OAUTH_CREDS_B64` or `GEMINI_API_KEY` is required when `CODING_AGENT=GC`.  

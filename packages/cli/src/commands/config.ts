@@ -4,6 +4,12 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join, resolve, isAbsolute } from "node:path";
 import { homedir } from "node:os";
+import {
+  splitEnv,
+  toEnvString,
+  type EnvFileKey,
+  type KnownEnv,
+} from "../lib/env-schema";
 
 const prdExample = {
   stories: [
@@ -17,10 +23,10 @@ const prdExample = {
         "src/main.tsx renders App component",
         "src/App.tsx exists with basic structure",
         "npm run dev starts dev server on port 5173",
-        "npm run build produces dist/ folder"
+        "npm run build produces dist/ folder",
       ],
       dependsOn: [],
-      status: "pending"
+      status: "pending",
     },
     {
       id: 2,
@@ -32,10 +38,10 @@ const prdExample = {
         "Grid uses CSS Grid layout",
         "Each square is 100x100 pixels",
         "Board is centered on page",
-        "Squares have visible borders"
+        "Squares have visible borders",
       ],
       dependsOn: [1],
-      status: "pending"
+      status: "pending",
     },
     {
       id: 3,
@@ -47,10 +53,10 @@ const prdExample = {
         "Pattern continues alternating",
         "X displayed in blue color",
         "O displayed in red color",
-        "Cannot click already-filled square"
+        "Cannot click already-filled square",
       ],
       dependsOn: [2],
-      status: "pending"
+      status: "pending",
     },
     {
       id: 4,
@@ -62,10 +68,10 @@ const prdExample = {
         "Detects diagonal wins (2 diagonals)",
         "Shows 'X Wins!' or 'O Wins!' message when won",
         "Winning message appears above the board",
-        "No more moves allowed after win"
+        "No more moves allowed after win",
       ],
       dependsOn: [3],
-      status: "pending"
+      status: "pending",
     },
     {
       id: 5,
@@ -76,10 +82,10 @@ const prdExample = {
         "Reset button appears below the board",
         "Clicking reset clears all squares",
         "Reset sets turn back to X",
-        "Reset clears any win/draw message"
+        "Reset clears any win/draw message",
       ],
       dependsOn: [4],
-      status: "pending"
+      status: "pending",
     },
     {
       id: 6,
@@ -89,20 +95,18 @@ const prdExample = {
         "Shows 'Current turn: X' or 'Current turn: O' above board",
         "Updates after each move",
         "Hidden when game is won or drawn",
-        "X indicator in blue, O indicator in red"
+        "X indicator in blue, O indicator in red",
       ],
       dependsOn: [3],
-      status: "pending"
-    }
-  ]
+      status: "pending",
+    },
+  ],
 };
 
 const tips = {
   oauth:
     "Tip: run 'claude setup-token' on your machine to generate an OAuth token (uses Pro/Max subscription).",
   apiKey: "Tip: create an Anthropic API key in the console (uses API credits).",
-  openrouter:
-    "Tip: create an OpenRouter API key at https://openrouter.ai/keys (pay per token).",
   github:
     "Tip: use a GitHub Personal Access Token (fine-grained recommended). Create at https://github.com/settings/tokens?type=beta with Contents (read/write) and Metadata (read).",
   geminiOauth:
@@ -116,11 +120,327 @@ const tips = {
 };
 
 const nativeOcModels = [
-  { title: "Grok Code Fast 1 (recommended)", value: "opencode/grok-code" },
+  { title: "Kimi K2.5 Free (recommended)", value: "opencode/kimi-k2.5-free" },
+  { title: "MiniMax 2.5", value: "opencode/minimax-m2.5-free" },
   { title: "Big Pickle", value: "opencode/big-pickle" },
-  { title: "GLM-4.7", value: "opencode/glm-4.7-free" },
-  { title: "MiniMax M2.1", value: "opencode/minimax-m2.1-free" },
 ];
+
+type CodingAgent = "CC" | "OC" | "GC" | "CX";
+type RepoSource = "github" | "local";
+type AgentAuthMethod = "oauth" | "apiKey";
+
+type NonInteractiveConfig = {
+  codingAgent: CodingAgent;
+  repoSource: RepoSource;
+  branchName?: string;
+  envProjectPath?: string;
+  maxIterations?: number;
+  githubToken?: string;
+  repoUrl?: string;
+  ccAuthMethod?: AgentAuthMethod;
+  ccAuthValue?: string;
+  ccModel?: "sonnet" | "opus" | "haiku";
+  ocModel?: string;
+  gcAuthMethod?: AgentAuthMethod;
+  gcOauthPath?: string;
+  gcApiKey?: string;
+  gcModel?: string;
+  cxAuthMethod?: AgentAuthMethod;
+  cxAuthJsonPath?: string;
+  cxApiKey?: string;
+  cxModel?: string;
+};
+
+type RunConfigOptions = {
+  nonInteractive?: string | boolean;
+};
+
+const nonInteractiveKeys = new Set<keyof NonInteractiveConfig>([
+  "codingAgent",
+  "repoSource",
+  "branchName",
+  "envProjectPath",
+  "maxIterations",
+  "githubToken",
+  "repoUrl",
+  "ccAuthMethod",
+  "ccAuthValue",
+  "ccModel",
+  "ocModel",
+  "gcAuthMethod",
+  "gcOauthPath",
+  "gcApiKey",
+  "gcModel",
+  "cxAuthMethod",
+  "cxAuthJsonPath",
+  "cxApiKey",
+  "cxModel",
+]);
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const asNonEmptyString = (value: unknown): string | undefined => {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+};
+
+const renderNonInteractiveConfigHelp = () => {
+  const lines: string[] = [];
+  lines.push("# Wile non-interactive config");
+  lines.push("");
+  lines.push("Use one flag for both docs and config application:");
+  lines.push("- `bunx wile config --non-interactive` prints this help.");
+  lines.push(
+    "- `bunx wile config --non-interactive '<json>'` validates and applies config.",
+  );
+  lines.push(
+    "- Direct edits to `.wile/secrets/.env` are discouraged; prefer this command so validation runs before writing.",
+  );
+  lines.push("");
+  lines.push("The JSON payload is ideal to pass via `WILE_PROMPTS_INJECT`:");
+  lines.push("```bash");
+  lines.push(
+    "export WILE_PROMPTS_INJECT='{\"codingAgent\":\"OC\",\"repoSource\":\"local\",\"ocModel\":\"opencode/kimi-k2.5-free\",\"branchName\":\"main\",\"envProjectPath\":\".wile/.env.project\",\"maxIterations\":25}'",
+  );
+  lines.push("bunx wile config --non-interactive \"$WILE_PROMPTS_INJECT\"");
+  lines.push("```");
+  lines.push("");
+  lines.push("Required fields:");
+  lines.push("- Always: `codingAgent`, `repoSource`.");
+  lines.push("- If `repoSource=github`: `githubToken`, `repoUrl`.");
+  lines.push("- If `codingAgent=CC`: `ccAuthMethod`, `ccAuthValue`.");
+  lines.push("- If `codingAgent=OC`: `ocModel`.");
+  lines.push("- If `codingAgent=GC` and `gcAuthMethod=oauth`: `gcOauthPath`.");
+  lines.push("- If `codingAgent=GC` and `gcAuthMethod=apiKey`: `gcApiKey`.");
+  lines.push("- If `codingAgent=CX` and `cxAuthMethod=oauth`: `cxAuthJsonPath`.");
+  lines.push("- If `codingAgent=CX` and `cxAuthMethod=apiKey`: `cxApiKey`.");
+  lines.push("");
+  lines.push("Optional fields:");
+  lines.push("- `branchName` (default `main`)");
+  lines.push("- `envProjectPath` (default `.wile/.env.project`)");
+  lines.push("- `maxIterations` (default `25`)");
+  lines.push("- `ccModel` (`sonnet` | `opus` | `haiku`, default `opus`)");
+  lines.push("- `gcModel` (default `gemini-3-pro-preview`)");
+  lines.push("- `cxModel` (default `gpt-5.3-codex`)");
+  lines.push("");
+  lines.push("Example (GitHub + Claude OAuth):");
+  lines.push("```json");
+  lines.push("{");
+  lines.push('  "codingAgent": "CC",');
+  lines.push('  "repoSource": "github",');
+  lines.push('  "githubToken": "ghp_xxx",');
+  lines.push('  "repoUrl": "https://github.com/owner/repo",');
+  lines.push('  "branchName": "main",');
+  lines.push('  "ccAuthMethod": "oauth",');
+  lines.push('  "ccAuthValue": "claude_oauth_token",');
+  lines.push('  "ccModel": "opus",');
+  lines.push('  "maxIterations": 25');
+  lines.push("}");
+  lines.push("```");
+  lines.push("");
+  return lines.join("\n");
+};
+
+const parseNonInteractiveConfig = (
+  raw: string,
+): { config?: NonInteractiveConfig; errors: string[] } => {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return { errors: ["config is not valid JSON"] };
+  }
+
+  if (!isRecord(parsed)) {
+    return { errors: ["config must be a JSON object"] };
+  }
+
+  const errors: string[] = [];
+  for (const key of Object.keys(parsed)) {
+    if (!nonInteractiveKeys.has(key as keyof NonInteractiveConfig)) {
+      errors.push(`unknown key '${key}'`);
+    }
+  }
+
+  const codingAgentRaw = parsed.codingAgent;
+  const codingAgent =
+    codingAgentRaw === "CC" ||
+    codingAgentRaw === "OC" ||
+    codingAgentRaw === "GC" ||
+    codingAgentRaw === "CX"
+      ? codingAgentRaw
+      : undefined;
+  if (!codingAgent) {
+    errors.push("codingAgent must be one of: CC, OC, GC, CX");
+  }
+
+  const repoSourceRaw = parsed.repoSource;
+  const repoSource =
+    repoSourceRaw === "github" || repoSourceRaw === "local"
+      ? repoSourceRaw
+      : undefined;
+  if (!repoSource) {
+    errors.push("repoSource must be one of: github, local");
+  }
+
+  const branchName = asNonEmptyString(parsed.branchName);
+  const envProjectPath = asNonEmptyString(parsed.envProjectPath);
+  const githubToken = asNonEmptyString(parsed.githubToken);
+  const repoUrl = asNonEmptyString(parsed.repoUrl);
+  const ccAuthValue = asNonEmptyString(parsed.ccAuthValue);
+  const ocModel = asNonEmptyString(parsed.ocModel);
+  const gcOauthPath = asNonEmptyString(parsed.gcOauthPath);
+  const gcApiKey = asNonEmptyString(parsed.gcApiKey);
+  const gcModel = asNonEmptyString(parsed.gcModel);
+  const cxAuthJsonPath = asNonEmptyString(parsed.cxAuthJsonPath);
+  const cxApiKey = asNonEmptyString(parsed.cxApiKey);
+  const cxModel = asNonEmptyString(parsed.cxModel);
+
+  if (repoSource === "github") {
+    if (!githubToken) {
+      errors.push("githubToken is required when repoSource=github");
+    }
+    if (!repoUrl) {
+      errors.push("repoUrl is required when repoSource=github");
+    }
+  }
+
+  const ccAuthMethodRaw = parsed.ccAuthMethod;
+  const ccAuthMethod =
+    ccAuthMethodRaw === "oauth" || ccAuthMethodRaw === "apiKey"
+      ? ccAuthMethodRaw
+      : undefined;
+  const ccModelRaw = parsed.ccModel;
+  const ccModel =
+    ccModelRaw === "sonnet" || ccModelRaw === "opus" || ccModelRaw === "haiku"
+      ? ccModelRaw
+      : undefined;
+
+  const gcAuthMethodRaw = parsed.gcAuthMethod;
+  const gcAuthMethod =
+    gcAuthMethodRaw === "oauth" || gcAuthMethodRaw === "apiKey"
+      ? gcAuthMethodRaw
+      : undefined;
+
+  const cxAuthMethodRaw = parsed.cxAuthMethod;
+  const cxAuthMethod =
+    cxAuthMethodRaw === "oauth" || cxAuthMethodRaw === "apiKey"
+      ? cxAuthMethodRaw
+      : undefined;
+
+  if (codingAgent === "CC") {
+    if (!ccAuthMethod) {
+      errors.push("ccAuthMethod is required when codingAgent=CC");
+    }
+    if (!ccAuthValue) {
+      errors.push("ccAuthValue is required when codingAgent=CC");
+    }
+    if (parsed.ccModel !== undefined && !ccModel) {
+      errors.push("ccModel must be one of: sonnet, opus, haiku");
+    }
+  }
+
+  if (codingAgent === "OC" && !ocModel) {
+    errors.push("ocModel is required when codingAgent=OC");
+  }
+
+  if (codingAgent === "GC") {
+    if (!gcAuthMethod) {
+      errors.push("gcAuthMethod is required when codingAgent=GC");
+    } else if (gcAuthMethod === "oauth" && !gcOauthPath) {
+      errors.push("gcOauthPath is required when codingAgent=GC and gcAuthMethod=oauth");
+    } else if (gcAuthMethod === "apiKey" && !gcApiKey) {
+      errors.push("gcApiKey is required when codingAgent=GC and gcAuthMethod=apiKey");
+    }
+  }
+
+  if (codingAgent === "CX") {
+    if (!cxAuthMethod) {
+      errors.push("cxAuthMethod is required when codingAgent=CX");
+    } else if (cxAuthMethod === "oauth" && !cxAuthJsonPath) {
+      errors.push("cxAuthJsonPath is required when codingAgent=CX and cxAuthMethod=oauth");
+    } else if (cxAuthMethod === "apiKey" && !cxApiKey) {
+      errors.push("cxApiKey is required when codingAgent=CX and cxAuthMethod=apiKey");
+    }
+  }
+
+  const maxIterationsRaw = parsed.maxIterations;
+  let maxIterations: number | undefined;
+  if (maxIterationsRaw !== undefined) {
+    if (typeof maxIterationsRaw !== "number" || !Number.isFinite(maxIterationsRaw)) {
+      errors.push("maxIterations must be a number");
+    } else if (maxIterationsRaw <= 0) {
+      errors.push("maxIterations must be greater than 0");
+    } else {
+      maxIterations = Math.floor(maxIterationsRaw);
+    }
+  }
+
+  if (errors.length > 0 || !codingAgent || !repoSource) {
+    return { errors };
+  }
+
+  return {
+    config: {
+      codingAgent,
+      repoSource,
+      branchName,
+      envProjectPath,
+      maxIterations,
+      githubToken,
+      repoUrl,
+      ccAuthMethod,
+      ccAuthValue,
+      ccModel,
+      ocModel,
+      gcAuthMethod,
+      gcOauthPath,
+      gcApiKey,
+      gcModel,
+      cxAuthMethod,
+      cxAuthJsonPath,
+      cxApiKey,
+      cxModel,
+    },
+    errors: [],
+  };
+};
+
+const toPromptInjectValues = (config: NonInteractiveConfig): unknown[] => {
+  const values: unknown[] = [config.codingAgent];
+  if (config.codingAgent === "CC") {
+    values.push(config.ccAuthMethod, config.ccAuthValue, config.ccModel ?? "opus");
+  } else if (config.codingAgent === "OC") {
+    values.push(config.ocModel ?? "opencode/kimi-k2.5-free");
+  } else if (config.codingAgent === "GC") {
+    values.push(config.gcAuthMethod);
+    if (config.gcAuthMethod === "oauth") {
+      values.push(config.gcOauthPath);
+    } else {
+      values.push(config.gcApiKey);
+    }
+  } else {
+    values.push(config.cxAuthMethod);
+    if (config.cxAuthMethod === "oauth") {
+      values.push(config.cxAuthJsonPath);
+    } else {
+      values.push(config.cxApiKey);
+    }
+    values.push(config.cxModel ?? "gpt-5.3-codex");
+  }
+  values.push(config.repoSource);
+  if (config.repoSource === "github") {
+    values.push(config.githubToken, config.repoUrl);
+  }
+  values.push(config.branchName ?? "main");
+  values.push(config.envProjectPath ?? ".wile/.env.project");
+  values.push(config.maxIterations ?? 25);
+  return values;
+};
 
 const readEnvFile = async (path: string) => {
   if (!existsSync(path)) {
@@ -194,8 +514,8 @@ const maybeInject = () => {
 };
 
 const setIfDefined = (
-  env: Record<string, string>,
-  key: string,
+  env: KnownEnv,
+  key: EnvFileKey,
   value: string | undefined,
 ) => {
   if (value === undefined) {
@@ -204,40 +524,10 @@ const setIfDefined = (
   env[key] = value;
 };
 
-const toEnvString = (env: Record<string, string>) => {
-  const orderedKeys = [
-    "CODING_AGENT",
-    "WILE_REPO_SOURCE",
-    "WILE_ENV_PROJECT_PATH",
-    "GITHUB_TOKEN",
-    "GITHUB_REPO_URL",
-    "BRANCH_NAME",
-    "WILE_MAX_ITERATIONS",
-    "CC_CLAUDE_MODEL",
-    "CC_CLAUDE_CODE_OAUTH_TOKEN",
-    "CC_ANTHROPIC_API_KEY",
-    "OC_PROVIDER",
-    "OC_MODEL",
-    "OC_OPENROUTER_API_KEY",
-    "GEMINI_OAUTH_CREDS_B64",
-    "GEMINI_API_KEY",
-    "CODEX_AUTH_JSON_B64",
-    "CODEX_AUTH_JSON_PATH",
-    "CODEX_API_KEY",
-    "CODEX_MODEL",
-  ];
-  const orderedSet = new Set(orderedKeys);
-  const ordered = orderedKeys.filter((key) => key in env);
-  const rest = Object.keys(env)
-    .filter((key) => !orderedSet.has(key))
-    .sort();
-  const lines = [...ordered, ...rest].map((key) => `${key}=${env[key]}`);
-  return lines.join("\n") + "\n";
-};
-
 const resolvePath = (cwd: string, input: string) => {
-  const expanded =
-    input.startsWith("~") ? join(homedir(), input.slice(1)) : input;
+  const expanded = input.startsWith("~")
+    ? join(homedir(), input.slice(1))
+    : input;
   return isAbsolute(expanded) ? expanded : resolve(cwd, expanded);
 };
 
@@ -246,7 +536,29 @@ const readBase64File = async (path: string) => {
   return Buffer.from(contents).toString("base64");
 };
 
-export const runConfig = async () => {
+export const runConfig = async (options: RunConfigOptions = {}) => {
+  const nonInteractiveInput = options.nonInteractive;
+  if (nonInteractiveInput === true) {
+    process.stdout.write(renderNonInteractiveConfigHelp());
+    return true;
+  }
+
+  let nonInteractiveConfig: NonInteractiveConfig | undefined;
+  if (typeof nonInteractiveInput === "string") {
+    const parsed = parseNonInteractiveConfig(nonInteractiveInput);
+    if (!parsed.config) {
+      process.stdout.write(renderNonInteractiveConfigHelp());
+      process.stdout.write("\n");
+      console.error("Error: invalid non-interactive config.");
+      for (const error of parsed.errors) {
+        console.error(`- ${error}`);
+      }
+      return false;
+    }
+    nonInteractiveConfig = parsed.config;
+    prompts.inject(toPromptInjectValues(parsed.config));
+  }
+
   const cwd = process.cwd();
   const wileDir = join(cwd, ".wile");
   const secretsDir = join(wileDir, "secrets");
@@ -264,9 +576,13 @@ export const runConfig = async () => {
 
   await mkdir(secretsDir, { recursive: true });
 
-  maybeInject();
+  if (!nonInteractiveConfig) {
+    maybeInject();
+  }
 
-  const existingEnv = await readEnvFile(envPath);
+  const { known: existingEnv, extra: extraEnv } = splitEnv(
+    await readEnvFile(envPath),
+  );
 
   const codingAgentResponse = await prompt({
     type: "select",
@@ -288,17 +604,18 @@ export const runConfig = async () => {
             : 0,
   });
 
-  const codingAgent = codingAgentResponse.codingAgent as "CC" | "OC" | "GC" | "CX";
+  const codingAgent = codingAgentResponse.codingAgent as
+    | "CC"
+    | "OC"
+    | "GC"
+    | "CX";
 
   let authMethod: "oauth" | "apiKey" | null = null;
   let geminiAuthMethod: "oauth" | "apiKey" | null = null;
   let codexAuthMethod: "oauth" | "apiKey" | null = null;
   let authValueResponse: { authValue?: string } = {};
   let defaultModelResponse: { model?: string } = {};
-  let ocProviderResponse: { ocProvider?: string } = {};
-  let ocKeyResponse: { ocKey?: string } = {};
   let ocModelResponse: { ocModel?: string } = {};
-  let ocNativeModelResponse: { ocNativeModel?: string } = {};
   let geminiOauthPathResponse: { geminiOauthPath?: string } = {};
   let geminiApiKeyResponse: { geminiApiKey?: string } = {};
   let codexAuthJsonPathResponse: { codexAuthJsonPath?: string } = {};
@@ -358,53 +675,17 @@ export const runConfig = async () => {
             : 1,
     });
   } else if (codingAgent === "OC") {
-    const providerDefault = existingEnv.OC_PROVIDER === "openrouter" ? "openrouter" : "native";
+    const existingNativeIdx = nativeOcModels.findIndex(
+      (m) => m.value === existingEnv.OC_MODEL,
+    );
 
-    ocProviderResponse = await prompt({
+    ocModelResponse = await prompt({
       type: "select",
-      name: "ocProvider",
-      message: "OpenCode provider",
-      choices: [
-        { title: "Native free models (no API key)", value: "native" },
-        { title: "OpenRouter (pay per token)", value: "openrouter" },
-      ],
-      initial: providerDefault === "openrouter" ? 1 : 0,
+      name: "ocModel",
+      message: "OpenCode model (free)",
+      choices: nativeOcModels,
+      initial: existingNativeIdx >= 0 ? existingNativeIdx : 0,
     });
-
-    const ocProvider = ocProviderResponse.ocProvider as "native" | "openrouter";
-
-    if (ocProvider === "openrouter") {
-      console.log("");
-      console.log(tips.openrouter);
-      console.log("");
-
-      ocKeyResponse = await prompt({
-        type: "password",
-        name: "ocKey",
-        message: "OpenRouter API key (press enter to keep existing)",
-        initial: existingEnv.OC_OPENROUTER_API_KEY ?? "",
-      });
-
-      ocModelResponse = await prompt({
-        type: "select",
-        name: "ocModel",
-        message: "OpenCode model (OpenRouter)",
-        choices: [{ title: "glm-4.7", value: "glm-4.7" }],
-        initial: 0,
-      });
-    } else {
-      const existingNativeIdx = nativeOcModels.findIndex(
-        (m) => m.value === existingEnv.OC_MODEL,
-      );
-
-      ocNativeModelResponse = await prompt({
-        type: "select",
-        name: "ocNativeModel",
-        message: "OpenCode model (free)",
-        choices: nativeOcModels,
-        initial: existingNativeIdx >= 0 ? existingNativeIdx : 0,
-      });
-    }
   } else if (codingAgent === "GC") {
     const geminiAuthDefault = existingEnv.GEMINI_OAUTH_CREDS_B64
       ? "oauth"
@@ -423,9 +704,13 @@ export const runConfig = async () => {
       initial: geminiAuthDefault === "apiKey" ? 1 : 0,
     });
 
-    geminiAuthMethod = geminiAuthResponse.geminiAuthMethod as "oauth" | "apiKey";
+    geminiAuthMethod = geminiAuthResponse.geminiAuthMethod as
+      | "oauth"
+      | "apiKey";
     console.log("");
-    console.log(geminiAuthMethod === "oauth" ? tips.geminiOauth : tips.geminiApiKey);
+    console.log(
+      geminiAuthMethod === "oauth" ? tips.geminiOauth : tips.geminiApiKey,
+    );
     console.log("");
 
     if (geminiAuthMethod === "oauth") {
@@ -464,7 +749,9 @@ export const runConfig = async () => {
 
     codexAuthMethod = codexAuthResponse.codexAuthMethod as "oauth" | "apiKey";
     console.log("");
-    console.log(codexAuthMethod === "oauth" ? tips.codexOauth : tips.codexApiKey);
+    console.log(
+      codexAuthMethod === "oauth" ? tips.codexOauth : tips.codexApiKey,
+    );
     console.log("");
 
     if (codexAuthMethod === "oauth") {
@@ -488,7 +775,7 @@ export const runConfig = async () => {
       type: "text",
       name: "codexModel",
       message: "Codex model (press enter to keep existing)",
-      initial: existingEnv.CODEX_MODEL ?? "",
+      initial: existingEnv.CODEX_MODEL ?? "gpt-5.3-codex",
     });
   }
 
@@ -570,33 +857,40 @@ export const runConfig = async () => {
     codingAgent === "CC"
       ? coalesceValue(authValueResponse.authValue, authFallback)
       : undefined;
-  const ocProvider =
-    codingAgent === "OC"
-      ? (ocProviderResponse.ocProvider as "native" | "openrouter") ?? "native"
-      : undefined;
-  const ocKey =
-    codingAgent === "OC" && ocProvider === "openrouter"
-      ? coalesceValue(ocKeyResponse.ocKey, existingEnv.OC_OPENROUTER_API_KEY)
-      : undefined;
   const ocModel =
     codingAgent === "OC"
-      ? ocProvider === "openrouter"
-        ? coalesceValue(ocModelResponse.ocModel, existingEnv.OC_MODEL ?? "glm-4.7")
-        : coalesceValue(ocNativeModelResponse.ocNativeModel, existingEnv.OC_MODEL ?? "opencode/grok-code")
+      ? coalesceValue(
+          ocModelResponse.ocModel,
+          existingEnv.OC_MODEL ?? "opencode/kimi-k2.5-free",
+        )
       : undefined;
   const geminiApiKey =
     codingAgent === "GC"
-      ? coalesceValue(geminiApiKeyResponse.geminiApiKey, existingEnv.GEMINI_API_KEY)
+      ? coalesceValue(
+          geminiApiKeyResponse.geminiApiKey,
+          existingEnv.GEMINI_API_KEY,
+        )
+      : undefined;
+  const geminiModel =
+    codingAgent === "GC"
+      ? coalesceValue(
+          nonInteractiveConfig?.gcModel,
+          existingEnv.GEMINI_MODEL ?? "gemini-3-pro-preview",
+        )
       : undefined;
   let geminiOauthCredsB64: string | undefined;
   if (codingAgent === "GC" && geminiAuthMethod === "oauth") {
-    const configuredPath = coalesceValue(geminiOauthPathResponse.geminiOauthPath);
+    const configuredPath = coalesceValue(
+      geminiOauthPathResponse.geminiOauthPath,
+    );
     if (configuredPath) {
       const resolvedPath = resolvePath(cwd, configuredPath);
       try {
         geminiOauthCredsB64 = await readBase64File(resolvedPath);
       } catch {
-        throw new Error(`Failed to read Gemini OAuth creds file: ${resolvedPath}`);
+        throw new Error(
+          `Failed to read Gemini OAuth creds file: ${resolvedPath}`,
+        );
       }
     } else {
       geminiOauthCredsB64 = existingEnv.GEMINI_OAUTH_CREDS_B64;
@@ -606,12 +900,14 @@ export const runConfig = async () => {
     codingAgent === "CX"
       ? coalesceValue(
           codexApiKeyResponse.codexApiKey,
-          existingEnv.CODEX_API_KEY ?? existingEnv.OPENAI_API_KEY
+          existingEnv.CODEX_API_KEY ?? existingEnv.OPENAI_API_KEY,
         )
       : undefined;
   let codexAuthJsonB64: string | undefined;
   if (codingAgent === "CX" && codexAuthMethod === "oauth") {
-    const configuredPath = coalesceValue(codexAuthJsonPathResponse.codexAuthJsonPath);
+    const configuredPath = coalesceValue(
+      codexAuthJsonPathResponse.codexAuthJsonPath,
+    );
     if (configuredPath) {
       const resolvedPath = resolvePath(cwd, configuredPath);
       try {
@@ -625,7 +921,10 @@ export const runConfig = async () => {
   }
   const codexModel =
     codingAgent === "CX"
-      ? coalesceValue(codexModelResponse.codexModel, existingEnv.CODEX_MODEL)
+      ? coalesceValue(
+          codexModelResponse.codexModel,
+          existingEnv.CODEX_MODEL ?? "gpt-5.3-codex",
+        )
       : undefined;
   const githubToken =
     repoSource === "github"
@@ -645,7 +944,7 @@ export const runConfig = async () => {
     existingEnv.BRANCH_NAME ?? "main",
   );
 
-  const envOut: Record<string, string> = { ...existingEnv };
+  const envOut: KnownEnv = { ...existingEnv };
   envOut.CODING_AGENT = codingAgent;
   envOut.WILE_REPO_SOURCE = repoSource;
   envOut.WILE_ENV_PROJECT_PATH = envProjectPathValue;
@@ -666,17 +965,14 @@ export const runConfig = async () => {
       setIfDefined(envOut, "CC_ANTHROPIC_API_KEY", authValue);
     }
   } else if (codingAgent === "OC") {
-    setIfDefined(envOut, "OC_PROVIDER", ocProvider ?? "native");
-    setIfDefined(envOut, "OC_MODEL", ocModel ?? "opencode/grok-code");
-    if (ocProvider === "openrouter") {
-      setIfDefined(envOut, "OC_OPENROUTER_API_KEY", ocKey);
-    }
+    setIfDefined(envOut, "OC_MODEL", ocModel ?? "opencode/kimi-k2.5-free");
   } else if (codingAgent === "GC") {
     if (geminiAuthMethod === "apiKey") {
       setIfDefined(envOut, "GEMINI_API_KEY", geminiApiKey);
     } else {
       setIfDefined(envOut, "GEMINI_OAUTH_CREDS_B64", geminiOauthCredsB64);
     }
+    setIfDefined(envOut, "GEMINI_MODEL", geminiModel);
   } else if (codingAgent === "CX") {
     if (codexAuthMethod === "apiKey") {
       setIfDefined(envOut, "CODEX_API_KEY", codexApiKey);
@@ -686,7 +982,7 @@ export const runConfig = async () => {
     setIfDefined(envOut, "CODEX_MODEL", codexModel);
   }
 
-  await writeFile(envPath, toEnvString(envOut));
+  await writeFile(envPath, toEnvString(envOut, extraEnv));
 
   await ensureGitignore(gitignorePath);
 
@@ -731,7 +1027,7 @@ export const runConfig = async () => {
       "# PRD authoring guidance for Wile",
       "",
       "Wile reads `.wile/prd.json` each iteration, picks the first runnable story in `stories`",
-      "where `status: \"pending\"`, implements exactly one story, marks it `done`, logs",
+      'where `status: "pending"`, implements exactly one story, marks it `done`, logs',
       "progress, and repeats until all stories are done. The PRD should be written so",
       "each story is independently actionable and verifiable.",
       "",
@@ -745,7 +1041,7 @@ export const runConfig = async () => {
       "- Never reuse IDs listed in any story's `compactedFrom` ranges.",
       '- Avoid vague terms like "should" or "nice".',
       "- Keep stories small enough to finish in one iteration.",
-      "- Use `status: \"pending\"` for work not done yet and `status: \"done\"` only after all acceptance criteria are verified.",
+      '- Use `status: "pending"` for work not done yet and `status: "done"` only after all acceptance criteria are verified.',
       "- Use `dependsOn` to model prerequisites by story ID.",
       "- `dependsOn` must reference active story IDs only; never reference compacted IDs.",
       '- When compacting completed stories, add a canonical range string like `compactedFrom: "1..3,5"` to the summary done story.',
@@ -771,4 +1067,5 @@ export const runConfig = async () => {
   if (!hadPreflight) {
     console.log("Created .wile/preflight.md for preflight checks (optional).");
   }
+  return true;
 };
