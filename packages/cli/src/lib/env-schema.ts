@@ -262,6 +262,9 @@ export const renderEnvDocMarkdown = () => {
   lines.push("");
   lines.push("- If `WILE_REPO_SOURCE=local`, GitHub keys are not required.");
   lines.push("- For each agent, only one valid auth path is required.");
+  lines.push(
+    "- Optional custom image customization lives in `.wile/Dockerfile` and should extend `wile-agent:base`."
+  );
   lines.push("- Keep `.wile/secrets/.env` out of version control.");
   lines.push("");
   return lines.join("\n");

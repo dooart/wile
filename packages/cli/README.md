@@ -39,6 +39,7 @@ This creates:
 Set `WILE_REPO_SOURCE=local` in `.wile/secrets/.env` to run against the current directory without GitHub.
 When `WILE_REPO_SOURCE=local`, GitHub credentials are optional.
 Set `WILE_MAX_ITERATIONS` in `.wile/secrets/.env` to change the default loop limit (default: 25).
+Optionally customize `.wile/Dockerfile` (created by `wile config`) to extend `wile-agent:base`.
 Set `CODING_AGENT=CX` to use Codex CLI, `CODING_AGENT=OC` to use OpenCode (free native models), `CODING_AGENT=GC` to use Gemini CLI, otherwise `CODING_AGENT=CC` uses Claude Code.
 
 ## Run Wile

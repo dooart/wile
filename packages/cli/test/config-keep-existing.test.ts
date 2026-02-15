@@ -125,3 +125,38 @@ test("config preserves existing additional instructions", async () => {
     expect(contents).toBe("<!--\nCustom additional\n-->\n- Keep this line\n");
   });
 });
+
+test("config preserves existing Dockerfile customizations", async () => {
+  await withTempDir(async (dir) => {
+    const wileDir = join(dir, ".wile");
+    const secretsDir = join(wileDir, "secrets");
+    await mkdir(secretsDir, { recursive: true });
+    const dockerfileContents = [
+      "ARG WILE_BASE_IMAGE=wile-agent:base",
+      "FROM ${WILE_BASE_IMAGE}",
+      "RUN echo custom",
+      ""
+    ].join("\n");
+    await writeFile(join(wileDir, "Dockerfile"), dockerfileContents);
+
+    setInject([
+      "CC",
+      "oauth",
+      "oauth-token",
+      "sonnet",
+      "local",
+      "main",
+      ".wile/.env.project",
+      12
+    ]);
+
+    try {
+      await runConfig();
+    } finally {
+      clearInject();
+    }
+
+    const contents = await readFile(join(wileDir, "Dockerfile"), "utf8");
+    expect(contents).toBe(dockerfileContents);
+  });
+});

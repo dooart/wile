@@ -39,6 +39,7 @@ export const runCompact = async (options: {
     console.log(`- WILE_AGENT_DIR: ${process.env.WILE_AGENT_DIR ?? "(unset)"}`);
     console.log(`- codingAgent: ${config.codingAgent}`);
     console.log(`- repoSource: ${config.repoSource}`);
+    console.log(`- customDockerfile: ${config.agentDockerfile ?? "(unset)"}`);
     console.log(`- githubRepoUrl: ${config.githubRepoUrl || "(empty)"}`);
     console.log(`- branchName: ${config.branchName || "(empty)"}`);
   }
@@ -66,7 +67,10 @@ export const runCompact = async (options: {
 
   const agentDir = resolveAgentDir();
   const resolvedIterations = options.maxIterations || "1";
-  buildAgentImage(agentDir);
+  buildAgentImage(agentDir, {
+    projectDir: cwd,
+    customDockerfilePath: config.agentDockerfile
+  });
 
   const dockerArgs = buildDockerArgs(
     { ...options, maxIterations: resolvedIterations },

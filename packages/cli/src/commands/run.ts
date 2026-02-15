@@ -5,6 +5,9 @@ import { fileURLToPath } from "node:url";
 import { readWileConfig } from "../lib/config";
 import { readAndValidatePrd } from "../lib/prd";
 
+const LOCAL_AGENT_IMAGE = "wile-agent:local";
+const BASE_AGENT_IMAGE = "wile-agent:base";
+
 const findAgentDir = (startDir: string) => {
   let current = startDir;
   while (true) {
@@ -42,13 +45,57 @@ export const validatePrdLocation = (paths: { prdPath: string }) => {
   }
 };
 
-export const buildAgentImage = (agentDir: string) => {
-  const result = spawnSync("docker", ["build", "-t", "wile-agent:local", agentDir], {
-    stdio: "inherit"
-  });
+const runDockerBuild = (args: string[], errorMessage: string) => {
+  const result = spawnSync("docker", args, { stdio: "inherit" });
   if (result.status !== 0) {
-    throw new Error("Docker build failed.");
+    throw new Error(errorMessage);
   }
+};
+
+const validateCustomDockerfile = (dockerfilePath: string) => {
+  const contents = readFileSync(dockerfilePath, "utf8");
+  if (contents.includes("WILE_BASE_IMAGE") || contents.includes(BASE_AGENT_IMAGE)) {
+    return;
+  }
+
+  throw new Error(
+    [
+      `Custom Dockerfile must extend ${BASE_AGENT_IMAGE}.`,
+      `Update ${dockerfilePath} to include either:`,
+      `- ARG WILE_BASE_IMAGE=${BASE_AGENT_IMAGE} + FROM \${WILE_BASE_IMAGE}`,
+      `- FROM ${BASE_AGENT_IMAGE}`
+    ].join("\n")
+  );
+};
+
+export const buildAgentImage = (
+  agentDir: string,
+  options: { projectDir: string; customDockerfilePath?: string }
+) => {
+  if (!options.customDockerfilePath) {
+    runDockerBuild(["build", "-t", LOCAL_AGENT_IMAGE, agentDir], "Docker build failed.");
+    return;
+  }
+
+  validateCustomDockerfile(options.customDockerfilePath);
+
+  runDockerBuild(
+    ["build", "-t", BASE_AGENT_IMAGE, agentDir],
+    "Docker base image build failed."
+  );
+  runDockerBuild(
+    [
+      "build",
+      "-t",
+      LOCAL_AGENT_IMAGE,
+      "--build-arg",
+      `WILE_BASE_IMAGE=${BASE_AGENT_IMAGE}`,
+      "-f",
+      options.customDockerfilePath,
+      options.projectDir
+    ],
+    "Custom Docker build failed."
+  );
 };
 
 export const resolveAgentDir = () => {
@@ -189,7 +236,7 @@ export const buildDockerArgs = (
     dockerArgs.push("-v", `${additionalInstructionsPath}:${additionalInstructionsPath}`);
   }
 
-  dockerArgs.push("wile-agent:local");
+  dockerArgs.push(LOCAL_AGENT_IMAGE);
   return dockerArgs;
 };
 
@@ -220,6 +267,7 @@ export const runWile = async (options: {
     console.log(`- WILE_AGENT_DIR: ${process.env.WILE_AGENT_DIR ?? "(unset)"}`);
     console.log(`- codingAgent: ${config.codingAgent}`);
     console.log(`- repoSource: ${config.repoSource}`);
+    console.log(`- customDockerfile: ${config.agentDockerfile ?? "(unset)"}`);
     console.log(`- githubRepoUrl: ${config.githubRepoUrl || "(empty)"}`);
     console.log(`- branchName: ${config.branchName || "(empty)"}`);
   }
@@ -250,7 +298,10 @@ export const runWile = async (options: {
 
   const agentDir = resolveAgentDir();
   const resolvedIterations = options.maxIterations || config.maxIterations || "25";
-  buildAgentImage(agentDir);
+  buildAgentImage(agentDir, {
+    projectDir: cwd,
+    customDockerfilePath: config.agentDockerfile
+  });
 
   const dockerArgs = buildDockerArgs(
     { ...options, maxIterations: resolvedIterations },

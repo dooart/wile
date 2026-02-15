@@ -18,6 +18,7 @@ export type WileConfig = {
   githubRepoUrl: string;
   branchName: string;
   repoSource: "github" | "local";
+  agentDockerfile?: string;
   ccClaudeModel?: string;
   maxIterations?: string;
   ccClaudeCodeOauthToken?: string;
@@ -63,6 +64,14 @@ const resolveEnvProjectPath = (cwd: string, configured?: string) => {
   return defaultPath;
 };
 
+const resolveAgentDockerfilePath = (cwd: string) => {
+  const defaultPath = join(cwd, ".wile", "Dockerfile");
+  if (existsSync(defaultPath)) {
+    return defaultPath;
+  }
+  return undefined;
+};
+
 const parseEnvFile = (path: string) => {
   if (!existsSync(path)) {
     return {} as Record<string, string>;
@@ -90,6 +99,7 @@ export const readWileConfig = (options: { cwd?: string; validate?: boolean } = {
 
   const { known: env } = splitEnv(parseEnvFile(paths.envPath));
   const envProjectPath = resolveEnvProjectPath(options.cwd ?? process.cwd(), env.WILE_ENV_PROJECT_PATH);
+  const agentDockerfile = resolveAgentDockerfilePath(options.cwd ?? process.cwd());
   const envProject = parseEnvFile(envProjectPath);
 
   const repoSource = (env.WILE_REPO_SOURCE as "github" | "local") || "github";
@@ -158,6 +168,7 @@ export const readWileConfig = (options: { cwd?: string; validate?: boolean } = {
       githubRepoUrl: env.GITHUB_REPO_URL ?? "",
       branchName: env.BRANCH_NAME ?? "",
       repoSource,
+      agentDockerfile,
       ccClaudeModel: env.CC_CLAUDE_MODEL,
       maxIterations: env.WILE_MAX_ITERATIONS,
       ccClaudeCodeOauthToken: env.CC_CLAUDE_CODE_OAUTH_TOKEN,

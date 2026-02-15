@@ -223,6 +223,9 @@ const renderNonInteractiveConfigHelp = () => {
   lines.push("- `branchName` (default `main`)");
   lines.push("- `envProjectPath` (default `.wile/.env.project`)");
   lines.push("- `maxIterations` (default `25`)");
+  lines.push(
+    "- Optional custom Dockerfile: edit `.wile/Dockerfile` (created automatically by `wile config`)"
+  );
   lines.push("- `ccModel` (`sonnet` | `opus` | `haiku`, default `opus`)");
   lines.push("- `gcModel` (default `gemini-3-pro-preview`)");
   lines.push("- `cxModel` (default `gpt-5.3-codex`)");
@@ -573,6 +576,7 @@ export const runConfig = async (options: RunConfigOptions = {}) => {
   );
   const preflightPath = join(wileDir, "preflight.md");
   const agentsPath = join(wileDir, "AGENTS.md");
+  const dockerfilePath = join(wileDir, "Dockerfile");
 
   await mkdir(secretsDir, { recursive: true });
 
@@ -1019,6 +1023,20 @@ export const runConfig = async (options: RunConfigOptions = {}) => {
   await writeIfMissing(
     preflightPath,
     '<!--\nUse bullet points for preflight checks, e.g.\n- Confirm SUPABASE_DB_URL is set.\n- Run `supabase db reset --db-url "$SUPABASE_DB_URL"`.\n-->\n',
+  );
+  await writeIfMissing(
+    dockerfilePath,
+    [
+      "ARG WILE_BASE_IMAGE=wile-agent:base",
+      "FROM ${WILE_BASE_IMAGE}",
+      "",
+      "# Optional: install additional system dependencies for your project.",
+      "# Example:",
+      "# USER root",
+      "# RUN apt-get update && apt-get install -y --no-install-recommends jq && rm -rf /var/lib/apt/lists/*",
+      "# USER wile",
+      ""
+    ].join("\n"),
   );
 
   await writeIfMissing(
