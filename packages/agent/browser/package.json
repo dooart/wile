@@ -1,0 +1,9 @@
+{
+  "name": "wile-isolated-browser",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "playwright-core": "1.64.1"
+  },
+  "version": "0.0.0"
+}

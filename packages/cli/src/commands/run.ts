@@ -186,6 +186,10 @@ export const buildDockerArgs = (
   extraEnv: string[] = []
 ) => {
   const dockerArgs = ["run", "--rm"];
+  const browserNetwork = process.env.WILE_BROWSER_NETWORK;
+  if (browserNetwork) {
+    dockerArgs.push("--network", browserNetwork, "--network-alias", "wile-agent");
+  }
 
   if (options.test) {
     dockerArgs.push(
@@ -224,6 +228,11 @@ export const buildDockerArgs = (
   const envFiles = [paths.envPath, paths.envProjectPath].filter((path) => existsSync(path));
   for (const envFile of envFiles) {
     dockerArgs.push("--env-file", envFile);
+  }
+
+  // This endpoint belongs to the disposable browser launcher, never the agent's local browser.
+  if (process.env.AGENT_BROWSER_CDP) {
+    dockerArgs.push("-e", `AGENT_BROWSER_CDP=${process.env.AGENT_BROWSER_CDP}`);
   }
 
   for (const envEntry of extraEnv) {
