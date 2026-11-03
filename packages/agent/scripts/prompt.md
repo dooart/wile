@@ -135,11 +135,11 @@ When acceptance criteria mention UI verification, visual checks, or "verify at l
 
 ### Take a Screenshot
 ```bash
-cd /tmp && npm init -y && npm install playwright
+cd /tmp && npm init -y && npm install --ignore-scripts playwright@1.64.1
 node -e "
 const { chromium } = require('playwright');
 (async () => {
-  const browser = await chromium.launch();
+  const browser = await chromium.launch({ channel: 'chrome', chromiumSandbox: true });
   const page = await browser.newPage();
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('http://localhost:3000/your-page');
@@ -156,7 +156,7 @@ const { chromium } = require('playwright');
 node -e "
 const { chromium } = require('playwright');
 (async () => {
-  const browser = await chromium.launch();
+  const browser = await chromium.launch({ channel: 'chrome', chromiumSandbox: true });
   const page = await browser.newPage();
   await page.goto('http://localhost:3000/login');
   await page.waitForLoadState('networkidle');
@@ -178,3 +178,5 @@ If something goes wrong:
 4. Document the issue in the progress log
 
 Do NOT skip to the next story if the current one fails. Fix it first.
+
+Browser security: direct Playwright in this agent container is for trusted loopback application tests only. For open-web or user-supplied URLs use `agent-browser` with `AGENT_BROWSER_CDP` pointing at a separately isolated, patched sandboxed browser. Do not install another browser, bypass the wrapper, reuse a personal profile or mount credentials/home/project write access into that browser environment. See root AGENTS.md.

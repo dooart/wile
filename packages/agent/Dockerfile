@@ -28,17 +28,19 @@ RUN mkdir -p /opt/agent-browser \
     && cat > /opt/agent-browser/package.json <<'JSON'
 {
   "name": "agent-browser-install",
-  "private": true
+  "private": true,
+  "overrides": { "playwright-core": "1.64.1" }
 }
 JSON
 RUN cd /opt/agent-browser \
-    && bun add agent-browser \
+    && bun add --exact agent-browser@0.17.1 playwright@1.64.1 \
     && node /opt/agent-browser/node_modules/agent-browser/scripts/postinstall.js \
-    && ln -s /opt/agent-browser/node_modules/agent-browser/bin/agent-browser.js /usr/local/bin/agent-browser
+    && ln -s /home/wile/scripts/agent-browser-safe.sh /usr/local/bin/agent-browser
 
 # Create non-root user
 RUN useradd -m -s /bin/bash wile \
     && mkdir -p /home/wile/workspace \
+    && ln -s /opt/agent-browser/node_modules /home/wile/node_modules \
     && chown -R wile:wile /home/wile
 
 # Memory optimization settings per Claude Code specs
@@ -70,31 +72,9 @@ RUN npm install -g @openai/codex
 # CC_ANTHROPIC_API_KEY is passed at runtime via environment variable (mapped to ANTHROPIC_API_KEY in entrypoint)
 # Usage: claude --dangerously-skip-permissions
 
-# Install Chromium dependencies for Playwright
-RUN apt-get update && apt-get install -y \
-    libnss3 \
-    libnspr4 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libdrm2 \
-    libxkbcommon0 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxfixes3 \
-    libxrandr2 \
-    libgbm1 \
-    libasound2 \
-    libpango-1.0-0 \
-    libcairo2 \
-    libatspi2.0-0 \
-    && rm -rf /var/lib/apt/lists/*
-
-# Download Chromium using the Playwright core version bundled with agent-browser
-ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
-RUN mkdir -p /opt/playwright-browsers \
-    && node /opt/agent-browser/node_modules/playwright-core/cli.js install chromium \
-    && chmod -R 755 /opt/playwright-browsers
+# Trusted local test browser only. Open-web automation uses a separate isolated CDP browser.
+RUN node /opt/agent-browser/node_modules/playwright/cli.js install --with-deps chrome \
+    && google-chrome --version
 
 # Copy scripts
 COPY scripts/ /home/wile/scripts/

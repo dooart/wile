@@ -1,0 +1,9 @@
+# Agent instructions
+
+## Browser automation security
+
+- Use a current, security-patched stable Google Chrome for Chromium automation. On 2026-11-03 the verified stable release is 156.0.8078.80; keep updating it. Playwright 1.64.1's bundled Chromium 156.0.8078.4 is below that security baseline. A Playwright package upgrade alone does not patch the browser.
+- For Playwright launches use `channel: 'chrome'` and `chromiumSandbox: true`; in Playwright Test put the latter in `use.launchOptions`. Explicit executable paths must point to a current patched Chrome. Do not silently fall back to bundled/cached Chromium or add `--no-sandbox` / `--disable-setuid-sandbox` to make a launch work.
+- Install/update Chrome separately on each host and CI runner (`playwright install chrome` where appropriate); keep Playwright and its lockfile current. Verify the actual executable/version before browsing. CDP/remote browser connections inherit the existing browser's version and sandbox; verify its launcher/provider separately.
+- Open-web, user-supplied URL and other untrusted-content browsing must run as a non-root user in an isolated disposable container/VM with a working browser sandbox, a disposable profile, and no mounted home directory, real credentials, agent environment secrets or writable project checkout. Keep credential-bearing agent processes separate. Do not relax host/OS security or disable the sandbox to resolve launch failures.
+- Use only intended, dedicated authenticated profiles for authorized owned-service workflows. Do not reuse a personal daily browser profile for untrusted browsing. Report isolation or provider limitations before running such workloads.

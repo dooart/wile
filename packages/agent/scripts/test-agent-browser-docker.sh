@@ -9,6 +9,8 @@ if ! command -v docker >/dev/null 2>&1; then
   exit 1
 fi
 
+: "${AGENT_BROWSER_CDP:?Provide a separately isolated patched sandboxed CDP browser before this impure check}"
+
 docker build -t wile-agent:local "$AGENT_DIR" >/dev/null
 
 OUTPUT_FILE=$(mktemp /tmp/wile-agent-browser-output-XXXXXX)
@@ -21,6 +23,7 @@ set +e
 SESSION_NAME="agent-browser-test"
 docker run --rm \
   -e AGENT_BROWSER_SESSION="$SESSION_NAME" \
+  -e AGENT_BROWSER_CDP="$AGENT_BROWSER_CDP" \
   --entrypoint /bin/sh \
   wile-agent:local \
   -c "agent-browser open https://example.com >/dev/null && agent-browser get title && agent-browser close" \

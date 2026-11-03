@@ -12,6 +12,23 @@
 
 import { chromium, type Page, type Browser } from 'playwright';
 
+function assertLocalURL(value: string): void {
+  const url = new URL(value);
+  if (!['http:', 'https:'].includes(url.protocol) || !['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)) {
+    throw new Error('This credential-bearing container only permits trusted loopback test pages. Use a separate isolated CDP browser for other content.');
+  }
+}
+
+async function localContext(browser: Browser) {
+  const context = await browser.newContext({ viewport: VIEWPORT, serviceWorkers: 'block' });
+  await context.route('**/*', route => {
+    try { assertLocalURL(route.request().url()); return route.continue(); }
+    catch { return route.abort('blockedbyclient'); }
+  });
+  await context.routeWebSocket('**/*', socket => socket.close());
+  return context;
+}
+
 const VIEWPORT = { width: 1280, height: 900 };
 const TIMEOUT = 30000;
 
@@ -20,11 +37,12 @@ async function waitForPageLoad(page: Page): Promise<void> {
 }
 
 async function screenshot(url: string, outputPath: string): Promise<void> {
+  assertLocalURL(url);
   let browser: Browser | null = null;
 
   try {
-    browser = await chromium.launch({ headless: true });
-    const context = await browser.newContext({ viewport: VIEWPORT });
+    browser = await chromium.launch({ channel: 'chrome', chromiumSandbox: true, headless: true });
+    const context = await localContext(browser);
     const page = await context.newPage();
 
     console.log(`Navigating to ${url}...`);
@@ -41,11 +59,12 @@ async function screenshot(url: string, outputPath: string): Promise<void> {
 }
 
 async function verify(url: string, selector: string): Promise<boolean> {
+  assertLocalURL(url);
   let browser: Browser | null = null;
 
   try {
-    browser = await chromium.launch({ headless: true });
-    const context = await browser.newContext({ viewport: VIEWPORT });
+    browser = await chromium.launch({ channel: 'chrome', chromiumSandbox: true, headless: true });
+    const context = await localContext(browser);
     const page = await context.newPage();
 
     console.log(`Navigating to ${url}...`);
